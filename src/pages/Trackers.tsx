@@ -2,6 +2,7 @@ import { useState } from "react";
 import { StatusCard } from "@/components/StatusCard";
 import { JobTable } from "@/components/JobTable";
 import { AddJobDialog } from "@/components/AddJobDialog";
+import { ColumnsDropdown } from "@/components/ColumnsDropdown";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -10,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Columns, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Job, JobStats } from "@/types/job";
 
 // Sample data
@@ -154,10 +155,7 @@ export default function Trackers() {
         </div>
 
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
-            <Columns className="h-4 w-4 mr-2" />
-            Columns
-          </Button>
+          <ColumnsDropdown />
           <Button variant="outline" size="sm">
             <Menu className="h-4 w-4 mr-2" />
             Menu
