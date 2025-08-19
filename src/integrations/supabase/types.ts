@@ -14,7 +14,252 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      contacts: {
+        Row: {
+          company: string | null
+          created_at: string
+          email: string | null
+          id: string
+          linkedin_url: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          position: string | null
+          relationship: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          linkedin_url?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          position?: string | null
+          relationship?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          linkedin_url?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          position?: string | null
+          relationship?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      interview_practices: {
+        Row: {
+          answer: string | null
+          category: string
+          created_at: string
+          difficulty: string
+          id: string
+          is_favorite: boolean
+          practice_count: number
+          question: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answer?: string | null
+          category: string
+          created_at?: string
+          difficulty: string
+          id?: string
+          is_favorite?: boolean
+          practice_count?: number
+          question: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answer?: string | null
+          category?: string
+          created_at?: string
+          difficulty?: string
+          id?: string
+          is_favorite?: boolean
+          practice_count?: number
+          question?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      jobs: {
+        Row: {
+          company: string
+          created_at: string
+          date_applied: string | null
+          date_saved: string
+          deadline: string | null
+          description: string | null
+          excitement: number
+          follow_up: string | null
+          id: string
+          job_url: string | null
+          location: string | null
+          max_salary: number | null
+          notes: string | null
+          position: string
+          requirements: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company: string
+          created_at?: string
+          date_applied?: string | null
+          date_saved?: string
+          deadline?: string | null
+          description?: string | null
+          excitement?: number
+          follow_up?: string | null
+          id?: string
+          job_url?: string | null
+          location?: string | null
+          max_salary?: number | null
+          notes?: string | null
+          position: string
+          requirements?: string | null
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          date_applied?: string | null
+          date_saved?: string
+          deadline?: string | null
+          description?: string | null
+          excitement?: number
+          follow_up?: string | null
+          id?: string
+          job_url?: string | null
+          location?: string | null
+          max_salary?: number | null
+          notes?: string | null
+          position?: string
+          requirements?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          location: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          location?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          location?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      resumes: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          is_active: boolean
+          template: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          template?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          template?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      work_styles: {
+        Row: {
+          assessment_type: string
+          completed_at: string
+          created_at: string
+          id: string
+          results: Json
+          user_id: string
+        }
+        Insert: {
+          assessment_type: string
+          completed_at?: string
+          created_at?: string
+          id?: string
+          results?: Json
+          user_id: string
+        }
+        Update: {
+          assessment_type?: string
+          completed_at?: string
+          created_at?: string
+          id?: string
+          results?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
