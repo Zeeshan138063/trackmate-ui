@@ -44,9 +44,9 @@ export function AddJobDialog({ onAddJob }: AddJobDialogProps) {
       maxSalary: formData.maxSalary ? parseInt(formData.maxSalary) : undefined,
       location: formData.location || undefined,
       status: formData.status,
-      dateSaved: new Date().toLocaleDateString(),
+      dateSaved: new Date().toISOString().split('T')[0],
       deadline: formData.deadline || undefined,
-      dateApplied: formData.status === "Applied" ? new Date().toLocaleDateString() : undefined,
+      dateApplied: formData.status === "Applied" ? new Date().toISOString().split('T')[0] : undefined,
       excitement: formData.excitement,
     };
 
