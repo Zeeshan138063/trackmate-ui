@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   Table,
@@ -10,7 +11,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, StarHalf } from "lucide-react";
+import { Star, StarHalf, Trash2 } from "lucide-react";
 import { Job } from "@/types/job";
 
 interface JobTableProps {
@@ -19,6 +20,7 @@ interface JobTableProps {
   onSelectJob: (jobId: string) => void;
   onSelectAll: (checked: boolean) => void;
   onUpdateJob: (job: Job) => void;
+  onDeleteJob?: (jobId: string) => void;
 }
 
 export function JobTable({ 
@@ -26,7 +28,8 @@ export function JobTable({
   selectedJobs, 
   onSelectJob, 
   onSelectAll,
-  onUpdateJob 
+  onUpdateJob,
+  onDeleteJob
 }: JobTableProps) {
   const isAllSelected = jobs.length > 0 && selectedJobs.length === jobs.length;
   const isIndeterminate = selectedJobs.length > 0 && selectedJobs.length < jobs.length;
@@ -49,7 +52,12 @@ export function JobTable({
     );
   };
 
-  const renderStars = (rating: number) => {
+  const handleStarClick = (job: Job, newRating: number) => {
+    onUpdateJob({ ...job, excitement: newRating });
+  };
+
+  const renderStars = (job: Job) => {
+    const rating = job.excitement;
     const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
@@ -59,7 +67,7 @@ export function JobTable({
         <Star
           key={i}
           className="h-4 w-4 fill-warning text-warning cursor-pointer"
-          onClick={() => onUpdateJob({ ...jobs.find(j => j.excitement === rating)!, excitement: i + 1 })}
+          onClick={() => handleStarClick(job, i + 1)}
         />
       );
     }
@@ -69,6 +77,7 @@ export function JobTable({
         <StarHalf
           key="half"
           className="h-4 w-4 fill-warning text-warning cursor-pointer"
+          onClick={() => handleStarClick(job, fullStars + 1)}
         />
       );
     }
@@ -79,7 +88,7 @@ export function JobTable({
         <Star
           key={`empty-${i}`}
           className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-warning"
-          onClick={() => onUpdateJob({ ...jobs.find(j => j.excitement === rating)!, excitement: fullStars + i + 2 })}
+          onClick={() => handleStarClick(job, fullStars + i + 1 + (hasHalfStar ? 1 : 0))}
         />
       );
     }
@@ -109,6 +118,7 @@ export function JobTable({
             <TableHead>Date Applied</TableHead>
             <TableHead>Follow up</TableHead>
             <TableHead>Excitement</TableHead>
+            {onDeleteJob && <TableHead className="w-12"></TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -131,7 +141,19 @@ export function JobTable({
               <TableCell>{job.deadline || "N/A"}</TableCell>
               <TableCell>{job.dateApplied || "N/A"}</TableCell>
               <TableCell>{job.followUp || "Add date"}</TableCell>
-              <TableCell>{renderStars(job.excitement)}</TableCell>
+              <TableCell>{renderStars(job)}</TableCell>
+              {onDeleteJob && (
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDeleteJob(job.id)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>

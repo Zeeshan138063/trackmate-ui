@@ -1,8 +1,10 @@
+
 import { useState } from "react";
 import { StatusCard } from "@/components/StatusCard";
 import { JobTable } from "@/components/JobTable";
 import { AddJobDialog } from "@/components/AddJobDialog";
 import { ColumnsDropdown } from "@/components/ColumnsDropdown";
+import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -12,56 +14,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Menu } from "lucide-react";
-import { Job, JobStats } from "@/types/job";
-
-// Sample data
-const initialJobs: Job[] = [
-  {
-    id: "1",
-    position: "Python Engineer",
-    company: "",
-    status: "Interviewing",
-    dateSaved: "12/20/2024",
-    dateApplied: "12/20/2024",
-    excitement: 0,
-  },
-  {
-    id: "2",
-    position: "Operations Manager - Sample Job",
-    company: "Acme Corp",
-    location: "remote",
-    status: "Bookmarked",
-    dateSaved: "01/19/2024",
-    dateApplied: "01/19/2024",
-    followUp: "01/22/2024",
-    excitement: 3,
-  },
-  {
-    id: "3",
-    position: "Marketing Manager - Sample Job",
-    company: "Acme Corp",
-    location: "Anywhere, USA",
-    status: "Bookmarked",
-    dateSaved: "01/19/2024",
-    dateApplied: "01/19/2024",
-    followUp: "01/22/2024",
-    excitement: 3,
-  },
-  {
-    id: "4",
-    position: "Product Designer - Sample Job",
-    company: "Acme Corp",
-    location: "Anywhere, USA",
-    status: "Bookmarked",
-    dateSaved: "01/19/2024",
-    dateApplied: "01/19/2024",
-    followUp: "01/22/2024",
-    excitement: 3,
-  },
-];
+import { JobStats } from "@/types/job";
+import { useJobs } from "@/hooks/useJobs";
 
 export default function Trackers() {
-  const [jobs, setJobs] = useState<Job[]>(initialJobs);
+  const { jobs, loading, addJob, updateJob, deleteJob } = useJobs();
   const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
 
   const calculateStats = (): JobStats => {
@@ -95,14 +52,6 @@ export default function Trackers() {
 
   const stats = calculateStats();
 
-  const handleAddJob = (newJob: Omit<Job, "id">) => {
-    const job: Job = {
-      ...newJob,
-      id: Date.now().toString(),
-    };
-    setJobs([job, ...jobs]);
-  };
-
   const handleSelectJob = (jobId: string) => {
     setSelectedJobs(prev =>
       prev.includes(jobId)
@@ -115,63 +64,89 @@ export default function Trackers() {
     setSelectedJobs(checked ? jobs.map(job => job.id) : []);
   };
 
-  const handleUpdateJob = (updatedJob: Job) => {
-    setJobs(prev => prev.map(job => 
-      job.id === updatedJob.id ? updatedJob : job
-    ));
+  const handleDeleteSelected = async () => {
+    for (const jobId of selectedJobs) {
+      await deleteJob(jobId);
+    }
+    setSelectedJobs([]);
   };
 
-  return (
-    <div className="p-6 space-y-6">
-      {/* Status Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <StatusCard title="BOOKMARKED" count={stats.bookmarked} />
-        <StatusCard title="APPLYING" count="--" />
-        <StatusCard title="APPLIED" count="--" />
-        <StatusCard title="INTERVIEWING" count={stats.interviewing} variant="primary" />
-        <StatusCard title="NEGOTIATING" count="--" />
-        <StatusCard title="ACCEPTED" count="--" />
+  if (loading) {
+    return (
+      <div className="min-h-screen">
+        <Header />
+        <div className="p-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-2 text-muted-foreground">Loading jobs...</p>
+            </div>
+          </div>
+        </div>
       </div>
+    );
+  }
 
-      {/* Table Controls */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <span className="text-sm text-muted-foreground">
-            {selectedJobs.length} selected
-          </span>
+  return (
+    <div className="min-h-screen">
+      <Header />
+      <div className="p-6 space-y-6">
+        {/* Status Overview */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <StatusCard title="BOOKMARKED" count={stats.bookmarked} />
+          <StatusCard title="APPLYING" count={stats.applying} />
+          <StatusCard title="APPLIED" count={stats.applied} />
+          <StatusCard title="INTERVIEWING" count={stats.interviewing} variant="primary" />
+          <StatusCard title="NEGOTIATING" count={stats.negotiating} />
+          <StatusCard title="ACCEPTED" count={stats.accepted} />
+        </div>
+
+        {/* Table Controls */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <span className="text-sm text-muted-foreground">
+              {selectedJobs.length} selected
+            </span>
+            {selectedJobs.length > 0 && (
+              <Button variant="destructive" size="sm" onClick={handleDeleteSelected}>
+                Delete Selected
+              </Button>
+            )}
+            <div className="flex items-center space-x-2">
+              <span className="text-sm">Group by:</span>
+              <Select defaultValue="none">
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="status">Status</SelectItem>
+                  <SelectItem value="company">Company</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div className="flex items-center space-x-2">
-            <span className="text-sm">Group by:</span>
-            <Select defaultValue="none">
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                <SelectItem value="status">Status</SelectItem>
-                <SelectItem value="company">Company</SelectItem>
-              </SelectContent>
-            </Select>
+            <ColumnsDropdown />
+            <Button variant="outline" size="sm">
+              <Menu className="h-4 w-4 mr-2" />
+              Menu
+            </Button>
+            <AddJobDialog onAddJob={addJob} />
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <ColumnsDropdown />
-          <Button variant="outline" size="sm">
-            <Menu className="h-4 w-4 mr-2" />
-            Menu
-          </Button>
-          <AddJobDialog onAddJob={handleAddJob} />
-        </div>
+        {/* Job Table */}
+        <JobTable
+          jobs={jobs}
+          selectedJobs={selectedJobs}
+          onSelectJob={handleSelectJob}
+          onSelectAll={handleSelectAll}
+          onUpdateJob={updateJob}
+          onDeleteJob={deleteJob}
+        />
       </div>
-
-      {/* Job Table */}
-      <JobTable
-        jobs={jobs}
-        selectedJobs={selectedJobs}
-        onSelectJob={handleSelectJob}
-        onSelectAll={handleSelectAll}
-        onUpdateJob={handleUpdateJob}
-      />
     </div>
   );
 }
