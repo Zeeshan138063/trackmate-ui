@@ -11,7 +11,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, StarHalf, Trash2 } from "lucide-react";
+import { Star, StarHalf, Trash2, Edit } from "lucide-react";
 import { Job } from "@/types/job";
 import { ColumnOption } from "@/components/ColumnsDropdown";
 
@@ -22,6 +22,7 @@ interface JobTableProps {
   onSelectAll: (checked: boolean) => void;
   onUpdateJob: (job: Job) => void;
   onDeleteJob?: (jobId: string) => void;
+  onEditJob?: (job: Job) => void;
   visibleColumns: ColumnOption[];
 }
 
@@ -32,6 +33,7 @@ export function JobTable({
   onSelectAll,
   onUpdateJob,
   onDeleteJob,
+  onEditJob,
   visibleColumns
 }: JobTableProps) {
   const isAllSelected = jobs.length > 0 && selectedJobs.length === jobs.length;
@@ -128,7 +130,7 @@ export function JobTable({
             {isColumnVisible('dateApplied') && <TableHead>Date Applied</TableHead>}
             {isColumnVisible('followUp') && <TableHead>Follow up</TableHead>}
             {isColumnVisible('excitement') && <TableHead>Excitement</TableHead>}
-            {onDeleteJob && <TableHead className="w-12"></TableHead>}
+            {(onEditJob || onDeleteJob) && <TableHead className="w-24">Actions</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -160,16 +162,30 @@ export function JobTable({
               {isColumnVisible('dateApplied') && <TableCell>{job.dateApplied || "N/A"}</TableCell>}
               {isColumnVisible('followUp') && <TableCell>{job.followUp || "Add date"}</TableCell>}
               {isColumnVisible('excitement') && <TableCell>{renderStars(job)}</TableCell>}
-              {onDeleteJob && (
+              {(onEditJob || onDeleteJob) && (
                 <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onDeleteJob(job.id)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-1">
+                    {onEditJob && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onEditJob(job)}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {onDeleteJob && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDeleteJob(job.id)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </TableCell>
               )}
             </TableRow>

@@ -12,12 +12,13 @@ import {
 import { StatusCard } from "@/components/StatusCard";
 import { JobTable } from "@/components/JobTable";
 import { AddJobDialog } from "@/components/AddJobDialog";
+import { EditJobDialog } from "@/components/EditJobDialog";
 import { ColumnsDropdown, ColumnOption } from "@/components/ColumnsDropdown";
 import { useJobs } from "@/hooks/useJobs";
 import { Header } from "@/components/Header";
 import { Menu, Archive, Download, FileText, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
-import { JobStats } from "@/types/job";
+import { JobStats, Job } from "@/types/job";
 
 const defaultColumns: ColumnOption[] = [
   { id: "minSalary", label: "Min. Salary", checked: false },
@@ -36,6 +37,8 @@ export default function Trackers() {
   const { jobs, loading, addJob, updateJob, deleteJob } = useJobs();
   const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
   const [visibleColumns, setVisibleColumns] = useState<ColumnOption[]>(defaultColumns);
+  const [editingJob, setEditingJob] = useState<Job | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const calculateStats = (): JobStats => {
     return jobs.reduce(
@@ -134,6 +137,16 @@ export default function Trackers() {
     URL.revokeObjectURL(url);
     
     toast.success("Data downloaded successfully!");
+  };
+
+  const handleEditJob = (job: Job) => {
+    setEditingJob(job);
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateJob = (updatedJob: Job) => {
+    updateJob(updatedJob);
+    setEditingJob(null);
   };
 
   if (loading) {
@@ -237,7 +250,16 @@ export default function Trackers() {
           onSelectAll={handleSelectAll}
           onUpdateJob={updateJob}
           onDeleteJob={deleteJob}
+          onEditJob={handleEditJob}
           visibleColumns={visibleColumns}
+        />
+
+        {/* Edit Job Dialog */}
+        <EditJobDialog
+          job={editingJob}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onUpdateJob={handleUpdateJob}
         />
       </div>
     </div>
