@@ -10,6 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Plus, X } from "lucide-react";
 import { Job } from "@/types/job";
 
@@ -25,6 +32,12 @@ export function AddJobDialog({ onAddJob }: AddJobDialogProps) {
     company: "",
     location: "",
     description: "",
+    minSalary: "",
+    maxSalary: "",
+    status: "Bookmarked" as Job["status"],
+    datePosted: "",
+    deadline: "",
+    excitement: 3,
   });
   const [showExtensionBanner, setShowExtensionBanner] = useState(true);
 
@@ -37,9 +50,14 @@ export function AddJobDialog({ onAddJob }: AddJobDialogProps) {
       company: formData.company,
       location: formData.location || undefined,
       description: formData.description || undefined,
-      status: "Bookmarked",
+      minSalary: formData.minSalary ? parseInt(formData.minSalary) : undefined,
+      maxSalary: formData.maxSalary ? parseInt(formData.maxSalary) : undefined,
+      status: formData.status,
+      datePosted: formData.datePosted || undefined,
       dateSaved: new Date().toISOString().split('T')[0],
-      excitement: 3,
+      deadline: formData.deadline || undefined,
+      dateApplied: formData.status === "Applied" ? new Date().toISOString().split('T')[0] : undefined,
+      excitement: formData.excitement,
     };
 
     onAddJob(newJob);
@@ -50,6 +68,12 @@ export function AddJobDialog({ onAddJob }: AddJobDialogProps) {
       company: "",
       location: "",
       description: "",
+      minSalary: "",
+      maxSalary: "",
+      status: "Bookmarked",
+      datePosted: "",
+      deadline: "",
+      excitement: 3,
     });
   };
 
@@ -61,7 +85,7 @@ export function AddJobDialog({ onAddJob }: AddJobDialogProps) {
           Add a New Job
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add a New Job Post</DialogTitle>
         </DialogHeader>
@@ -88,15 +112,28 @@ export function AddJobDialog({ onAddJob }: AddJobDialogProps) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="position">Job Title</Label>
-            <Input
-              id="position"
-              value={formData.position}
-              onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-              placeholder="Job Title"
-              required
-            />
+          {/* Basic Job Information */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="position">Job Title *</Label>
+              <Input
+                id="position"
+                value={formData.position}
+                onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                placeholder="Job Title"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="company">Company Name *</Label>
+              <Input
+                id="company"
+                value={formData.company}
+                onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                placeholder="Company Name"
+                required
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -110,27 +147,99 @@ export function AddJobDialog({ onAddJob }: AddJobDialogProps) {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="company">Company Name</Label>
-            <Input
-              id="company"
-              value={formData.company}
-              onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-              placeholder="Company Name"
-              required
-            />
+          {/* Salary Information */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="minSalary">Min Salary</Label>
+              <Input
+                id="minSalary"
+                type="number"
+                value={formData.minSalary}
+                onChange={(e) => setFormData({ ...formData, minSalary: e.target.value })}
+                placeholder="e.g. 60000"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="maxSalary">Max Salary</Label>
+              <Input
+                id="maxSalary"
+                type="number"
+                value={formData.maxSalary}
+                onChange={(e) => setFormData({ ...formData, maxSalary: e.target.value })}
+                placeholder="e.g. 75000"
+              />
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              placeholder="Location"
-            />
+          {/* Location and Status */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="location">Location</Label>
+              <Input
+                id="location"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                placeholder="e.g. Remote, San Francisco"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value as Job["status"] })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Bookmarked">Bookmarked</SelectItem>
+                  <SelectItem value="Applying">Applying</SelectItem>
+                  <SelectItem value="Applied">Applied</SelectItem>
+                  <SelectItem value="Interviewing">Interviewing</SelectItem>
+                  <SelectItem value="Negotiating">Negotiating</SelectItem>
+                  <SelectItem value="Accepted">Accepted</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
+          {/* Dates */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="datePosted">Date Posted</Label>
+              <Input
+                id="datePosted"
+                type="date"
+                value={formData.datePosted}
+                onChange={(e) => setFormData({ ...formData, datePosted: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="deadline">Application Deadline</Label>
+              <Input
+                id="deadline"
+                type="date"
+                value={formData.deadline}
+                onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+              />
+            </div>
+          </div>
+
+          {/* Excitement Level */}
+          <div className="space-y-2">
+            <Label htmlFor="excitement">Excitement Level (1-5 stars)</Label>
+            <Select value={formData.excitement.toString()} onValueChange={(value) => setFormData({ ...formData, excitement: parseInt(value) })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">⭐ 1 Star</SelectItem>
+                <SelectItem value="2">⭐⭐ 2 Stars</SelectItem>
+                <SelectItem value="3">⭐⭐⭐ 3 Stars</SelectItem>
+                <SelectItem value="4">⭐⭐⭐⭐ 4 Stars</SelectItem>
+                <SelectItem value="5">⭐⭐⭐⭐⭐ 5 Stars</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Job Description */}
           <div className="space-y-2">
             <Label htmlFor="description">Job Description</Label>
             <Textarea
