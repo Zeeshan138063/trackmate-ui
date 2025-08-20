@@ -32,6 +32,7 @@ const navigationItems = [
   { title: "Resume Builder", url: "/resume", icon: FileText },
   { title: "Trackers", url: "/trackers", icon: Target },
   { title: "Interview Practice", url: "/interview", icon: MessageSquare },
+  { title: "Interview Feedback", url: "/interview-feedback", icon: MessageSquare },
   { title: "Work Styles", url: "/work-styles", icon: Briefcase },
   { title: "Job Search", url: "/job-search", icon: Search },
 ];

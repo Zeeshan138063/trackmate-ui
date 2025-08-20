@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import Trackers from "./pages/Trackers";
 import ResumeBuilder from "./pages/ResumeBuilder";
 import InterviewPractice from "./pages/InterviewPractice";
+import InterviewFeedback from "./pages/InterviewFeedback";
 import WorkStyles from "./pages/WorkStyles";
 import JobSearch from "./pages/JobSearch";
 import Support from "./pages/Support";
@@ -52,6 +53,13 @@ const App = () => (
             <ProtectedRoute>
               <Layout>
                 <InterviewPractice />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/interview-feedback" element={
+            <ProtectedRoute>
+              <Layout>
+                <InterviewFeedback />
               </Layout>
             </ProtectedRoute>
           } />

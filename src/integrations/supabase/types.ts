@@ -92,6 +92,92 @@ export type Database = {
         }
         Relationships: []
       }
+      interview_feedback: {
+        Row: {
+          company: string
+          created_at: string
+          duration_minutes: number | null
+          feedback_notes: string | null
+          follow_up_date: string | null
+          id: string
+          interview_date: string
+          interview_format: string
+          interview_round: string
+          interview_time: string | null
+          interview_type: string
+          interviewers: Json
+          job_id: string | null
+          location_platform: string | null
+          next_steps: string | null
+          outcome: string | null
+          overall_rating: number | null
+          position: string
+          questions_answers: Json
+          salary_discussed: boolean | null
+          technical_assessment: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company: string
+          created_at?: string
+          duration_minutes?: number | null
+          feedback_notes?: string | null
+          follow_up_date?: string | null
+          id?: string
+          interview_date: string
+          interview_format: string
+          interview_round: string
+          interview_time?: string | null
+          interview_type: string
+          interviewers?: Json
+          job_id?: string | null
+          location_platform?: string | null
+          next_steps?: string | null
+          outcome?: string | null
+          overall_rating?: number | null
+          position: string
+          questions_answers?: Json
+          salary_discussed?: boolean | null
+          technical_assessment?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          duration_minutes?: number | null
+          feedback_notes?: string | null
+          follow_up_date?: string | null
+          id?: string
+          interview_date?: string
+          interview_format?: string
+          interview_round?: string
+          interview_time?: string | null
+          interview_type?: string
+          interviewers?: Json
+          job_id?: string | null
+          location_platform?: string | null
+          next_steps?: string | null
+          outcome?: string | null
+          overall_rating?: number | null
+          position?: string
+          questions_answers?: Json
+          salary_discussed?: boolean | null
+          technical_assessment?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_feedback_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       interview_practices: {
         Row: {
           answer: string | null
