@@ -2,11 +2,10 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { SidebarProvider } from "@/components/ui/sidebar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { AppSidebar } from "@/components/AppSidebar";
+import { Layout } from "@/components/Layout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Trackers from "./pages/Trackers";
@@ -28,28 +27,63 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />
-          <Route path="/*" element={
+          <Route path="/" element={
             <ProtectedRoute>
-              <SidebarProvider>
-                <div className="min-h-screen flex w-full bg-background">
-                  <AppSidebar />
-                  <main className="flex-1 bg-background">
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/trackers" element={<Trackers />} />
-                      <Route path="/resume" element={<ResumeBuilder />} />
-                      <Route path="/interview" element={<InterviewPractice />} />
-                      <Route path="/work-styles" element={<WorkStyles />} />
-                      <Route path="/job-search" element={<JobSearch />} />
-                      <Route path="/support" element={<Support />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </main>
-                </div>
-              </SidebarProvider>
+              <Layout>
+                <Index />
+              </Layout>
             </ProtectedRoute>
           } />
+          <Route path="/trackers" element={
+            <ProtectedRoute>
+              <Layout>
+                <Trackers />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/resume" element={
+            <ProtectedRoute>
+              <Layout>
+                <ResumeBuilder />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/interview" element={
+            <ProtectedRoute>
+              <Layout>
+                <InterviewPractice />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/work-styles" element={
+            <ProtectedRoute>
+              <Layout>
+                <WorkStyles />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/job-search" element={
+            <ProtectedRoute>
+              <Layout>
+                <JobSearch />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/support" element={
+            <ProtectedRoute>
+              <Layout>
+                <Support />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <Layout>
+                <Settings />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
