@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -10,29 +9,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Columns } from "lucide-react";
 
-const columnOptions = [
-  { id: "minSalary", label: "Min. Salary", checked: false },
-  { id: "maxSalary", label: "Max. Salary", checked: true },
-  { id: "location", label: "Location", checked: true },
-  { id: "status", label: "Status", checked: true },
-  { id: "datePosted", label: "Date Posted", checked: false },
-  { id: "dateSaved", label: "Date Saved", checked: true },
-  { id: "deadline", label: "Deadline", checked: true },
-  { id: "dateApplied", label: "Date Applied", checked: true },
-  { id: "followUp", label: "Follow up", checked: true },
-  { id: "excitement", label: "Excitement", checked: true },
-];
+export interface ColumnOption {
+  id: string;
+  label: string;
+  checked: boolean;
+}
 
-export function ColumnsDropdown() {
-  const [columns, setColumns] = useState(columnOptions);
+interface ColumnsDropdownProps {
+  columns: ColumnOption[];
+  onToggleColumn: (columnId: string) => void;
+}
 
-  const handleColumnToggle = (columnId: string) => {
-    setColumns(prev => 
-      prev.map(col => 
-        col.id === columnId ? { ...col, checked: !col.checked } : col
-      )
-    );
-  };
+export function ColumnsDropdown({ columns, onToggleColumn }: ColumnsDropdownProps) {
 
   return (
     <DropdownMenu>
@@ -42,7 +30,7 @@ export function ColumnsDropdown() {
           Columns
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48 bg-card border">
+      <DropdownMenuContent align="end" className="w-48 bg-card border z-50">
         <DropdownMenuLabel className="text-sm font-medium">
           Show columns
         </DropdownMenuLabel>
@@ -53,7 +41,7 @@ export function ColumnsDropdown() {
               <Checkbox
                 id={column.id}
                 checked={column.checked}
-                onCheckedChange={() => handleColumnToggle(column.id)}
+                onCheckedChange={() => onToggleColumn(column.id)}
               />
               <label
                 htmlFor={column.id}

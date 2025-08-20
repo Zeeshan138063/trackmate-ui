@@ -3,7 +3,7 @@ import { useState } from "react";
 import { StatusCard } from "@/components/StatusCard";
 import { JobTable } from "@/components/JobTable";
 import { AddJobDialog } from "@/components/AddJobDialog";
-import { ColumnsDropdown } from "@/components/ColumnsDropdown";
+import { ColumnsDropdown, ColumnOption } from "@/components/ColumnsDropdown";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,9 +17,23 @@ import { Menu } from "lucide-react";
 import { JobStats } from "@/types/job";
 import { useJobs } from "@/hooks/useJobs";
 
+const defaultColumns: ColumnOption[] = [
+  { id: "minSalary", label: "Min. Salary", checked: false },
+  { id: "maxSalary", label: "Max. Salary", checked: true },
+  { id: "location", label: "Location", checked: true },
+  { id: "status", label: "Status", checked: true },
+  { id: "datePosted", label: "Date Posted", checked: false },
+  { id: "dateSaved", label: "Date Saved", checked: true },
+  { id: "deadline", label: "Deadline", checked: true },
+  { id: "dateApplied", label: "Date Applied", checked: true },
+  { id: "followUp", label: "Follow up", checked: true },
+  { id: "excitement", label: "Excitement", checked: true },
+];
+
 export default function Trackers() {
   const { jobs, loading, addJob, updateJob, deleteJob } = useJobs();
   const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
+  const [visibleColumns, setVisibleColumns] = useState<ColumnOption[]>(defaultColumns);
 
   const calculateStats = (): JobStats => {
     return jobs.reduce(
@@ -69,6 +83,14 @@ export default function Trackers() {
       await deleteJob(jobId);
     }
     setSelectedJobs([]);
+  };
+
+  const handleToggleColumn = (columnId: string) => {
+    setVisibleColumns(prev => 
+      prev.map(col => 
+        col.id === columnId ? { ...col, checked: !col.checked } : col
+      )
+    );
   };
 
   if (loading) {
@@ -128,7 +150,10 @@ export default function Trackers() {
           </div>
 
           <div className="flex items-center space-x-2">
-            <ColumnsDropdown />
+            <ColumnsDropdown 
+              columns={visibleColumns}
+              onToggleColumn={handleToggleColumn}
+            />
             <Button variant="outline" size="sm">
               <Menu className="h-4 w-4 mr-2" />
               Menu
@@ -145,6 +170,7 @@ export default function Trackers() {
           onSelectAll={handleSelectAll}
           onUpdateJob={updateJob}
           onDeleteJob={deleteJob}
+          visibleColumns={visibleColumns}
         />
       </div>
     </div>

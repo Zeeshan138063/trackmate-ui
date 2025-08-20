@@ -2,9 +2,11 @@ export interface Job {
   id: string;
   position: string;
   company: string;
+  minSalary?: number;
   maxSalary?: number;
   location?: string;
   status: "Bookmarked" | "Applying" | "Applied" | "Interviewing" | "Negotiating" | "Accepted" | "Rejected";
+  datePosted?: string;
   dateSaved: string;
   deadline?: string;
   dateApplied?: string;
