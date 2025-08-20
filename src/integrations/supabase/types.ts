@@ -103,6 +103,7 @@ export type Database = {
           company: string
           created_at: string
           date_applied: string | null
+          date_posted: string | null
           date_saved: string
           deadline: string | null
           description: string | null
@@ -112,6 +113,7 @@ export type Database = {
           job_url: string | null
           location: string | null
           max_salary: number | null
+          min_salary: number | null
           notes: string | null
           position: string
           requirements: string | null
@@ -123,6 +125,7 @@ export type Database = {
           company: string
           created_at?: string
           date_applied?: string | null
+          date_posted?: string | null
           date_saved?: string
           deadline?: string | null
           description?: string | null
@@ -132,6 +135,7 @@ export type Database = {
           job_url?: string | null
           location?: string | null
           max_salary?: number | null
+          min_salary?: number | null
           notes?: string | null
           position: string
           requirements?: string | null
@@ -143,6 +147,7 @@ export type Database = {
           company?: string
           created_at?: string
           date_applied?: string | null
+          date_posted?: string | null
           date_saved?: string
           deadline?: string | null
           description?: string | null
@@ -152,6 +157,7 @@ export type Database = {
           job_url?: string | null
           location?: string | null
           max_salary?: number | null
+          min_salary?: number | null
           notes?: string | null
           position?: string
           requirements?: string | null

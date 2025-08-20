@@ -28,9 +28,11 @@ export function AddJobDialog({ onAddJob }: AddJobDialogProps) {
   const [formData, setFormData] = useState({
     position: "",
     company: "",
+    minSalary: "",
     maxSalary: "",
     location: "",
     status: "Bookmarked" as Job["status"],
+    datePosted: "",
     deadline: "",
     excitement: 3,
   });
@@ -41,9 +43,11 @@ export function AddJobDialog({ onAddJob }: AddJobDialogProps) {
     const newJob: Omit<Job, "id"> = {
       position: formData.position,
       company: formData.company,
+      minSalary: formData.minSalary ? parseInt(formData.minSalary) : undefined,
       maxSalary: formData.maxSalary ? parseInt(formData.maxSalary) : undefined,
       location: formData.location || undefined,
       status: formData.status,
+      datePosted: formData.datePosted || undefined,
       dateSaved: new Date().toISOString().split('T')[0],
       deadline: formData.deadline || undefined,
       dateApplied: formData.status === "Applied" ? new Date().toISOString().split('T')[0] : undefined,
@@ -55,9 +59,11 @@ export function AddJobDialog({ onAddJob }: AddJobDialogProps) {
     setFormData({
       position: "",
       company: "",
+      minSalary: "",
       maxSalary: "",
       location: "",
       status: "Bookmarked",
+      datePosted: "",
       deadline: "",
       excitement: 3,
     });
@@ -99,6 +105,16 @@ export function AddJobDialog({ onAddJob }: AddJobDialogProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
+              <Label htmlFor="minSalary">Min Salary</Label>
+              <Input
+                id="minSalary"
+                type="number"
+                value={formData.minSalary}
+                onChange={(e) => setFormData({ ...formData, minSalary: e.target.value })}
+                placeholder="e.g. 60000"
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="salary">Max Salary</Label>
               <Input
                 id="salary"
@@ -108,6 +124,9 @@ export function AddJobDialog({ onAddJob }: AddJobDialogProps) {
                 placeholder="e.g. 75000"
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="location">Location</Label>
               <Input
@@ -115,6 +134,15 @@ export function AddJobDialog({ onAddJob }: AddJobDialogProps) {
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 placeholder="e.g. Remote, San Francisco"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="datePosted">Date Posted</Label>
+              <Input
+                id="datePosted"
+                type="date"
+                value={formData.datePosted}
+                onChange={(e) => setFormData({ ...formData, datePosted: e.target.value })}
               />
             </div>
           </div>
