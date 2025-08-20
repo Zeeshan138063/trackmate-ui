@@ -1,21 +1,23 @@
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 import { StatusCard } from "@/components/StatusCard";
 import { JobTable } from "@/components/JobTable";
 import { AddJobDialog } from "@/components/AddJobDialog";
 import { ColumnsDropdown, ColumnOption } from "@/components/ColumnsDropdown";
-import { Header } from "@/components/Header";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Menu } from "lucide-react";
-import { JobStats } from "@/types/job";
 import { useJobs } from "@/hooks/useJobs";
+import { Header } from "@/components/Header";
+import { Menu, Archive, Download, FileText, HelpCircle } from "lucide-react";
+import { toast } from "sonner";
+import { JobStats } from "@/types/job";
 
 const defaultColumns: ColumnOption[] = [
   { id: "minSalary", label: "Min. Salary", checked: false },
@@ -93,6 +95,47 @@ export default function Trackers() {
     );
   };
 
+  const handleQuickTour = () => {
+    toast.info("Quick Tour feature coming soon!");
+  };
+
+  const handleArchivedJobs = () => {
+    toast.info("Archived Jobs feature coming soon!");
+  };
+
+  const handleExportReport = () => {
+    const csvContent = "data:text/csv;charset=utf-8," + 
+      "Job Title,Company,Location,Status,Date Applied,Deadline,Salary Min,Salary Max,Excitement\n" +
+      jobs.map(job => 
+        `"${job.position}","${job.company}","${job.location}","${job.status}","${job.dateApplied || 'N/A'}","${job.deadline || 'N/A'}","${job.minSalary || 'N/A'}","${job.maxSalary || 'N/A'}","${job.excitement}"`
+      ).join("\n");
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "jobs_report.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success("Report exported successfully!");
+  };
+
+  const handleDownloadData = () => {
+    const jsonData = JSON.stringify(jobs, null, 2);
+    const blob = new Blob([jsonData], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "jobs_data.json";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast.success("Data downloaded successfully!");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen">
@@ -154,10 +197,34 @@ export default function Trackers() {
               columns={visibleColumns}
               onToggleColumn={handleToggleColumn}
             />
-            <Button variant="outline" size="sm">
-              <Menu className="h-4 w-4 mr-2" />
-              Menu
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Menu className="h-4 w-4 mr-2" />
+                  Menu
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={handleQuickTour}>
+                  <HelpCircle className="h-4 w-4 mr-2" />
+                  Quick Tour
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleArchivedJobs}>
+                  <Archive className="h-4 w-4 mr-2" />
+                  Archived Jobs
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleExportReport}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Export Report
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDownloadData}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Data
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <AddJobDialog onAddJob={addJob} />
           </div>
         </div>
