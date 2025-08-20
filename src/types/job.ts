@@ -1,7 +1,7 @@
 export interface Job {
   id: string;
   position: string;
-  url?: string;
+  jobUrl?: string;
   company: string;
   minSalary?: number;
   maxSalary?: number;

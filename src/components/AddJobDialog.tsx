@@ -21,7 +21,7 @@ export function AddJobDialog({ onAddJob }: AddJobDialogProps) {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     position: "",
-    url: "",
+    jobUrl: "",
     company: "",
     location: "",
     description: "",
@@ -33,7 +33,7 @@ export function AddJobDialog({ onAddJob }: AddJobDialogProps) {
     
     const newJob: Omit<Job, "id"> = {
       position: formData.position,
-      url: formData.url || undefined,
+      jobUrl: formData.jobUrl || undefined,
       company: formData.company,
       location: formData.location || undefined,
       description: formData.description || undefined,
@@ -46,7 +46,7 @@ export function AddJobDialog({ onAddJob }: AddJobDialogProps) {
     setOpen(false);
     setFormData({
       position: "",
-      url: "",
+      jobUrl: "",
       company: "",
       location: "",
       description: "",
@@ -100,12 +100,12 @@ export function AddJobDialog({ onAddJob }: AddJobDialogProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="url">URL for Original Posting</Label>
+            <Label htmlFor="jobUrl">URL for Original Posting</Label>
             <Input
-              id="url"
+              id="jobUrl"
               type="url"
-              value={formData.url}
-              onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+              value={formData.jobUrl}
+              onChange={(e) => setFormData({ ...formData, jobUrl: e.target.value })}
               placeholder="URL for Original Posting"
             />
           </div>
