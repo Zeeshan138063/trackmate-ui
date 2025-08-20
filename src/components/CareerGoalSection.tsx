@@ -5,30 +5,29 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Edit2, Target } from "lucide-react";
-import { toast } from "sonner";
-
-interface CareerGoal {
-  targetTitle: string;
-  targetDate: string;
-  salaryMin: number;
-  salaryMax: number;
-}
+import { useCareerGoals, type CareerGoal } from "@/hooks/useCareerGoals";
 
 export function CareerGoalSection() {
-  const [goal, setGoal] = useState<CareerGoal>({
+  const { goals, addGoal, updateGoal, loading } = useCareerGoals();
+  const [isEditing, setIsEditing] = useState(false);
+  
+  // Use existing goal or default values
+  const currentGoal = goals[0] || {
     targetTitle: "python software engineer",
     targetDate: "January 2025",
     salaryMin: 76000,
     salaryMax: 100000
-  });
+  };
+  
+  const [editForm, setEditForm] = useState(currentGoal);
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState(goal);
-
-  const handleSave = () => {
-    setGoal(editForm);
+  const handleSave = async () => {
+    if (goals.length > 0) {
+      await updateGoal(goals[0].id, editForm);
+    } else {
+      await addGoal(editForm);
+    }
     setIsEditing(false);
-    toast.success("Career goal updated successfully!");
   };
 
   const formatSalary = (amount: number) => {
@@ -38,6 +37,16 @@ export function CareerGoalSection() {
       maximumFractionDigits: 0
     }).format(amount);
   };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -110,16 +119,16 @@ export function CareerGoalSection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
           <div>
             <div className="font-medium text-muted-foreground">Target Title</div>
-            <div className="font-semibold">{goal.targetTitle}</div>
+            <div className="font-semibold">{currentGoal.targetTitle}</div>
           </div>
           <div>
             <div className="font-medium text-muted-foreground">Target Date</div>
-            <div className="font-semibold">{goal.targetDate}</div>
+            <div className="font-semibold">{currentGoal.targetDate}</div>
           </div>
           <div>
             <div className="font-medium text-muted-foreground">Target Salary Range</div>
             <div className="font-semibold">
-              {formatSalary(goal.salaryMin)} to {formatSalary(goal.salaryMax)}
+              {formatSalary(currentGoal.salaryMin)} to {formatSalary(currentGoal.salaryMax)}
             </div>
           </div>
         </div>

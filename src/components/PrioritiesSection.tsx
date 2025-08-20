@@ -6,69 +6,38 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Circle, Plus, Star, Trash2 } from "lucide-react";
-import { toast } from "sonner";
-
-interface Priority {
-  id: string;
-  title: string;
-  description?: string;
-  completed: boolean;
-  important: boolean;
-}
+import { usePriorities, type Priority } from "@/hooks/usePriorities";
 
 export function PrioritiesSection() {
-  const [priorities, setPriorities] = useState<Priority[]>([
-    {
-      id: '1',
-      title: 'Update LinkedIn profile',
-      description: 'Add recent project experience and skills',
-      completed: false,
-      important: true
-    },
-    {
-      id: '2', 
-      title: 'Follow up with ABC Company',
-      description: 'Send thank you email after interview',
-      completed: false,
-      important: false
-    }
-  ]);
-
+  const { priorities, addPriority, updatePriority, deletePriority, loading } = usePriorities();
   const [isAddingPriority, setIsAddingPriority] = useState(false);
   const [newPriority, setNewPriority] = useState({ title: '', description: '', important: false });
 
-  const handleAddPriority = () => {
+  const handleAddPriority = async () => {
     if (!newPriority.title.trim()) return;
     
-    const priority: Priority = {
-      id: Date.now().toString(),
+    const priority: Omit<Priority, 'id'> = {
       title: newPriority.title,
       description: newPriority.description,
       completed: false,
       important: newPriority.important
     };
     
-    setPriorities(prev => [...prev, priority]);
+    await addPriority(priority);
     setNewPriority({ title: '', description: '', important: false });
     setIsAddingPriority(false);
-    toast.success("Priority added!");
   };
 
-  const handleToggleComplete = (id: string) => {
-    setPriorities(prev => 
-      prev.map(p => p.id === id ? { ...p, completed: !p.completed } : p)
-    );
+  const handleToggleComplete = async (id: string, completed: boolean) => {
+    await updatePriority(id, { completed: !completed });
   };
 
-  const handleToggleImportant = (id: string) => {
-    setPriorities(prev => 
-      prev.map(p => p.id === id ? { ...p, important: !p.important } : p)
-    );
+  const handleToggleImportant = async (id: string, important: boolean) => {
+    await updatePriority(id, { important: !important });
   };
 
-  const handleDeletePriority = (id: string) => {
-    setPriorities(prev => prev.filter(p => p.id !== id));
-    toast.success("Priority deleted!");
+  const handleDeletePriority = async (id: string) => {
+    await deletePriority(id);
   };
 
   const sortedPriorities = [...priorities].sort((a, b) => {
@@ -76,6 +45,16 @@ export function PrioritiesSection() {
     if (a.important !== b.important) return b.important ? 1 : -1;
     return 0;
   });
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -146,7 +125,7 @@ export function PrioritiesSection() {
                 }`}
               >
                 <button
-                  onClick={() => handleToggleComplete(priority.id)}
+                  onClick={() => handleToggleComplete(priority.id, priority.completed)}
                   className="mt-0.5"
                 >
                   {priority.completed ? (
@@ -177,7 +156,7 @@ export function PrioritiesSection() {
                 
                 <div className="flex items-center space-x-1">
                   <button
-                    onClick={() => handleToggleImportant(priority.id)}
+                    onClick={() => handleToggleImportant(priority.id, priority.important)}
                     className="p-1 hover:bg-muted rounded"
                   >
                     <Star className={`h-4 w-4 ${priority.important ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`} />
