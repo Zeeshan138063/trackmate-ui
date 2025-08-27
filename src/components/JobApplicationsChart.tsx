@@ -5,27 +5,37 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Edit2, Send } from "lucide-react";
-import { toast } from "sonner";
+import { useApplicationGoals } from "@/hooks/useApplicationGoals";
 
 interface JobApplicationsChartProps {
   appliedCount: number;
 }
 
 export function JobApplicationsChart({ appliedCount }: JobApplicationsChartProps) {
-  const [goal, setGoal] = useState(1);
+  const { goal, loading, updateGoal } = useApplicationGoals();
   const [isEditing, setIsEditing] = useState(false);
-  const [editGoal, setEditGoal] = useState(goal);
+  const [editGoal, setEditGoal] = useState(goal?.weeklyGoal || 1);
 
-  const handleSaveGoal = () => {
-    setGoal(editGoal);
+  const handleSaveGoal = async () => {
+    await updateGoal(editGoal);
     setIsEditing(false);
-    toast.success("Application goal updated!");
   };
 
-  const percentage = goal > 0 ? Math.min((appliedCount / goal) * 100, 100) : 0;
+  const currentGoal = goal?.weeklyGoal || 1;
+  const percentage = currentGoal > 0 ? Math.min((appliedCount / currentGoal) * 100, 100) : 0;
   const circumference = 2 * Math.PI * 45;
   const strokeDasharray = circumference;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -53,6 +63,7 @@ export function JobApplicationsChart({ appliedCount }: JobApplicationsChartProps
                   min="1"
                   value={editGoal}
                   onChange={(e) => setEditGoal(parseInt(e.target.value) || 1)}
+                  onFocus={() => setEditGoal(goal?.weeklyGoal || 1)}
                 />
               </div>
               <div className="flex justify-end space-x-2">
@@ -101,7 +112,7 @@ export function JobApplicationsChart({ appliedCount }: JobApplicationsChartProps
           </div>
         </div>
         <Button size="sm" className="bg-primary text-primary-foreground">
-          Goal: {goal}
+          Goal: {currentGoal}
         </Button>
         <p className="text-xs text-center text-muted-foreground max-w-48">
           Make sure to move jobs to "Applied" in your Job Tracker to see your weekly goal progress
