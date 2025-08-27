@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,19 +8,245 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { User, Bell, Shield, CreditCard, Download, Trash2 } from "lucide-react";
+import { useProfile } from "@/hooks/useProfile";
+import { useUserSettings } from "@/hooks/useUserSettings";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export default function Settings() {
-  const [notifications, setNotifications] = useState({
-    email: true,
-    push: false,
-    jobAlerts: true,
-    weeklyDigest: true
+  const { user } = useAuth();
+  const { profile, loading: profileLoading, updateProfile } = useProfile();
+  const { settings, loading: settingsLoading, updateSettings } = useUserSettings();
+  
+  // Form states
+  const [profileForm, setProfileForm] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    location: '',
+    bio: '',
+    timezone: 'America/Los_Angeles'
+  });
+  
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   });
 
-  const handleNotificationChange = (key: string, value: boolean) => {
-    setNotifications(prev => ({ ...prev, [key]: value }));
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isExportingData, setIsExportingData] = useState(false);
+
+  // Update form when profile data loads
+  useEffect(() => {
+    if (profile) {
+      setProfileForm({
+        fullName: profile.fullName,
+        email: profile.email,
+        phone: profile.phone,
+        location: profile.location,
+        bio: profile.bio,
+        timezone: settings?.timezone || 'America/Los_Angeles'
+      });
+    }
+  }, [profile, settings]);
+
+  const handleProfileSave = async () => {
+    await updateProfile({
+      fullName: profileForm.fullName,
+      email: profileForm.email,
+      phone: profileForm.phone,
+      location: profileForm.location,
+      bio: profileForm.bio,
+    });
+    
+    if (settings) {
+      await updateSettings({
+        timezone: profileForm.timezone
+      });
+    }
   };
+
+  const handleNotificationChange = async (key: string, value: boolean) => {
+    if (!settings) return;
+    
+    const updates: any = {};
+    switch (key) {
+      case 'email':
+        updates.emailNotifications = value;
+        break;
+      case 'push':
+        updates.pushNotifications = value;
+        break;
+      case 'jobAlerts':
+        updates.jobAlerts = value;
+        break;
+      case 'weeklyDigest':
+        updates.weeklyDigest = value;
+        break;
+    }
+    
+    await updateSettings(updates);
+  };
+
+  const handlePrivacyChange = async (visibility: 'public' | 'limited' | 'private') => {
+    if (!settings) return;
+    await updateSettings({ profileVisibility: visibility });
+  };
+
+  const handlePasswordChange = async () => {
+    if (!passwordForm.newPassword || !passwordForm.confirmPassword) {
+      toast.error('Please fill in all password fields');
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters long');
+      return;
+    }
+
+    setIsChangingPassword(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: passwordForm.newPassword
+      });
+
+      if (error) {
+        console.error('Error updating password:', error);
+        toast.error('Failed to update password: ' + error.message);
+        return;
+      }
+
+      toast.success('Password updated successfully!');
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (error) {
+      console.error('Error updating password:', error);
+      toast.error('Failed to update password');
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  const handleExportData = async () => {
+    if (!user) {
+      toast.error('You must be logged in to export data');
+      return;
+    }
+
+    setIsExportingData(true);
+
+    try {
+      // Fetch all user data from different tables
+      const [
+        profileData,
+        settingsData,
+        jobsData,
+        contactsData,
+        careerGoalsData,
+        prioritiesData,
+        applicationGoalsData,
+        interviewFeedbackData,
+        resumesData,
+        interviewPracticesData,
+        workStylesData
+      ] = await Promise.all([
+        supabase.from('profiles').select('*').eq('user_id', user.id),
+        supabase.from('user_settings').select('*').eq('user_id', user.id),
+        supabase.from('jobs').select('*').eq('user_id', user.id),
+        supabase.from('contacts').select('*').eq('user_id', user.id),
+        supabase.from('career_goals').select('*').eq('user_id', user.id),
+        supabase.from('priorities').select('*').eq('user_id', user.id),
+        supabase.from('application_goals').select('*').eq('user_id', user.id),
+        supabase.from('interview_feedback').select('*').eq('user_id', user.id),
+        supabase.from('resumes').select('*').eq('user_id', user.id),
+        supabase.from('interview_practices').select('*').eq('user_id', user.id),
+        supabase.from('work_styles').select('*').eq('user_id', user.id)
+      ]);
+
+      // Create export object
+      const exportData = {
+        exportInfo: {
+          exportedAt: new Date().toISOString(),
+          userId: user.id,
+          userEmail: user.email,
+          version: '1.0'
+        },
+        profile: profileData.data || [],
+        settings: settingsData.data || [],
+        jobs: jobsData.data || [],
+        contacts: contactsData.data || [],
+        careerGoals: careerGoalsData.data || [],
+        priorities: prioritiesData.data || [],
+        applicationGoals: applicationGoalsData.data || [],
+        interviewFeedback: interviewFeedbackData.data || [],
+        resumes: resumesData.data || [],
+        interviewPractices: interviewPracticesData.data || [],
+        workStyles: workStylesData.data || [],
+        statistics: {
+          totalJobs: jobsData.data?.length || 0,
+          totalContacts: contactsData.data?.length || 0,
+          totalInterviewFeedback: interviewFeedbackData.data?.length || 0,
+          totalResumes: resumesData.data?.length || 0,
+          totalInterviewPractices: interviewPracticesData.data?.length || 0
+        }
+      };
+
+      // Create and download file
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `trackmate-data-export-${new Date().toISOString().split('T')[0]}.json`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      URL.revokeObjectURL(url);
+
+      toast.success('Data exported successfully! Check your downloads folder.');
+
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      toast.error('Failed to export data. Please try again.');
+    } finally {
+      setIsExportingData(false);
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  if (profileLoading || settingsLoading) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -54,8 +280,10 @@ export default function Settings() {
             <CardContent className="space-y-6">
               <div className="flex items-center space-x-4">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src="/placeholder-avatar.jpg" />
-                  <AvatarFallback>JD</AvatarFallback>
+                  <AvatarImage src={profile?.avatarUrl || "/placeholder-avatar.jpg"} />
+                  <AvatarFallback>
+                    {profile?.fullName ? getInitials(profile.fullName) : user?.email?.[0]?.toUpperCase() || 'U'}
+                  </AvatarFallback>
                 </Avatar>
                 <div>
                   <Button variant="outline">Change Photo</Button>
@@ -65,48 +293,77 @@ export default function Settings() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" defaultValue="John" />
-                </div>
-                <div>
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" defaultValue="Doe" />
-                </div>
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input 
+                  id="fullName" 
+                  value={profileForm.fullName}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, fullName: e.target.value }))}
+                  placeholder="Enter your full name"
+                />
               </div>
 
               <div>
                 <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" defaultValue="john.doe@email.com" />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  value={profileForm.email}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="Enter your email address"
+                />
               </div>
 
               <div>
                 <Label htmlFor="phone">Phone Number</Label>
-                <Input id="phone" defaultValue="+1 (555) 123-4567" />
+                <Input 
+                  id="phone" 
+                  value={profileForm.phone}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="Enter your phone number"
+                />
               </div>
 
               <div>
                 <Label htmlFor="location">Location</Label>
-                <Input id="location" defaultValue="San Francisco, CA" />
+                <Input 
+                  id="location" 
+                  value={profileForm.location}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, location: e.target.value }))}
+                  placeholder="Enter your location"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea 
+                  id="bio" 
+                  value={profileForm.bio}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, bio: e.target.value }))}
+                  placeholder="Tell us about yourself..."
+                  rows={3}
+                />
               </div>
 
               <div>
                 <Label htmlFor="timezone">Timezone</Label>
-                <Select defaultValue="pst">
+                <Select 
+                  value={profileForm.timezone}
+                  onValueChange={(value) => setProfileForm(prev => ({ ...prev, timezone: value }))}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pst">Pacific Time (PST)</SelectItem>
-                    <SelectItem value="mst">Mountain Time (MST)</SelectItem>
-                    <SelectItem value="cst">Central Time (CST)</SelectItem>
-                    <SelectItem value="est">Eastern Time (EST)</SelectItem>
+                    <SelectItem value="America/Los_Angeles">Pacific Time (PST)</SelectItem>
+                    <SelectItem value="America/Denver">Mountain Time (MST)</SelectItem>
+                    <SelectItem value="America/Chicago">Central Time (CST)</SelectItem>
+                    <SelectItem value="America/New_York">Eastern Time (EST)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <Button>Save Changes</Button>
+              <Button onClick={handleProfileSave}>Save Changes</Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -132,7 +389,7 @@ export default function Settings() {
                     </p>
                   </div>
                   <Switch
-                    checked={notifications.email}
+                    checked={settings?.emailNotifications || false}
                     onCheckedChange={(value) => handleNotificationChange('email', value)}
                   />
                 </div>
@@ -145,7 +402,7 @@ export default function Settings() {
                     </p>
                   </div>
                   <Switch
-                    checked={notifications.push}
+                    checked={settings?.pushNotifications || false}
                     onCheckedChange={(value) => handleNotificationChange('push', value)}
                   />
                 </div>
@@ -158,7 +415,7 @@ export default function Settings() {
                     </p>
                   </div>
                   <Switch
-                    checked={notifications.jobAlerts}
+                    checked={settings?.jobAlerts || false}
                     onCheckedChange={(value) => handleNotificationChange('jobAlerts', value)}
                   />
                 </div>
@@ -171,13 +428,15 @@ export default function Settings() {
                     </p>
                   </div>
                   <Switch
-                    checked={notifications.weeklyDigest}
+                    checked={settings?.weeklyDigest || false}
                     onCheckedChange={(value) => handleNotificationChange('weeklyDigest', value)}
                   />
                 </div>
               </div>
 
-              <Button>Save Preferences</Button>
+              <p className="text-sm text-muted-foreground">
+                Notification preferences are saved automatically when changed.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -198,18 +457,47 @@ export default function Settings() {
                 <h4 className="font-medium mb-4">Password</h4>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="currentPassword">Current Password</Label>
-                    <Input id="currentPassword" type="password" />
-                  </div>
-                  <div>
                     <Label htmlFor="newPassword">New Password</Label>
-                    <Input id="newPassword" type="password" />
+                    <Input 
+                      id="newPassword" 
+                      type="password" 
+                      value={passwordForm.newPassword}
+                      onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                      placeholder="Enter new password (minimum 6 characters)"
+                      disabled={isChangingPassword}
+                    />
                   </div>
                   <div>
                     <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                    <Input id="confirmPassword" type="password" />
+                    <Input 
+                      id="confirmPassword" 
+                      type="password" 
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                      placeholder="Confirm new password"
+                      disabled={isChangingPassword}
+                    />
                   </div>
-                  <Button>Update Password</Button>
+                  <div className="flex items-center space-x-4">
+                    <Button 
+                      onClick={handlePasswordChange}
+                      disabled={isChangingPassword || !passwordForm.newPassword || !passwordForm.confirmPassword}
+                    >
+                      {isChangingPassword ? 'Updating...' : 'Update Password'}
+                    </Button>
+                    {passwordForm.newPassword && passwordForm.confirmPassword && (
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })}
+                        disabled={isChangingPassword}
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Password must be at least 6 characters long. You will remain logged in after changing your password.
+                  </p>
                 </div>
               </div>
 
@@ -228,7 +516,10 @@ export default function Settings() {
 
               <div>
                 <h4 className="font-medium mb-4">Profile Visibility</h4>
-                <Select defaultValue="private">
+                <Select 
+                  value={settings?.profileVisibility || 'private'}
+                  onValueChange={(value) => handlePrivacyChange(value as 'public' | 'limited' | 'private')}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -328,12 +619,21 @@ export default function Settings() {
               <div>
                 <h4 className="font-medium mb-4">Export Data</h4>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Download a copy of all your data including job applications, resumes, and settings.
+                  Download a copy of all your data including job applications, contacts, resumes, interview feedback, and settings in JSON format.
                 </p>
-                <Button variant="outline">
+                <Button 
+                  variant="outline" 
+                  onClick={handleExportData}
+                  disabled={isExportingData}
+                >
                   <Download className="h-4 w-4 mr-2" />
-                  Export All Data
+                  {isExportingData ? 'Exporting...' : 'Export All Data'}
                 </Button>
+                {isExportingData && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Gathering your data... This may take a moment.
+                  </p>
+                )}
               </div>
 
               <div>
