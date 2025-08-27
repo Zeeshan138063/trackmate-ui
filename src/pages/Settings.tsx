@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { User, Bell, Shield, CreditCard, Download, Trash2 } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -20,6 +21,16 @@ export default function Settings() {
   const { user } = useAuth();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
   const { settings, loading: settingsLoading, updateSettings } = useUserSettings();
+  const { 
+    subscription, 
+    paymentMethods, 
+    loading: subscriptionLoading, 
+    isCreatingCheckout,
+    createCheckoutSession,
+    isSubscriptionActive,
+    getSubscriptionStatusText,
+    formatPrice
+  } = useSubscription();
   
   // Form states
   const [profileForm, setProfileForm] = useState({
@@ -229,6 +240,13 @@ export default function Settings() {
     }
   };
 
+  const handleUpgradePlan = async (planId: string, interval: 'monthly' | 'yearly') => {
+    const checkoutData = await createCheckoutSession(planId, interval);
+    if (checkoutData?.url) {
+      window.location.href = checkoutData.url;
+    }
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -238,7 +256,7 @@ export default function Settings() {
       .slice(0, 2);
   };
 
-  if (profileLoading || settingsLoading) {
+  if (profileLoading || settingsLoading || subscriptionLoading) {
     return (
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-center py-8">
@@ -546,60 +564,190 @@ export default function Settings() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Current Plan */}
               <div className="p-4 border rounded-lg">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h4 className="font-medium">Current Plan</h4>
-                    <p className="text-sm text-muted-foreground">Pro Plan</p>
+                    <p className="text-sm text-muted-foreground">
+                      {subscription ? subscription.planName : 'Free Plan'}
+                    </p>
                   </div>
-                  <Badge>Active</Badge>
+                  <Badge variant={isSubscriptionActive() ? 'default' : 'secondary'}>
+                    {subscription ? getSubscriptionStatusText() : 'Free'}
+                  </Badge>
                 </div>
-                <div className="space-y-2 text-sm">
+                
+                {subscription ? (
+                  <>
+                    <div className="space-y-2 text-sm mb-4">
+                      <p>• Unlimited job tracking</p>
+                      <p>• Advanced resume builder</p>
+                      <p>• Interview preparation</p>
+                      <p>• Priority support</p>
+                      {subscription.planId === 'premium' && (
+                        <>
+                          <p>• AI-powered insights</p>
+                          <p>• Advanced analytics</p>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-lg font-medium">
+                        {formatPrice(subscription.amount)}/{subscription.intervalType === 'month' ? 'month' : 'year'}
+                      </span>
+                      <div className="space-x-2">
+                        <Button variant="outline" size="sm">
+                          Change Plan
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                    {subscription.cancelAtPeriodEnd && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Your subscription will cancel on {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-2 text-sm mb-4">
+                      <p>• Basic job tracking (up to 10 jobs)</p>
+                      <p>• Basic resume builder</p>
+                      <p>• Community support</p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-lg font-medium">$0/month</span>
+                      <Button 
+                        onClick={() => handleUpgradePlan('pro', 'monthly')}
+                        disabled={isCreatingCheckout}
+                      >
+                        {isCreatingCheckout ? 'Loading...' : 'Upgrade to Pro'}
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Available Plans - Show if no subscription */}
+              {!subscription && (
+                <div>
+                  <h4 className="font-medium mb-4">Available Plans</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Pro Plan */}
+                    <div className="p-4 border rounded-lg">
+                      <div className="mb-4">
+                        <h5 className="font-medium">Pro Plan</h5>
+                        <p className="text-sm text-muted-foreground">Perfect for active job seekers</p>
+                      </div>
+                      <div className="space-y-2 text-sm mb-4">
                   <p>• Unlimited job tracking</p>
                   <p>• Advanced resume builder</p>
                   <p>• Interview preparation</p>
                   <p>• Priority support</p>
                 </div>
-                <div className="flex items-center justify-between mt-4">
-                  <span className="text-lg font-medium">$29.99/month</span>
-                  <Button variant="outline">Change Plan</Button>
+                      <div className="space-y-2">
+                        <Button 
+                          className="w-full" 
+                          onClick={() => handleUpgradePlan('pro', 'monthly')}
+                          disabled={isCreatingCheckout}
+                        >
+                          $29.99/month
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="w-full" 
+                          onClick={() => handleUpgradePlan('pro', 'yearly')}
+                          disabled={isCreatingCheckout}
+                        >
+                          $299.99/year (Save $60)
+                        </Button>
                 </div>
               </div>
 
-              <div>
-                <h4 className="font-medium mb-4">Payment Method</h4>
+                    {/* Premium Plan */}
                 <div className="p-4 border rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-6 bg-blue-500 rounded text-white text-xs flex items-center justify-center">
-                        VISA
+                      <div className="mb-4">
+                        <h5 className="font-medium">Premium Plan</h5>
+                        <p className="text-sm text-muted-foreground">For serious professionals</p>
                       </div>
-                      <span>**** **** **** 4242</span>
+                      <div className="space-y-2 text-sm mb-4">
+                        <p>• Everything in Pro</p>
+                        <p>• AI-powered insights</p>
+                        <p>• Advanced analytics</p>
+                        <p>• 1-on-1 career coaching</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Button 
+                          className="w-full" 
+                          onClick={() => handleUpgradePlan('premium', 'monthly')}
+                          disabled={isCreatingCheckout}
+                        >
+                          $49.99/month
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="w-full" 
+                          onClick={() => handleUpgradePlan('premium', 'yearly')}
+                          disabled={isCreatingCheckout}
+                        >
+                          $499.99/year (Save $100)
+                        </Button>
+                      </div>
                     </div>
-                    <Button variant="outline" size="sm">Update</Button>
                   </div>
                 </div>
-              </div>
+              )}
 
+              {/* Payment Method */}
+              {paymentMethods.length > 0 && (
               <div>
-                <h4 className="font-medium mb-4">Billing History</h4>
+                  <h4 className="font-medium mb-4">Payment Method</h4>
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between p-3 border rounded">
-                    <div>
-                      <p className="font-medium">Pro Plan - December 2024</p>
-                      <p className="text-sm text-muted-foreground">Paid on Dec 1, 2024</p>
+                    {paymentMethods.map((pm) => (
+                      <div key={pm.id} className="p-4 border rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-6 bg-blue-500 rounded text-white text-xs flex items-center justify-center">
+                              {pm.cardBrand?.toUpperCase() || 'CARD'}
+                            </div>
+                            <span>**** **** **** {pm.cardLast4}</span>
+                            {pm.cardExpMonth && pm.cardExpYear && (
+                              <span className="text-sm text-muted-foreground">
+                                {pm.cardExpMonth.toString().padStart(2, '0')}/{pm.cardExpYear}
+                              </span>
+                            )}
+                            {pm.isDefault && <Badge variant="secondary" className="text-xs">Default</Badge>}
+                          </div>
+                          <Button variant="outline" size="sm">Update</Button>
+                        </div>
                     </div>
-                    <span className="font-medium">$29.99</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 border rounded">
-                    <div>
-                      <p className="font-medium">Pro Plan - November 2024</p>
-                      <p className="text-sm text-muted-foreground">Paid on Nov 1, 2024</p>
-                    </div>
-                    <span className="font-medium">$29.99</span>
+                    ))}
                   </div>
                 </div>
-              </div>
+              )}
+
+              {/* Next Billing */}
+              {subscription && isSubscriptionActive() && (
+                <div>
+                  <h4 className="font-medium mb-4">Next Billing</h4>
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex items-center justify-between">
+                    <div>
+                        <p className="font-medium">
+                          {subscription.planName} - {subscription.intervalType === 'month' ? 'Monthly' : 'Yearly'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Next payment on {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span className="font-medium">{formatPrice(subscription.amount)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
