@@ -22,8 +22,8 @@ export interface Contact {
   personal_website?: string;
   
   // Relationship Context
-  how_we_met?: 'job_application' | 'networking_event' | 'referral' | 'linkedin' | 'conference' | 'other';
-  relationship_strength: 'cold' | 'warm' | 'strong' | 'advocate';
+  how_we_met?: 'job_application' | 'networking_event' | 'referral' | 'linkedin' | 'twitter' | 'github' | 'personal_website' | 'conference' | 'cold_outreach' | 'other';
+  relationship_strength: 'cold' | 'neutral' | 'warm' | 'strong' | 'advocate';
   
   // Communication Tracking
   last_contact_date?: string;

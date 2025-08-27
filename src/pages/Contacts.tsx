@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { ContactCard } from "@/components/ContactCard";
 import { AddContactDialog } from "@/components/AddContactDialog";
+import BulkUploadDialog from "@/components/BulkUploadDialog";
 import EditContactDialog from "@/components/EditContactDialog";
 import { useContacts } from "@/hooks/useContacts";
 import type { Contact, ContactFilters } from "@/types/contact";
@@ -156,7 +157,10 @@ export default function Contacts() {
           <h1 className="text-3xl font-bold">Contacts</h1>
           <p className="text-muted-foreground">Manage your professional relationships</p>
         </div>
-        <AddContactDialog onSubmit={addContact} />
+        <div className="flex items-center gap-2">
+          <BulkUploadDialog onCompleted={() => { /* refresh handled client-side by hooks */ }} />
+          <AddContactDialog onSubmit={addContact} />
+        </div>
       </div>
 
       {/* Stats Cards */}

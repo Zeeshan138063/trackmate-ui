@@ -26,8 +26,8 @@ const formSchema = z.object({
   twitter_url: z.string().url("Invalid Twitter URL").optional().or(z.literal("")),
   github_url: z.string().url("Invalid GitHub URL").optional().or(z.literal("")),
   personal_website: z.string().url("Invalid website URL").optional().or(z.literal("")),
-  how_we_met: z.enum(['job_application', 'networking_event', 'referral', 'linkedin', 'conference', 'other']).optional(),
-  relationship_strength: z.enum(['cold', 'warm', 'strong', 'advocate']),
+  how_we_met: z.enum(['job_application', 'networking_event', 'referral', 'linkedin', 'twitter', 'github', 'personal_website', 'conference', 'cold_outreach', 'other']).optional(),
+  relationship_strength: z.enum(['cold', 'neutral', 'warm', 'strong', 'advocate']),
   last_contact_date: z.string().optional(),
   next_follow_up_date: z.string().optional(),
   communication_frequency: z.enum(['weekly', 'monthly', 'quarterly', 'as_needed']).optional(),
@@ -200,7 +200,11 @@ export default function EditContactDialog({ open, onOpenChange, contact, onSubmi
                           <SelectItem value="networking_event">Networking Event</SelectItem>
                           <SelectItem value="referral">Referral</SelectItem>
                           <SelectItem value="linkedin">LinkedIn</SelectItem>
+                          <SelectItem value="twitter">Twitter</SelectItem>
+                          <SelectItem value="github">GitHub</SelectItem>
+                          <SelectItem value="personal_website">Personal Website</SelectItem>
                           <SelectItem value="conference">Conference</SelectItem>
+                          <SelectItem value="cold_outreach">Cold Outreach</SelectItem>
                           <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
