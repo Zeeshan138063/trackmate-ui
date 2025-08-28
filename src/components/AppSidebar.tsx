@@ -11,7 +11,8 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Users
+  Users,
+  Building2
 } from "lucide-react";
 
 import {
@@ -32,6 +33,7 @@ const navigationItems = [
   { title: "Home", url: "/", icon: Home },
   { title: "Resume Builder", url: "/resume", icon: FileText },
   { title: "Trackers", url: "/trackers", icon: Target },
+  { title: "Dream Companies", url: "/dream-companies", icon: Building2 },
   { title: "Contacts", url: "/contacts", icon: Users },
   { title: "Interview Practice", url: "/interview", icon: MessageSquare },
   { title: "Interview Feedback", url: "/interview-feedback", icon: MessageSquare },

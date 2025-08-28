@@ -9,6 +9,7 @@ import { Layout } from "@/components/Layout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Trackers from "./pages/Trackers";
+import DreamCompanies from "./pages/DreamCompanies";
 import Contacts from "./pages/Contacts";
 import ResumeBuilder from "./pages/ResumeBuilder";
 import ResumeLanding from "./pages/ResumeLanding";
@@ -28,7 +29,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route path="/" element={
@@ -42,6 +43,13 @@ const App = () => (
             <ProtectedRoute>
               <Layout>
                 <Trackers />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/dream-companies" element={
+            <ProtectedRoute>
+              <Layout>
+                <DreamCompanies />
               </Layout>
             </ProtectedRoute>
           } />

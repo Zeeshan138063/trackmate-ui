@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
@@ -39,6 +39,34 @@ export default function Trackers() {
   const [visibleColumns, setVisibleColumns] = useState<ColumnOption[]>(defaultColumns);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [highlightedJobId, setHighlightedJobId] = useState<string | null>(null);
+
+  // Check for highlight parameter in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const highlightId = urlParams.get('highlight');
+    if (highlightId) {
+      setHighlightedJobId(highlightId);
+      // Auto-select the highlighted job
+      setSelectedJobs([highlightId]);
+      
+      // Find the job to show in toast
+      const highlightedJob = jobs.find(job => job.id === highlightId);
+      if (highlightedJob) {
+        toast.info(`Showing job: ${highlightedJob.position} at ${highlightedJob.company}`);
+      }
+      
+      // Clear the highlight after 5 seconds
+      setTimeout(() => {
+        setHighlightedJobId(null);
+      }, 5000);
+      
+      // Remove the parameter from URL
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('highlight');
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [jobs]);
 
   const calculateStats = (): JobStats => {
     return jobs.reduce(
@@ -243,16 +271,17 @@ export default function Trackers() {
         </div>
 
         {/* Job Table */}
-        <JobTable
-          jobs={jobs}
-          selectedJobs={selectedJobs}
-          onSelectJob={handleSelectJob}
-          onSelectAll={handleSelectAll}
-          onUpdateJob={updateJob}
-          onDeleteJob={deleteJob}
-          onEditJob={handleEditJob}
-          visibleColumns={visibleColumns}
-        />
+                    <JobTable
+              jobs={jobs}
+              selectedJobs={selectedJobs}
+              onSelectJob={handleSelectJob}
+              onSelectAll={handleSelectAll}
+              onUpdateJob={updateJob}
+              onDeleteJob={deleteJob}
+              onEditJob={handleEditJob}
+              visibleColumns={visibleColumns}
+              highlightedJobId={highlightedJobId}
+            />
 
         {/* Edit Job Dialog */}
         <EditJobDialog

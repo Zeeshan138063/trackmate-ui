@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,16 @@ export default function Contacts() {
   const [companyFilter, setCompanyFilter] = useState("");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [pendingOnly, setPendingOnly] = useState(false);
+
+  // Handle URL parameters for company filtering
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const companyParam = urlParams.get('company');
+    if (companyParam) {
+      setCompanyFilter(companyParam);
+      setSearchQuery(companyParam); // Also set search to highlight the company
+    }
+  }, []);
 
   // Filter contacts based on search and filters
   const filteredContacts = useMemo(() => {

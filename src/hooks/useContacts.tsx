@@ -441,10 +441,30 @@ export const useContacts = () => {
     }
   }, [user]);
 
+  const createContact = async (contactData: ContactInsert): Promise<boolean> => {
+    // Clean up empty strings and convert them to null/undefined for database
+    const cleanedData = {
+      ...contactData,
+      email: contactData.email && contactData.email.trim() !== '' ? contactData.email : null,
+      phone: contactData.phone && contactData.phone.trim() !== '' ? contactData.phone : null,
+      department: contactData.department && contactData.department.trim() !== '' ? contactData.department : null,
+      linkedin_url: contactData.linkedin_url && contactData.linkedin_url.trim() !== '' ? contactData.linkedin_url : null,
+      twitter_url: contactData.twitter_url && contactData.twitter_url.trim() !== '' ? contactData.twitter_url : null,
+      github_url: contactData.github_url && contactData.github_url.trim() !== '' ? contactData.github_url : null,
+      personal_website: contactData.personal_website && contactData.personal_website.trim() !== '' ? contactData.personal_website : null,
+      last_contact_date: contactData.last_contact_date && contactData.last_contact_date.trim() !== '' ? contactData.last_contact_date : null,
+      next_follow_up_date: contactData.next_follow_up_date && contactData.next_follow_up_date.trim() !== '' ? contactData.next_follow_up_date : null,
+      notes: contactData.notes && contactData.notes.trim() !== '' ? contactData.notes : null,
+    };
+    
+    return addContact(cleanedData);
+  };
+
   return {
     contacts,
     loading,
     addContact,
+    createContact,
     updateContact,
     deleteContact,
     getContactWithDetails,

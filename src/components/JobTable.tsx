@@ -24,6 +24,7 @@ interface JobTableProps {
   onDeleteJob?: (jobId: string) => void;
   onEditJob?: (job: Job) => void;
   visibleColumns: ColumnOption[];
+  highlightedJobId?: string | null;
 }
 
 export function JobTable({ 
@@ -34,7 +35,8 @@ export function JobTable({
   onUpdateJob,
   onDeleteJob,
   onEditJob,
-  visibleColumns
+  visibleColumns,
+  highlightedJobId
 }: JobTableProps) {
   const isAllSelected = jobs.length > 0 && selectedJobs.length === jobs.length;
   const isIndeterminate = selectedJobs.length > 0 && selectedJobs.length < jobs.length;
@@ -135,7 +137,14 @@ export function JobTable({
         </TableHeader>
         <TableBody>
           {jobs.map((job) => (
-            <TableRow key={job.id} className="hover:bg-muted/50">
+            <TableRow 
+              key={job.id} 
+              className={`hover:bg-muted/50 transition-colors ${
+                highlightedJobId === job.id 
+                  ? 'bg-primary/10 border-l-4 border-l-primary animate-pulse' 
+                  : ''
+              }`}
+            >
               <TableCell>
                 <Checkbox
                   checked={selectedJobs.includes(job.id)}

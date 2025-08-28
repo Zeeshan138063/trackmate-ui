@@ -11,6 +11,9 @@ export interface Contact {
   company: string;
   department?: string;
   
+  // Dream Company Integration
+  dream_company_id?: string; // Link to dream companies if applicable
+  
   // Professional Info
   contact_type: 'recruiter' | 'hiring_manager' | 'employee' | 'referral' | 'networking' | 'other';
   seniority_level?: 'junior' | 'mid' | 'senior' | 'director' | 'vp' | 'c_level';
@@ -90,6 +93,7 @@ export interface ContactInsert {
   title: string;
   company: string;
   department?: string;
+  dream_company_id?: string;
   contact_type: Contact['contact_type'];
   seniority_level?: Contact['seniority_level'];
   linkedin_url?: string;
