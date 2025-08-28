@@ -107,6 +107,11 @@ export const ContactCard = ({
             <Badge variant="outline" className={`text-xs ${getContactTypeColor(contact.contact_type)}`}>
               {formatContactType(contact.contact_type)}
             </Badge>
+            {contact.dream_company_id && (
+              <Badge variant="secondary" className="text-xs">
+                Dream Company
+              </Badge>
+            )}
           </div>
           <p className="text-sm text-muted-foreground truncate">
             {(contact.title || "").trim()} {contact.company ? `at ${contact.company}` : ""}
@@ -144,6 +149,11 @@ export const ContactCard = ({
               <div className="flex items-center space-x-1 mt-1">
                 <Building2 className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">{contact.company}</span>
+                {contact.dream_company_id && (
+                  <Badge variant="secondary" className="text-xs px-2 py-0.5 ml-2">
+                    Dream Company
+                  </Badge>
+                )}
                 {contact.department && (
                   <>
                     <span className="text-muted-foreground">•</span>
