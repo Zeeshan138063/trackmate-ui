@@ -60,7 +60,7 @@ TrackMate UI helps users manage their job search, organize applications, track p
 ---
 ## 📂 Project Structure
 
-
+```
 trackmate-ui/
 │── src/
 │   ├── components/
@@ -73,7 +73,7 @@ trackmate-ui/
 │── public/
 │── package.json
 │── README.md
-
+```
 
 ---
 
