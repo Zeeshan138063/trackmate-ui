@@ -582,7 +582,7 @@ class JobExtractor {
             .replace(/Description/gi, '')
             .trim();
           if (cleanText.length > 50) {
-            data.description = cleanText.substring(0, 5000);
+            data.description = cleanText.substring(0, 50000);
             break;
           }
         }
