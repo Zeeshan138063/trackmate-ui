@@ -118,16 +118,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       const trackMateUrl = trackMateUrlInput.value || 'http://localhost:8080/trackers';
 
       // Ensure we're not sending large data - it will be stored in extension storage
+      // Gather data from inputs (allowing user edits)
       const jobDataToSend = {
-        position: currentJobData.position || '',
-        company: currentJobData.company || '',
+        position: document.getElementById('position').value || '',
+        company: document.getElementById('company').value || '',
         jobUrl: currentJobData.jobUrl || tab.url || '',
-        location: currentJobData.location || '',
-        description: currentJobData.description || '', // Will be stored, not in URL
-        minSalary: currentJobData.minSalary || null,
-        maxSalary: currentJobData.maxSalary || null,
-        datePosted: currentJobData.datePosted || null,
-        deadline: currentJobData.deadline || null,
+        location: document.getElementById('location').value || '',
+        description: document.getElementById('description').value || '',
+        minSalary: document.getElementById('minSalary').value ? parseInt(document.getElementById('minSalary').value) : null,
+        maxSalary: document.getElementById('maxSalary').value ? parseInt(document.getElementById('maxSalary').value) : null,
+        datePosted: document.getElementById('datePosted').value || null,
+        deadline: document.getElementById('deadline').value || null,
         status: 'Bookmarked', // Default status
         excitement: 3, // Default excitement
         screenshot: currentScreenshot || null, // Will be stored, not in URL
@@ -170,48 +171,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   }, 500);
 });
 
-// Display job data in popup
+// Display job data in popup inputs
 function displayJobData(data) {
   const jobDataDiv = document.getElementById('jobData');
   jobDataDiv.style.display = 'block';
 
-  const positionEl = document.getElementById('position');
-  const companyEl = document.getElementById('company');
-  const locationEl = document.getElementById('location');
-  const salaryEl = document.getElementById('salary');
-  const descriptionEl = document.getElementById('description');
-
-  positionEl.textContent = data.position || 'Not found';
-  positionEl.className = data.position ? 'value' : 'value empty';
-
-  companyEl.textContent = data.company || 'Not found';
-  companyEl.className = data.company ? 'value' : 'value empty';
-
-  locationEl.textContent = data.location || 'Not found';
-  locationEl.className = data.location ? 'value' : 'value empty';
-
-  let salaryText = 'Not found';
-  if (data.minSalary && data.maxSalary) {
-    salaryText = `$${data.minSalary.toLocaleString()} - $${data.maxSalary.toLocaleString()}`;
-  } else if (data.minSalary) {
-    salaryText = `$${data.minSalary.toLocaleString()}+`;
-  } else if (data.maxSalary) {
-    salaryText = `Up to $${data.maxSalary.toLocaleString()}`;
-  }
-  salaryEl.textContent = salaryText;
-  salaryEl.className = (data.minSalary || data.maxSalary) ? 'value' : 'value empty';
-
-  const datePostedEl = document.getElementById('datePosted');
-  datePostedEl.textContent = data.datePosted || 'Not found';
-  datePostedEl.className = data.datePosted ? 'value' : 'value empty';
-
-  const deadlineEl = document.getElementById('deadline');
-  deadlineEl.textContent = data.deadline || 'Not found';
-  deadlineEl.className = data.deadline ? 'value' : 'value empty';
-
-  const descText = data.description || 'Not found';
-  descriptionEl.textContent = descText;
-  descriptionEl.className = data.description ? 'value' : 'value empty';
+  document.getElementById('position').value = data.position || '';
+  document.getElementById('company').value = data.company || '';
+  document.getElementById('location').value = data.location || '';
+  document.getElementById('minSalary').value = data.minSalary || '';
+  document.getElementById('maxSalary').value = data.maxSalary || '';
+  document.getElementById('datePosted').value = data.datePosted || '';
+  document.getElementById('deadline').value = data.deadline || '';
+  document.getElementById('description').value = data.description || '';
 }
 
 // Display screenshot

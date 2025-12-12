@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -183,7 +184,9 @@
     }
 
     @keyframes spin {
-      to { transform: rotate(360deg); }
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     .settings {
@@ -192,24 +195,31 @@
       border-top: 1px solid #e5e7eb;
     }
 
-    .settings input {
+    /* Input styles */
+    .input-field {
       width: 100%;
       padding: 8px;
-      border: 1px solid #e5e7eb;
+      border: 1px solid #d1d5db;
       border-radius: 6px;
       font-size: 14px;
-      margin-top: 5px;
+      color: #111827;
+      font-family: inherit;
+      transition: border-color 0.2s;
     }
 
-    .settings label {
-      display: block;
-      font-size: 12px;
-      font-weight: 500;
-      color: #6b7280;
-      margin-bottom: 5px;
+    .input-field:focus {
+      outline: none;
+      border-color: #10b981;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+    }
+
+    textarea.input-field {
+      min-height: 80px;
+      resize: vertical;
     }
   </style>
 </head>
+
 <body>
   <div class="header">
     <h1>🎯 TrackMate</h1>
@@ -225,31 +235,37 @@
       <h3>Extracted Job Details</h3>
       <div class="field">
         <label>Job Title</label>
-        <div id="position" class="value empty">Not found</div>
+        <input type="text" id="position" class="input-field" placeholder="Job Title">
       </div>
       <div class="field">
         <label>Company</label>
-        <div id="company" class="value empty">Not found</div>
+        <input type="text" id="company" class="input-field" placeholder="Company Name">
       </div>
       <div class="field">
         <label>Location</label>
-        <div id="location" class="value empty">Not found</div>
+        <input type="text" id="location" class="input-field" placeholder="Location">
       </div>
-      <div class="field">
-        <label>Salary</label>
-        <div id="salary" class="value empty">Not found</div>
+      <div style="display: flex; gap: 10px;">
+        <div class="field" style="flex: 1;">
+          <label>Min Salary</label>
+          <input type="number" id="minSalary" class="input-field" placeholder="0">
+        </div>
+        <div class="field" style="flex: 1;">
+          <label>Max Salary</label>
+          <input type="number" id="maxSalary" class="input-field" placeholder="0">
+        </div>
       </div>
       <div class="field">
         <label>Date Posted</label>
-        <div id="datePosted" class="value empty">Not found</div>
+        <input type="text" id="datePosted" class="input-field" placeholder="YYYY-MM-DD or Text">
       </div>
       <div class="field">
         <label>Deadline</label>
-        <div id="deadline" class="value empty">Not found</div>
+        <input type="text" id="deadline" class="input-field" placeholder="YYYY-MM-DD or Text">
       </div>
       <div class="field">
         <label>Description</label>
-        <div id="description" class="value empty">Not found</div>
+        <textarea id="description" class="input-field" placeholder="Job Description"></textarea>
       </div>
     </div>
 
@@ -274,14 +290,17 @@
 
     <div class="settings">
       <label>TrackMate URL:</label>
-      <input type="text" id="trackMateUrl" placeholder="http://localhost:8080/trackers" value="http://localhost:8080/trackers">
-      <div style="margin-top: 10px; padding: 8px; background: #fef3c7; border-radius: 6px; font-size: 11px; color: #92400e;">
-        ⚠️ <strong>Note:</strong> Make sure you're logged into TrackMate before saving jobs. All jobs are automatically associated with your account.
+      <input type="text" id="trackMateUrl" placeholder="http://localhost:8080/trackers"
+        value="http://localhost:8080/trackers">
+      <div
+        style="margin-top: 10px; padding: 8px; background: #fef3c7; border-radius: 6px; font-size: 11px; color: #92400e;">
+        ⚠️ <strong>Note:</strong> Make sure you're logged into TrackMate before saving jobs. All jobs are automatically
+        associated with your account.
       </div>
     </div>
   </div>
 
   <script src="popup.js"></script>
 </body>
-</html>
 
+</html>
