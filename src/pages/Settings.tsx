@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { User, Bell, Shield, CreditCard, Download, Trash2 } from "lucide-react";
+import { User, Bell, Shield, CreditCard, Download, Trash2, Sparkles } from "lucide-react";
 
 export default function Settings() {
   const [notifications, setNotifications] = useState({
@@ -17,6 +17,19 @@ export default function Settings() {
     jobAlerts: true,
     weeklyDigest: true
   });
+
+  const [apiKey, setApiKey] = useState("");
+
+  useEffect(() => {
+    const storedKey = localStorage.getItem("GEMINI_API_KEY");
+    if (storedKey) setApiKey(storedKey);
+  }, []);
+
+  const handleSaveApiKey = () => {
+    localStorage.setItem("GEMINI_API_KEY", apiKey);
+    // You could facilitate a toast here in a real app
+    alert("API Key Saved!");
+  };
 
   const handleNotificationChange = (key: string, value: boolean) => {
     setNotifications(prev => ({ ...prev, [key]: value }));
@@ -32,9 +45,10 @@ export default function Settings() {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="ai">AI Config</TabsTrigger>
           <TabsTrigger value="privacy">Privacy</TabsTrigger>
           <TabsTrigger value="billing">Billing</TabsTrigger>
           <TabsTrigger value="data">Data</TabsTrigger>
@@ -178,6 +192,39 @@ export default function Settings() {
               </div>
 
               <Button>Save Preferences</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="ai" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Sparkles className="h-5 w-5 mr-2 text-primary" />
+                AI Configuration
+              </CardTitle>
+              <CardDescription>
+                Configure your AI settings to enable Resume Matching and Cover Letter generation.
+                We currently support Google Gemini.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="geminiKey">Gemini API Key</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="geminiKey"
+                    type="password"
+                    placeholder="AIzaSy..."
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                  />
+                  <Button onClick={handleSaveApiKey}>Save Key</Button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Your key is stored locally in your browser. Its free to get one from <a href="https://aistudio.google.com/app/apikey" target="_blank" className="underline text-primary" rel="noreferrer">Google AI Studio</a>.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

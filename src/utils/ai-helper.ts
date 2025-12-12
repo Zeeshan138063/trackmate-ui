@@ -9,44 +9,97 @@ export interface AICoverLetterResult {
     coverLetter: string;
 }
 
-// Simulating AI behavior for now. 
-// In a real implementation, this would call OpenAI or Gemini API.
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+
+const callGemini = async (prompt: string, apiKey: string) => {
+    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            contents: [
+                {
+                    parts: [{ text: prompt }]
+                }
+            ]
+        }),
+    });
+
+    if (!response.ok) {
+        throw new Error(`Gemini API Error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.candidates[0].content.parts[0].text;
+};
+
 export const AIHelper = {
 
     analyzeMatch: async (jobDescription: string, resumeContent: string): Promise<AIMatchResult> => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                // Mock logic to generate a somewhat realistic score based on string length or random
-                // This is just a placeholder simulation
-                const score = Math.floor(Math.random() * (95 - 60 + 1) + 60);
+        const apiKey = localStorage.getItem("GEMINI_API_KEY");
+        if (!apiKey) {
+            throw new Error("Please configure your Gemini API Key in Settings first.");
+        }
 
-                const possibleKeywords = ["React", "TypeScript", "Node.js", "AWS", "GraphQL", "Docker", "Kubernetes", "CI/CD", "Testing", "Agile"];
-                const missing = possibleKeywords.filter(() => Math.random() > 0.7).slice(0, 3);
+        const prompt = `
+      You are an expert ATS (Applicant Tracking System) optimizer.
+      Analyze the following Job Description and Resume.
+      
+      Job Description:
+      ${jobDescription.substring(0, 5000)}
 
-                resolve({
-                    score,
-                    missingKeywords: missing,
-                    explanation: `Your resume matches ${score}% of the job requirements. You have strong coverage in core technologies, but adding the missing keywords could improve your ATS ranking.`
-                });
-            }, 1500);
-        });
+      Resume Content (Summary/Skills/Exp):
+      ${resumeContent.substring(0, 2000)}
+
+      Output a JSON object ONLY with this structure (no markdown):
+      {
+        "score": number (0-100),
+        "missingKeywords": ["string", "string", ...],
+        "explanation": "string (brief explanation)"
+      }
+    `;
+
+        try {
+            const responseText = await callGemini(prompt, apiKey);
+            // Clean up potential markdown code blocks
+            const jsonString = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+            return JSON.parse(jsonString);
+        } catch (error) {
+            console.error("AI Match Error:", error);
+            // Fallback or re-throw
+            throw error;
+        }
     },
 
     generateCoverLetter: async (jobDescription: string, resumeContent: string, jobTitle: string, companyName: string): Promise<AICoverLetterResult> => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const letter = `Dear Hiring Manager at ${companyName},
+        const apiKey = localStorage.getItem("GEMINI_API_KEY");
+        if (!apiKey) {
+            throw new Error("Please configure your Gemini API Key in Settings first.");
+        }
 
-I am writing to express my strong interest in the ${jobTitle} position. With my background in software development and experience with similar technologies, I am confident in my ability to contribute effectively to your team.
+        const prompt = `
+      Write a professional, tailored cover letter for the position of ${jobTitle} at ${companyName}.
+      
+      Job Description:
+      ${jobDescription.substring(0, 5000)}
 
-I was particularly drawn to this role because of [mention something specific from job description if parsed]. My experience aligns well with the requirements for this position.
+      My Resume Details:
+      ${resumeContent.substring(0, 2000)}
 
-Thank you for considering my application. I look forward to the possibility of discussing how my skills and experience can benefit ${companyName}.
+      Instructions:
+      - Keep it concise (under 300 words).
+      - Highlight 2-3 key matches between my resume and the job description.
+      - Use a professional but enthusiastic tone.
+      - Output ONLY the body of the letter (No placeholders like [Your Name], I will add that).
+    `;
 
-Sincerely,
-[Your Name]`;
-                resolve({ coverLetter: letter });
-            }, 2000);
-        });
+        try {
+            const coverLetter = await callGemini(prompt, apiKey);
+            return { coverLetter };
+        } catch (error) {
+            console.error("AI Cover Letter Error:", error);
+            throw error;
+        }
     }
 };
