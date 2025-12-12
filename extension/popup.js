@@ -63,21 +63,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       
+      if (!tab || !tab.id) {
+        setStatus('Error: Could not get active tab', 'error');
+        captureBtn.disabled = false;
+        return;
+      }
+
+      // Use a promise-based approach for better error handling
       chrome.runtime.sendMessage(
         { action: 'captureScreenshot', tabId: tab.id },
         (response) => {
+          // Check for runtime errors first
           if (chrome.runtime.lastError) {
             setStatus('Error: ' + chrome.runtime.lastError.message, 'error');
             captureBtn.disabled = false;
             return;
           }
 
-          if (response && response.success) {
+          // Check response
+          if (!response) {
+            setStatus('Error: No response from background script', 'error');
+            captureBtn.disabled = false;
+            return;
+          }
+
+          if (response.success) {
             currentScreenshot = response.screenshot;
             displayScreenshot(response.screenshot);
             setStatus('Screenshot captured!', 'success');
           } else {
-            setStatus('Failed to capture screenshot', 'error');
+            setStatus('Failed: ' + (response.error || 'Unknown error'), 'error');
           }
           captureBtn.disabled = false;
         }

@@ -5,11 +5,20 @@ let capturedScreenshots = {};
 // Listen for messages from content script and popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'captureScreenshot') {
-    captureScreenshot(sender.tab.id)
+    // Use tabId from request, or fallback to sender.tab.id
+    const tabId = request.tabId || sender.tab?.id;
+    
+    if (!tabId) {
+      sendResponse({ success: false, error: 'No tab ID available' });
+      return true;
+    }
+
+    captureScreenshot(tabId)
       .then(screenshot => {
         sendResponse({ success: true, screenshot });
       })
       .catch(error => {
+        console.error('Screenshot error:', error);
         sendResponse({ success: false, error: error.message });
       });
     return true; // Keep channel open for async response
@@ -44,7 +53,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'sendToTrackMate') {
     // Send job data to TrackMate UI
     const jobData = request.data;
-    const trackMateUrl = request.trackMateUrl || 'http://localhost:5173/trackers';
+    const trackMateUrl = request.trackMateUrl || 'http://localhost:8080/trackers';
     
     // Open TrackMate with job data as URL parameters or in a new tab
     const params = new URLSearchParams({
@@ -71,7 +80,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Capture screenshot of current tab
 async function captureScreenshot(tabId) {
   try {
-    const dataUrl = await chrome.tabs.captureVisibleTab(null, {
+    // Get the window ID for the tab
+    const tab = await chrome.tabs.get(tabId);
+    if (!tab) {
+      throw new Error('Tab not found');
+    }
+    
+    const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, {
       format: 'png',
       quality: 100
     });

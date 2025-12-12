@@ -265,32 +265,156 @@ class JobExtractor {
       datePosted: null,
     };
 
-    // Try common selectors
-    const titleSelectors = ['h1', 'h2', '[class*="title"]', '[class*="job-title"]'];
+    // Try to find job title - more comprehensive selectors
+    const titleSelectors = [
+      'h1[class*="title"]',
+      'h1[class*="job"]',
+      'h1[class*="position"]',
+      'h1[class*="role"]',
+      'h2[class*="title"]',
+      'h2[class*="job"]',
+      'h1',
+      '[class*="job-title"]',
+      '[class*="position-title"]',
+      '[class*="role-title"]',
+      '[id*="job-title"]',
+      '[id*="position"]',
+      'h2',
+      '[data-testid*="title"]',
+      '[data-testid*="job"]'
+    ];
+    
     for (const selector of titleSelectors) {
-      const el = document.querySelector(selector);
-      if (el && el.textContent.trim().length > 5 && el.textContent.trim().length < 100) {
-        data.position = el.textContent.trim();
-        break;
+      const elements = document.querySelectorAll(selector);
+      for (const el of elements) {
+        const text = el.textContent.trim();
+        // Filter out navigation, menu items, etc.
+        if (text && 
+            text.length > 5 && 
+            text.length < 150 &&
+            !text.toLowerCase().includes('menu') &&
+            !text.toLowerCase().includes('navigation') &&
+            !text.toLowerCase().includes('skip')) {
+          data.position = text;
+          break;
+        }
       }
+      if (data.position) break;
     }
 
-    // Try to find company name
-    const companySelectors = ['[class*="company"]', '[class*="employer"]', 'strong', 'b'];
+    // Try to find company name - improved selectors
+    const companySelectors = [
+      '[class*="company"]',
+      '[class*="employer"]',
+      '[class*="organization"]',
+      '[class*="org"]',
+      '[id*="company"]',
+      '[id*="employer"]',
+      '[data-testid*="company"]',
+      'strong',
+      'b',
+      '[class*="brand"]',
+      '[class*="logo"]'
+    ];
+    
     for (const selector of companySelectors) {
+      const elements = document.querySelectorAll(selector);
+      for (const el of elements) {
+        const text = el.textContent.trim();
+        // Filter out common false positives
+        if (text && 
+            text.length > 2 && 
+            text.length < 100 &&
+            !text.toLowerCase().includes('company') &&
+            !text.toLowerCase().includes('about') &&
+            !text.toLowerCase().includes('menu')) {
+          // Check if it's likely a company name (not a label)
+          const parentText = el.parentElement?.textContent || '';
+          if (!parentText.toLowerCase().includes('company name') &&
+              !parentText.toLowerCase().includes('employer:')) {
+            data.company = text;
+            break;
+          }
+        }
+      }
+      if (data.company) break;
+    }
+
+    // Try to find location
+    const locationSelectors = [
+      '[class*="location"]',
+      '[class*="place"]',
+      '[class*="city"]',
+      '[id*="location"]',
+      '[data-testid*="location"]',
+      '[class*="address"]'
+    ];
+    
+    for (const selector of locationSelectors) {
       const el = document.querySelector(selector);
-      if (el && el.textContent.trim().length > 2 && el.textContent.trim().length < 50) {
-        data.company = el.textContent.trim();
-        break;
+      if (el) {
+        const text = el.textContent.trim();
+        if (text && text.length > 2 && text.length < 100) {
+          data.location = text;
+          break;
+        }
       }
     }
 
-    // Description - get main content
-    const descEl = document.querySelector('main') || 
-                   document.querySelector('[class*="description"]') ||
-                   document.querySelector('article');
-    if (descEl) {
-      data.description = descEl.textContent.trim().substring(0, 5000);
+    // Description - get main content with better selectors
+    const descSelectors = [
+      '[class*="description"]',
+      '[class*="details"]',
+      '[class*="content"]',
+      '[class*="about"]',
+      '[id*="description"]',
+      '[id*="details"]',
+      'main',
+      'article',
+      '[role="main"]',
+      '[class*="job-description"]',
+      '[class*="job-details"]'
+    ];
+    
+    for (const selector of descSelectors) {
+      const el = document.querySelector(selector);
+      if (el) {
+        const text = el.textContent.trim();
+        // Make sure it's substantial content
+        if (text && text.length > 50) {
+          // Remove common navigation/header text
+          const cleanText = text
+            .replace(/About the job/gi, '')
+            .replace(/Job description/gi, '')
+            .replace(/Description/gi, '')
+            .trim();
+          if (cleanText.length > 50) {
+            data.description = cleanText.substring(0, 5000);
+            break;
+          }
+        }
+      }
+    }
+
+    // Try to extract salary from page text
+    const pageText = document.body.textContent || '';
+    const salaryPatterns = [
+      /\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*-\s*\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)/,
+      /salary[:\s]+\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*-\s*\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)/i,
+      /(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*-\s*(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*(?:per\s+year|annually|yearly)/i
+    ];
+    
+    for (const pattern of salaryPatterns) {
+      const match = pageText.match(pattern);
+      if (match) {
+        const min = this.parseSalary(match[1]);
+        const max = this.parseSalary(match[2]);
+        if (min && max) {
+          data.minSalary = min;
+          data.maxSalary = max;
+          break;
+        }
+      }
     }
 
     return data;
