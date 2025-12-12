@@ -107,5 +107,19 @@ export const AIHelper = {
             console.error("AI Cover Letter Error:", error);
             throw error;
         }
+    },
+
+    validateConnection: async (): Promise<boolean> => {
+        const apiKey = localStorage.getItem("GEMINI_API_KEY");
+        if (!apiKey) {
+            throw new Error("API Key is missing.");
+        }
+        try {
+            await callGemini("Reply with 'OK' if you can read this.", apiKey);
+            return true;
+        } catch (error) {
+            console.error("Connection Validation Error:", error);
+            throw error;
+        }
     }
 };

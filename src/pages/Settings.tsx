@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { User, Bell, Shield, CreditCard, Download, Trash2, Sparkles } from "lucide-react";
+import { AIHelper } from "@/utils/ai-helper";
 
 export default function Settings() {
   const [notifications, setNotifications] = useState({
@@ -19,16 +20,39 @@ export default function Settings() {
   });
 
   const [apiKey, setApiKey] = useState("");
+  const [modelName, setModelName] = useState("gemini-2.5-flash");
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [testStatus, setTestStatus] = useState<{ success: boolean; message: string } | null>(null);
 
   useEffect(() => {
     const storedKey = localStorage.getItem("GEMINI_API_KEY");
     if (storedKey) setApiKey(storedKey);
+
+    const storedModel = localStorage.getItem("GEMINI_MODEL_NAME");
+    if (storedModel) setModelName(storedModel);
   }, []);
 
   const handleSaveApiKey = () => {
     localStorage.setItem("GEMINI_API_KEY", apiKey);
-    // You could facilitate a toast here in a real app
-    alert("API Key Saved!");
+    localStorage.setItem("GEMINI_MODEL_NAME", modelName);
+    setTestStatus({ success: true, message: "Settings saved! Click 'Test Connection' to verify." });
+  };
+
+  const handleTestConnection = async () => {
+    setTestingConnection(true);
+    setTestStatus(null);
+    try {
+      // Temporarily save to ensure helper uses current values
+      localStorage.setItem("GEMINI_API_KEY", apiKey);
+      localStorage.setItem("GEMINI_MODEL_NAME", modelName);
+
+      await AIHelper.validateConnection();
+      setTestStatus({ success: true, message: "Connection successful! The API Key and Model Name are valid." });
+    } catch (error: any) {
+      setTestStatus({ success: false, message: `Connection failed: ${error.message}` });
+    } finally {
+      setTestingConnection(false);
+    }
   };
 
   const handleNotificationChange = (key: string, value: boolean) => {
@@ -234,7 +258,18 @@ export default function Settings() {
                   </p>
                 </div>
 
-                <Button onClick={handleSaveApiKey}>Save Settings</Button>
+                <div className="flex gap-2">
+                  <Button onClick={handleSaveApiKey}>Save Settings</Button>
+                  <Button variant="outline" onClick={handleTestConnection} disabled={testingConnection}>
+                    {testingConnection ? "Testing..." : "Test Connection"}
+                  </Button>
+                </div>
+
+                {testStatus && (
+                  <div className={`p-3 rounded text-sm ${testStatus.success ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                    {testStatus.message}
+                  </div>
+                )}
 
                 <p className="text-sm text-muted-foreground pt-2">
                   Your key is stored locally in your browser. Get a free key from <a href="https://aistudio.google.com/app/apikey" target="_blank" className="underline text-primary" rel="noreferrer">Google AI Studio</a>.
