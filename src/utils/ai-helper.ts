@@ -10,7 +10,11 @@ export interface AICoverLetterResult {
 }
 
 const callGemini = async (prompt: string, apiKey: string) => {
-    const modelName = localStorage.getItem("GEMINI_MODEL_NAME") || "gemini-1.5-flash"; // Changed default model name to match original
+    let modelName = localStorage.getItem("GEMINI_MODEL_NAME") || "gemini-1.5-flash";
+
+    // Sanitize model name to remove 'models/' prefix if user added it
+    modelName = modelName.replace(/^models\//, '');
+
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
 
     const response = await fetch(`${apiUrl}?key=${apiKey}`, {
