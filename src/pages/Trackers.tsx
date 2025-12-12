@@ -188,243 +188,249 @@ export default function Trackers() {
 
       // If we have a dataId, fetch full data from extension storage
       if (dataId) {
-        const fetchFullData = () => {
-          // Request data from extension via postMessage (bridge script handles it)
+        // Send request immediately and then every 500ms
+        const sendRequest = () => {
           window.postMessage({
             type: 'TRACKMATE_FETCH_JOB_DATA',
             dataId: dataId
           }, window.location.origin);
+        };
 
-          // Listen for response
-          const messageHandler = (event: MessageEvent) => {
-            if (event.data.type === 'TRACKMATE_JOB_DATA_RESPONSE' && event.origin === window.location.origin) {
-              window.removeEventListener('message', messageHandler);
+        sendRequest();
+        const retryInterval = setInterval(sendRequest, 500);
 
-              const fullData = event.data.data;
-              const jobData: Partial<Job> = fullData ? {
-                position: fullData.position || searchParams.get('position') || '',
-                company: fullData.company || searchParams.get('company') || '',
-                jobUrl: fullData.jobUrl || searchParams.get('jobUrl') || undefined,
-                location: fullData.location || searchParams.get('location') || undefined,
-                description: fullData.description || undefined,
-                minSalary: fullData.minSalary || (searchParams.get('minSalary') ? parseInt(searchParams.get('minSalary')!) : undefined),
-                maxSalary: fullData.maxSalary || (searchParams.get('maxSalary') ? parseInt(searchParams.get('maxSalary')!) : undefined),
-                datePosted: fullData.datePosted || searchParams.get('datePosted') || undefined,
-                deadline: fullData.deadline || searchParams.get('deadline') || undefined,
-                status: (fullData.status as Job["status"]) || 'Bookmarked',
-                excitement: fullData.excitement ? Number(fullData.excitement) : 3,
-              } : {
-                position: searchParams.get('position') || '',
-                company: searchParams.get('company') || '',
-                jobUrl: searchParams.get('jobUrl') || undefined,
-                location: searchParams.get('location') || undefined,
-                minSalary: searchParams.get('minSalary') ? parseInt(searchParams.get('minSalary')!) : undefined,
-                maxSalary: searchParams.get('maxSalary') ? parseInt(searchParams.get('maxSalary')!) : undefined,
-                datePosted: searchParams.get('datePosted') || undefined,
-                deadline: searchParams.get('deadline') || undefined,
-                status: (searchParams.get('status') as Job["status"]) || 'Bookmarked',
-                excitement: searchParams.get('excitement') ? parseInt(searchParams.get('excitement')!) : 3,
-              };
-
-              // Validate required fields - if missing, just warn but allow user to fill them
-              if (!jobData.position || !jobData.company) {
-                toast.warning('Some job details could not be extracted. Please fill them in.');
-              }
-
-              setExtensionJobData(jobData);
-              setAddDialogOpen(true);
-              setSearchParams({});
-              toast.success(`Job data received from extension! Ready to add as ${user.email}`);
-            }
-          };
-
-          window.addEventListener('message', messageHandler);
-
-          // Timeout fallback to URL params only
-          setTimeout(() => {
+        // Listen for response
+        const messageHandler = (event: MessageEvent) => {
+          if (event.data.type === 'TRACKMATE_JOB_DATA_RESPONSE' && event.origin === window.location.origin) {
             window.removeEventListener('message', messageHandler);
-            const jobData: Partial<Job> = {
+            clearInterval(retryInterval);
+
+            const fullData = event.data.data;
+            const jobData: Partial<Job> = fullData ? {
+              position: fullData.position || searchParams.get('position') || '',
+              company: fullData.company || searchParams.get('company') || '',
+              jobUrl: fullData.jobUrl || searchParams.get('jobUrl') || undefined,
+              location: fullData.location || searchParams.get('location') || undefined,
+              description: fullData.description || undefined,
+              minSalary: fullData.minSalary || (searchParams.get('minSalary') ? parseInt(searchParams.get('minSalary')!) : undefined),
+              maxSalary: fullData.maxSalary || (searchParams.get('maxSalary') ? parseInt(searchParams.get('maxSalary')!) : undefined),
+              datePosted: fullData.datePosted || searchParams.get('datePosted') || undefined,
+              deadline: fullData.deadline || searchParams.get('deadline') || undefined,
+              status: (fullData.status as Job["status"]) || 'Bookmarked',
+              excitement: fullData.excitement ? Number(fullData.excitement) : 3,
+            } : {
               position: searchParams.get('position') || '',
               company: searchParams.get('company') || '',
               jobUrl: searchParams.get('jobUrl') || undefined,
               location: searchParams.get('location') || undefined,
               minSalary: searchParams.get('minSalary') ? parseInt(searchParams.get('minSalary')!) : undefined,
               maxSalary: searchParams.get('maxSalary') ? parseInt(searchParams.get('maxSalary')!) : undefined,
-              status: (searchParams.get('status') as Job["status"]) || 'Bookmarked',
-              excitement: searchParams.get('excitement') ? parseInt(searchParams.get('excitement')!) : 3,
               datePosted: searchParams.get('datePosted') || undefined,
               deadline: searchParams.get('deadline') || undefined,
+              status: (searchParams.get('status') as Job["status"]) || 'Bookmarked',
+              excitement: searchParams.get('excitement') ? parseInt(searchParams.get('excitement')!) : 3,
             };
 
-            if (jobData.position && jobData.company) {
-              setExtensionJobData(jobData);
-              setAddDialogOpen(true);
-              setSearchParams({});
-              toast.success(`Job data received from extension! Ready to add as ${user.email}`);
+            // Validate required fields - if missing, just warn but allow user to fill them
+            if (!jobData.position || !jobData.company) {
+              toast.warning('Some job details could not be extracted. Please fill them in.');
             }
-          }, 2000);
-        };
 
-        fetchFullData();
-      } else {
-        // Fallback: use URL params only (for backwards compatibility)
-        const jobData: Partial<Job> = {
-          position: searchParams.get('position') || '',
-          company: searchParams.get('company') || '',
-          jobUrl: searchParams.get('jobUrl') || undefined,
-          location: searchParams.get('location') || undefined,
-          minSalary: searchParams.get('minSalary') ? parseInt(searchParams.get('minSalary')!) : undefined,
-          maxSalary: searchParams.get('maxSalary') ? parseInt(searchParams.get('maxSalary')!) : undefined,
-          status: (searchParams.get('status') as Job["status"]) || 'Bookmarked',
-          excitement: searchParams.get('excitement') ? parseInt(searchParams.get('excitement')!) : 3,
-          datePosted: searchParams.get('datePosted') || undefined,
-          deadline: searchParams.get('deadline') || undefined,
-        };
-
-        if (jobData.position || jobData.company || jobData.jobUrl) {
-          if (!jobData.position || !jobData.company) {
-            toast.warning('Some job details could not be extracted. Please fill them in.');
+            setExtensionJobData(jobData);
+            setAddDialogOpen(true);
+            setSearchParams({});
+            toast.success(`Job data received from extension! Ready to add as ${user.email}`);
           }
-          setExtensionJobData(jobData);
-          setAddDialogOpen(true);
-          setSearchParams({});
-          toast.success(`Job data received from extension! Ready to add as ${user.email}`);
+        };
+
+        window.addEventListener('message', messageHandler);
+
+        // Timeout fallback to URL params only
+        setTimeout(() => {
+          window.removeEventListener('message', messageHandler);
+          clearInterval(retryInterval);
+          const jobData: Partial<Job> = {
+            position: searchParams.get('position') || '',
+            company: searchParams.get('company') || '',
+            jobUrl: searchParams.get('jobUrl') || undefined,
+            location: searchParams.get('location') || undefined,
+            minSalary: searchParams.get('minSalary') ? parseInt(searchParams.get('minSalary')!) : undefined,
+            maxSalary: searchParams.get('maxSalary') ? parseInt(searchParams.get('maxSalary')!) : undefined,
+            status: (searchParams.get('status') as Job["status"]) || 'Bookmarked',
+            excitement: searchParams.get('excitement') ? parseInt(searchParams.get('excitement')!) : 3,
+            datePosted: searchParams.get('datePosted') || undefined,
+            deadline: searchParams.get('deadline') || undefined,
+          };
+
+          if (jobData.position || jobData.company || jobData.jobUrl) {
+            setExtensionJobData(jobData);
+            setAddDialogOpen(true);
+            setSearchParams({});
+            toast.warning('Could not fetch full job details (description might be missing). Please fill manually.');
+          }
+        }, 5000); // Increased to 5s fallback
+      };
+
+      fetchFullData();
+    } else {
+      // Fallback: use URL params only (for backwards compatibility)
+      const jobData: Partial<Job> = {
+        position: searchParams.get('position') || '',
+        company: searchParams.get('company') || '',
+        jobUrl: searchParams.get('jobUrl') || undefined,
+        location: searchParams.get('location') || undefined,
+        minSalary: searchParams.get('minSalary') ? parseInt(searchParams.get('minSalary')!) : undefined,
+        maxSalary: searchParams.get('maxSalary') ? parseInt(searchParams.get('maxSalary')!) : undefined,
+        status: (searchParams.get('status') as Job["status"]) || 'Bookmarked',
+        excitement: searchParams.get('excitement') ? parseInt(searchParams.get('excitement')!) : 3,
+        datePosted: searchParams.get('datePosted') || undefined,
+        deadline: searchParams.get('deadline') || undefined,
+      };
+
+      if (jobData.position || jobData.company || jobData.jobUrl) {
+        if (!jobData.position || !jobData.company) {
+          toast.warning('Some job details could not be extracted. Please fill them in.');
         }
+        setExtensionJobData(jobData);
+        setAddDialogOpen(true);
+        setSearchParams({});
+        toast.success(`Job data received from extension! Ready to add as ${user.email}`);
       }
     }
+  }
   }, [searchParams, setSearchParams, isAuthenticated, user, authLoading]);
 
-  const handleAddJobFromExtension = async (job: Omit<Job, "id">) => {
-    if (!user) {
-      toast.error('You must be logged in to add jobs');
-      return;
-    }
-
-    // The addJob function from useJobs already includes user_id: user.id
-    // This ensures the job is associated with the logged-in user
-    await addJob(job);
-    setExtensionJobData(null);
-    setAddDialogOpen(false);
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen">
-        <Header />
-        <div className="p-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-2 text-muted-foreground">Loading jobs...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+const handleAddJobFromExtension = async (job: Omit<Job, "id">) => {
+  if (!user) {
+    toast.error('You must be logged in to add jobs');
+    return;
   }
 
+  // The addJob function from useJobs already includes user_id: user.id
+  // This ensures the job is associated with the logged-in user
+  await addJob(job);
+  setExtensionJobData(null);
+  setAddDialogOpen(false);
+};
+
+if (loading) {
   return (
     <div className="min-h-screen">
       <Header />
-      <div className="p-6 space-y-6">
-        {/* Status Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <StatusCard title="BOOKMARKED" count={stats.bookmarked} />
-          <StatusCard title="APPLYING" count={stats.applying} />
-          <StatusCard title="APPLIED" count={stats.applied} />
-          <StatusCard title="INTERVIEWING" count={stats.interviewing} variant="primary" />
-          <StatusCard title="NEGOTIATING" count={stats.negotiating} />
-          <StatusCard title="ACCEPTED" count={stats.accepted} />
-        </div>
-
-        {/* Table Controls */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-muted-foreground">
-              {selectedJobs.length} selected
-            </span>
-            {selectedJobs.length > 0 && (
-              <Button variant="destructive" size="sm" onClick={handleDeleteSelected}>
-                Delete Selected
-              </Button>
-            )}
-            <div className="flex items-center space-x-2">
-              <span className="text-sm">Group by:</span>
-              <Select defaultValue="none">
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="status">Status</SelectItem>
-                  <SelectItem value="company">Company</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <ColumnsDropdown
-              columns={visibleColumns}
-              onToggleColumn={handleToggleColumn}
-            />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Menu className="h-4 w-4 mr-2" />
-                  Menu
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={handleQuickTour}>
-                  <HelpCircle className="h-4 w-4 mr-2" />
-                  Quick Tour
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleArchivedJobs}>
-                  <Archive className="h-4 w-4 mr-2" />
-                  Archived Jobs
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleExportReport}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Export Report
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDownloadData}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Data
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <AddJobDialog
-              onAddJob={addJob}
-              initialData={extensionJobData}
-              open={addDialogOpen}
-              onOpenChange={setAddDialogOpen}
-            />
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-muted-foreground">Loading jobs...</p>
           </div>
         </div>
-
-        {/* Job Table */}
-        <JobTable
-          jobs={jobs}
-          selectedJobs={selectedJobs}
-          onSelectJob={handleSelectJob}
-          onSelectAll={handleSelectAll}
-          onUpdateJob={updateJob}
-          onDeleteJob={deleteJob}
-          onEditJob={handleEditJob}
-          visibleColumns={visibleColumns}
-        />
-
-        {/* Edit Job Dialog */}
-        <EditJobDialog
-          job={editingJob}
-          open={editDialogOpen}
-          onOpenChange={setEditDialogOpen}
-          onUpdateJob={handleUpdateJob}
-        />
       </div>
     </div>
   );
+}
+
+return (
+  <div className="min-h-screen">
+    <Header />
+    <div className="p-6 space-y-6">
+      {/* Status Overview */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <StatusCard title="BOOKMARKED" count={stats.bookmarked} />
+        <StatusCard title="APPLYING" count={stats.applying} />
+        <StatusCard title="APPLIED" count={stats.applied} />
+        <StatusCard title="INTERVIEWING" count={stats.interviewing} variant="primary" />
+        <StatusCard title="NEGOTIATING" count={stats.negotiating} />
+        <StatusCard title="ACCEPTED" count={stats.accepted} />
+      </div>
+
+      {/* Table Controls */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <span className="text-sm text-muted-foreground">
+            {selectedJobs.length} selected
+          </span>
+          {selectedJobs.length > 0 && (
+            <Button variant="destructive" size="sm" onClick={handleDeleteSelected}>
+              Delete Selected
+            </Button>
+          )}
+          <div className="flex items-center space-x-2">
+            <span className="text-sm">Group by:</span>
+            <Select defaultValue="none">
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="status">Status</SelectItem>
+                <SelectItem value="company">Company</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <ColumnsDropdown
+            columns={visibleColumns}
+            onToggleColumn={handleToggleColumn}
+          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Menu className="h-4 w-4 mr-2" />
+                Menu
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={handleQuickTour}>
+                <HelpCircle className="h-4 w-4 mr-2" />
+                Quick Tour
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleArchivedJobs}>
+                <Archive className="h-4 w-4 mr-2" />
+                Archived Jobs
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleExportReport}>
+                <FileText className="h-4 w-4 mr-2" />
+                Export Report
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleDownloadData}>
+                <Download className="h-4 w-4 mr-2" />
+                Download Data
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <AddJobDialog
+            onAddJob={addJob}
+            initialData={extensionJobData}
+            open={addDialogOpen}
+            onOpenChange={setAddDialogOpen}
+          />
+        </div>
+      </div>
+
+      {/* Job Table */}
+      <JobTable
+        jobs={jobs}
+        selectedJobs={selectedJobs}
+        onSelectJob={handleSelectJob}
+        onSelectAll={handleSelectAll}
+        onUpdateJob={updateJob}
+        onDeleteJob={deleteJob}
+        onEditJob={handleEditJob}
+        visibleColumns={visibleColumns}
+      />
+
+      {/* Edit Job Dialog */}
+      <EditJobDialog
+        job={editingJob}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onUpdateJob={handleUpdateJob}
+      />
+    </div>
+  </div>
+);
 }
