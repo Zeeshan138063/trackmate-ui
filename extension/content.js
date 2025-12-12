@@ -196,7 +196,10 @@ class JobExtractor {
       'h1.job-details-jobs-unified-top-card__job-title',
       'h1[data-test-id="job-title"]',
       '.jobs-details-top-card__job-title',
-      'h1.top-card-layout__title'
+      'h1.top-card-layout__title',
+      '.top-card-layout__title',
+      '.job-details-jobs-unified-top-card__job-title',
+      'h1'
     ];
     for (const selector of titleSelectors) {
       const element = document.querySelector(selector);
@@ -479,8 +482,8 @@ class JobExtractor {
         const text = el.textContent.trim();
         // Filter out navigation, menu items, etc.
         if (text &&
-          text.length > 5 &&
-          text.length < 150 &&
+          text.length > 2 && // Relaxed from 5
+          text.length < 200 && // Relaxed from 150
           !text.toLowerCase().includes('menu') &&
           !text.toLowerCase().includes('navigation') &&
           !text.toLowerCase().includes('skip')) {
