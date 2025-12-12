@@ -209,9 +209,7 @@ function displayJobData(data) {
   deadlineEl.textContent = data.deadline || 'Not found';
   deadlineEl.className = data.deadline ? 'value' : 'value empty';
 
-  const descText = data.description ?
-    (data.description.length > 200 ? data.description.substring(0, 200) + '...' : data.description) :
-    'Not found';
+  const descText = data.description || 'Not found';
   descriptionEl.textContent = descText;
   descriptionEl.className = data.description ? 'value' : 'value empty';
 }
