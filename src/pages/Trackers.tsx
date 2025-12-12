@@ -37,7 +37,7 @@ const defaultColumns: ColumnOption[] = [
 
 export default function Trackers() {
   const { jobs, loading, addJob, updateJob, deleteJob } = useJobs();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
   const [visibleColumns, setVisibleColumns] = useState<ColumnOption[]>(defaultColumns);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
@@ -159,12 +159,30 @@ export default function Trackers() {
   useEffect(() => {
     const action = searchParams.get('action');
     if (action === 'addJob') {
-      // Ensure user is authenticated before processing extension data
+      // Wait for auth to finish loading before processing
+      if (authLoading) {
+        // Auth is still loading, will retry when loading completes
+        return;
+      }
+
+      // Since this page is protected by ProtectedRoute, if we reach here and auth is done loading,
+      // the user should be authenticated. But double-check anyway.
       if (!isAuthenticated || !user) {
-        toast.error('Please log in to add jobs from the extension');
+        console.warn('User not authenticated when processing extension data', { isAuthenticated, user, authLoading });
+        toast.error('Please log in to TrackMate first, then use the extension to add jobs. Redirecting to login...', {
+          duration: 4000
+        });
+        // Redirect to auth page with redirect back to trackers
+        setTimeout(() => {
+          const currentUrl = window.location.pathname + window.location.search;
+          window.location.href = '/auth?redirect=' + encodeURIComponent(currentUrl);
+        }, 2000);
         setSearchParams({});
         return;
       }
+
+      // User is authenticated, proceed with processing extension data
+      console.log('Processing extension job data for user:', user.email);
 
       const dataId = searchParams.get('dataId');
       
@@ -265,7 +283,7 @@ export default function Trackers() {
         }
       }
     }
-  }, [searchParams, setSearchParams, isAuthenticated, user]);
+  }, [searchParams, setSearchParams, isAuthenticated, user, authLoading]);
 
   const handleAddJobFromExtension = async (job: Omit<Job, "id">) => {
     if (!user) {
