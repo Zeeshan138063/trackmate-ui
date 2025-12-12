@@ -16,9 +16,12 @@ export function useJobs() {
     
     setLoading(true);
     try {
+      // Only fetch jobs for the current logged-in user
+      // The user_id is automatically set when adding jobs via addJob()
       const { data, error } = await supabase
         .from('jobs')
         .select('*')
+        .eq('user_id', user.id) // Filter by current user
         .order('created_at', { ascending: false });
 
       if (error) {

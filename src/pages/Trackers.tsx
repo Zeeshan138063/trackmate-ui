@@ -1,5 +1,6 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
@@ -15,6 +16,7 @@ import { AddJobDialog } from "@/components/AddJobDialog";
 import { EditJobDialog } from "@/components/EditJobDialog";
 import { ColumnsDropdown, ColumnOption } from "@/components/ColumnsDropdown";
 import { useJobs } from "@/hooks/useJobs";
+import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/Header";
 import { Menu, Archive, Download, FileText, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -35,10 +37,14 @@ const defaultColumns: ColumnOption[] = [
 
 export default function Trackers() {
   const { jobs, loading, addJob, updateJob, deleteJob } = useJobs();
+  const { user, isAuthenticated } = useAuth();
   const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
   const [visibleColumns, setVisibleColumns] = useState<ColumnOption[]>(defaultColumns);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [extensionJobData, setExtensionJobData] = useState<Partial<Job> | null>(null);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   const calculateStats = (): JobStats => {
     return jobs.reduce(
@@ -149,6 +155,59 @@ export default function Trackers() {
     setEditingJob(null);
   };
 
+  // Handle extension job data from URL parameters
+  useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'addJob') {
+      // Ensure user is authenticated before processing extension data
+      if (!isAuthenticated || !user) {
+        toast.error('Please log in to add jobs from the extension');
+        setSearchParams({});
+        return;
+      }
+
+      const jobData: Partial<Job> = {
+        position: searchParams.get('position') || '',
+        company: searchParams.get('company') || '',
+        jobUrl: searchParams.get('jobUrl') || undefined,
+        location: searchParams.get('location') || undefined,
+        description: searchParams.get('description') || undefined,
+        minSalary: searchParams.get('minSalary') ? parseInt(searchParams.get('minSalary')!) : undefined,
+        maxSalary: searchParams.get('maxSalary') ? parseInt(searchParams.get('maxSalary')!) : undefined,
+        status: 'Bookmarked',
+        excitement: 3,
+      };
+
+      // Validate required fields
+      if (!jobData.position || !jobData.company) {
+        toast.error('Invalid job data: missing required fields');
+        setSearchParams({});
+        return;
+      }
+
+      setExtensionJobData(jobData);
+      setAddDialogOpen(true);
+      
+      // Clean up URL parameters
+      setSearchParams({});
+      
+      toast.success(`Job data received from extension! Ready to add as ${user.email}`);
+    }
+  }, [searchParams, setSearchParams, isAuthenticated, user]);
+
+  const handleAddJobFromExtension = async (job: Omit<Job, "id">) => {
+    if (!user) {
+      toast.error('You must be logged in to add jobs');
+      return;
+    }
+    
+    // The addJob function from useJobs already includes user_id: user.id
+    // This ensures the job is associated with the logged-in user
+    await addJob(job);
+    setExtensionJobData(null);
+    setAddDialogOpen(false);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen">
@@ -238,7 +297,12 @@ export default function Trackers() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <AddJobDialog onAddJob={addJob} />
+            <AddJobDialog 
+              onAddJob={addJob} 
+              initialData={extensionJobData}
+              open={addDialogOpen}
+              onOpenChange={setAddDialogOpen}
+            />
           </div>
         </div>
 

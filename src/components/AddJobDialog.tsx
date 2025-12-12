@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -22,10 +22,15 @@ import { Job } from "@/types/job";
 
 interface AddJobDialogProps {
   onAddJob: (job: Omit<Job, "id">) => void;
+  initialData?: Partial<Job> | null;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function AddJobDialog({ onAddJob }: AddJobDialogProps) {
-  const [open, setOpen] = useState(false);
+export function AddJobDialog({ onAddJob, initialData, open: controlledOpen, onOpenChange }: AddJobDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
   const [formData, setFormData] = useState({
     position: "",
     jobUrl: "",
@@ -40,6 +45,26 @@ export function AddJobDialog({ onAddJob }: AddJobDialogProps) {
     excitement: 3,
   });
   const [showExtensionBanner, setShowExtensionBanner] = useState(true);
+
+  // Populate form when initialData is provided
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        position: initialData.position || "",
+        jobUrl: initialData.jobUrl || "",
+        company: initialData.company || "",
+        location: initialData.location || "",
+        description: initialData.description || "",
+        minSalary: initialData.minSalary?.toString() || "",
+        maxSalary: initialData.maxSalary?.toString() || "",
+        status: initialData.status || "Bookmarked",
+        datePosted: initialData.datePosted || "",
+        deadline: initialData.deadline || "",
+        excitement: initialData.excitement || 3,
+      });
+      setOpen(true);
+    }
+  }, [initialData, setOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
