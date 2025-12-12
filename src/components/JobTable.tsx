@@ -26,10 +26,10 @@ interface JobTableProps {
   visibleColumns: ColumnOption[];
 }
 
-export function JobTable({ 
-  jobs, 
-  selectedJobs, 
-  onSelectJob, 
+export function JobTable({
+  jobs,
+  selectedJobs,
+  onSelectJob,
   onSelectAll,
   onUpdateJob,
   onDeleteJob,
@@ -142,7 +142,20 @@ export function JobTable({
                   onCheckedChange={() => onSelectJob(job.id)}
                 />
               </TableCell>
-              <TableCell className="font-medium">{job.position}</TableCell>
+              <TableCell className="font-medium">
+                {job.jobUrl ? (
+                  <a
+                    href={job.jobUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    {job.position}
+                  </a>
+                ) : (
+                  job.position
+                )}
+              </TableCell>
               <TableCell>{job.company}</TableCell>
               {isColumnVisible('minSalary') && (
                 <TableCell>
