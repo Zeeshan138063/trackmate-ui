@@ -205,13 +205,13 @@ export default function Settings() {
               </CardTitle>
               <CardDescription>
                 Configure your AI settings to enable Resume Matching and Cover Letter generation.
-                We currently support Google Gemini.
+                We currently recommend <strong>gemini-2.5-flash</strong>.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="geminiKey">Gemini API Key</Label>
-                <div className="flex gap-2">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="geminiKey">Gemini API Key</Label>
                   <Input
                     id="geminiKey"
                     type="password"
@@ -219,10 +219,25 @@ export default function Settings() {
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
                   />
-                  <Button onClick={handleSaveApiKey}>Save Key</Button>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Your key is stored locally in your browser. Its free to get one from <a href="https://aistudio.google.com/app/apikey" target="_blank" className="underline text-primary" rel="noreferrer">Google AI Studio</a>.
+
+                <div className="space-y-2">
+                  <Label htmlFor="modelName">Model Name</Label>
+                  <Input
+                    id="modelName"
+                    placeholder="gemini-2.5-flash"
+                    value={modelName}
+                    onChange={(e) => setModelName(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Default: gemini-2.5-flash. You can try 'gemini-1.5-pro' or others if available.
+                  </p>
+                </div>
+
+                <Button onClick={handleSaveApiKey}>Save Settings</Button>
+
+                <p className="text-sm text-muted-foreground pt-2">
+                  Your key is stored locally in your browser. Get a free key from <a href="https://aistudio.google.com/app/apikey" target="_blank" className="underline text-primary" rel="noreferrer">Google AI Studio</a>.
                 </p>
               </div>
             </CardContent>

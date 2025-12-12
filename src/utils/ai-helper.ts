@@ -9,10 +9,11 @@ export interface AICoverLetterResult {
     coverLetter: string;
 }
 
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
-
 const callGemini = async (prompt: string, apiKey: string) => {
-    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+    const modelName = localStorage.getItem("GEMINI_MODEL_NAME") || "gemini-1.5-flash"; // Changed default model name to match original
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
+
+    const response = await fetch(`${apiUrl}?key=${apiKey}`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -27,10 +28,15 @@ const callGemini = async (prompt: string, apiKey: string) => {
     });
 
     if (!response.ok) {
-        throw new Error(`Gemini API Error: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Gemini API Error Details:", errorData);
+        throw new Error(`Gemini API Error: ${response.status} ${response.statusText} - ${errorData.error?.message || ''}`);
     }
 
     const data = await response.json();
+    if (!data.candidates || data.candidates.length === 0) {
+        throw new Error("Gemini API returned no candidates. The model might be overloaded or the prompt blocked.");
+    }
     return data.candidates[0].content.parts[0].text;
 };
 
