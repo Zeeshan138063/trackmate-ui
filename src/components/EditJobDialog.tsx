@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/select";
 import { Job } from "@/types/job";
 
+import { formatDistanceToNow } from "date-fns";
+
 interface EditJobDialogProps {
   job: Job | null;
   open: boolean;
@@ -64,7 +66,7 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob }: EditJobD
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!job) return;
 
     const updatedJob: Job = {
@@ -88,6 +90,15 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob }: EditJobD
     onOpenChange(false);
   };
 
+  const getDomainFromUrl = (url: string) => {
+    try {
+      const hostname = new URL(url).hostname;
+      return hostname.replace('www.', '');
+    } catch {
+      return 'unknown source';
+    }
+  };
+
   if (!job) return null;
 
   return (
@@ -95,6 +106,12 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob }: EditJobD
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Job Application</DialogTitle>
+          {job.dateSaved && (
+            <div className="text-xs text-muted-foreground mt-1">
+              Saved {formatDistanceToNow(new Date(job.dateSaved), { addSuffix: true })}
+              {job.jobUrl && ` on ${getDomainFromUrl(job.jobUrl)}`}
+            </div>
+          )}
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
