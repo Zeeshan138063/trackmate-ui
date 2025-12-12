@@ -201,6 +201,14 @@ function displayJobData(data) {
   salaryEl.textContent = salaryText;
   salaryEl.className = (data.minSalary || data.maxSalary) ? 'value' : 'value empty';
 
+  const datePostedEl = document.getElementById('datePosted');
+  datePostedEl.textContent = data.datePosted || 'Not found';
+  datePostedEl.className = data.datePosted ? 'value' : 'value empty';
+
+  const deadlineEl = document.getElementById('deadline');
+  deadlineEl.textContent = data.deadline || 'Not found';
+  deadlineEl.className = data.deadline ? 'value' : 'value empty';
+
   const descText = data.description ?
     (data.description.length > 200 ? data.description.substring(0, 200) + '...' : data.description) :
     'Not found';

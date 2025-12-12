@@ -67,7 +67,16 @@ class JobExtractor {
     if (metaData && metaData.position) {
       // Merge with site-specific extraction
       const siteData = this.extractFromSite(hostname);
-      return { ...metaData, ...siteData };
+      // Smart merge: only overwrite if siteData returns non-empty values
+      const merged = { ...metaData };
+      if (siteData) {
+        for (const [key, value] of Object.entries(siteData)) {
+          if (value && value !== '' && value !== null) {
+            merged[key] = value;
+          }
+        }
+      }
+      return merged;
     }
 
     // Finally, use site-specific DOM extraction

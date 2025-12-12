@@ -226,11 +226,9 @@ export default function Trackers() {
                 excitement: searchParams.get('excitement') ? parseInt(searchParams.get('excitement')!) : 3,
               };
 
-              // Validate required fields
+              // Validate required fields - if missing, just warn but allow user to fill them
               if (!jobData.position || !jobData.company) {
-                toast.error('Invalid job data: missing required fields');
-                setSearchParams({});
-                return;
+                toast.warning('Some job details could not be extracted. Please fill them in.');
               }
 
               setExtensionJobData(jobData);
@@ -283,7 +281,10 @@ export default function Trackers() {
           deadline: searchParams.get('deadline') || undefined,
         };
 
-        if (jobData.position && jobData.company) {
+        if (jobData.position || jobData.company || jobData.jobUrl) {
+          if (!jobData.position || !jobData.company) {
+            toast.warning('Some job details could not be extracted. Please fill them in.');
+          }
           setExtensionJobData(jobData);
           setAddDialogOpen(true);
           setSearchParams({});
