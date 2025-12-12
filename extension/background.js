@@ -61,17 +61,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // Store full job data in extension storage (handles large descriptions/screenshots)
     chrome.storage.local.set({ [jobDataId]: jobData }, () => {
       // Only pass essential, small fields via URL to avoid 431 error
+      // Truncate all fields to ensure URL stays under limit
       const params = new URLSearchParams({
         action: 'addJob',
         dataId: jobDataId, // Reference to stored data
         position: (jobData.position || '').substring(0, 100), // Truncate for URL safety
         company: (jobData.company || '').substring(0, 100),
-        jobUrl: jobData.jobUrl || '',
+        jobUrl: (jobData.jobUrl || '').substring(0, 200), // Truncate URL if too long
         location: (jobData.location || '').substring(0, 100),
-        minSalary: jobData.minSalary || '',
-        maxSalary: jobData.maxSalary || ''
-        // Description and screenshot are in storage, not URL
+        minSalary: jobData.minSalary ? String(jobData.minSalary) : '',
+        maxSalary: jobData.maxSalary ? String(jobData.maxSalary) : ''
+        // Description and screenshot are in storage, not URL - NEVER include them
       });
+
+      // Ensure total URL length is reasonable (max ~2000 chars to be safe)
+      const fullUrl = `${trackMateUrl}?${params.toString()}`;
+      if (fullUrl.length > 2000) {
+        console.warn('URL too long, truncating further');
+        // Further truncate if needed
+        params.set('position', (jobData.position || '').substring(0, 50));
+        params.set('company', (jobData.company || '').substring(0, 50));
+        params.set('jobUrl', (jobData.jobUrl || '').substring(0, 100));
+        params.set('location', (jobData.location || '').substring(0, 50));
+      }
 
       chrome.tabs.create({
         url: `${trackMateUrl}?${params.toString()}`

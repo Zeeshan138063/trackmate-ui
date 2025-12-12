@@ -115,12 +115,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      const trackMateUrl = trackMateUrlInput.value || 'http://localhost:5173/trackers';
+      const trackMateUrl = trackMateUrlInput.value || 'http://localhost:8080/trackers';
 
+      // Ensure we're not sending large data - it will be stored in extension storage
       const jobDataToSend = {
-        ...currentJobData,
-        screenshot: currentScreenshot,
-        url: tab.url
+        position: currentJobData.position || '',
+        company: currentJobData.company || '',
+        jobUrl: currentJobData.jobUrl || tab.url || '',
+        location: currentJobData.location || '',
+        description: currentJobData.description || '', // Will be stored, not in URL
+        minSalary: currentJobData.minSalary || null,
+        maxSalary: currentJobData.maxSalary || null,
+        screenshot: currentScreenshot || null, // Will be stored, not in URL
+        url: tab.url || ''
       };
 
       chrome.runtime.sendMessage(
