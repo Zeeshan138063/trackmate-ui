@@ -34,6 +34,11 @@ const callGemini = async (prompt: string, apiKey: string) => {
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("Gemini API Error Details:", errorData);
+
+        if (response.status === 429) {
+            throw new Error("Gemini API Rate Limit Exceeded. You are likely on the free tier. Please wait a minute and try again.");
+        }
+
         throw new Error(`Gemini API Error: ${response.status} ${response.statusText} - ${errorData.error?.message || ''}`);
     }
 
