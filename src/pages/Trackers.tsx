@@ -199,11 +199,15 @@ export default function Trackers() {
         sendRequest();
         const retryInterval = setInterval(sendRequest, 500);
 
+        // Define timeout ID variable so we can clear it
+        let fallbackTimeoutId: NodeJS.Timeout;
+
         // Listen for response
         const messageHandler = (event: MessageEvent) => {
           if (event.data.type === 'TRACKMATE_JOB_DATA_RESPONSE' && event.origin === window.location.origin) {
             window.removeEventListener('message', messageHandler);
             clearInterval(retryInterval);
+            clearTimeout(fallbackTimeoutId); // stop fallback from running
 
             const fullData = event.data.data;
             const jobData: Partial<Job> = fullData ? {
@@ -246,9 +250,10 @@ export default function Trackers() {
         window.addEventListener('message', messageHandler);
 
         // Timeout fallback to URL params only
-        setTimeout(() => {
+        fallbackTimeoutId = setTimeout(() => {
           window.removeEventListener('message', messageHandler);
           clearInterval(retryInterval);
+
           const jobData: Partial<Job> = {
             position: searchParams.get('position') || '',
             company: searchParams.get('company') || '',
