@@ -7,7 +7,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'captureScreenshot') {
     // Use tabId from request, or fallback to sender.tab.id
     const tabId = request.tabId || sender.tab?.id;
-    
+
     if (!tabId) {
       sendResponse({ success: false, error: 'No tab ID available' });
       return true;
@@ -54,10 +54,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // Send job data to TrackMate UI
     const jobData = request.data;
     const trackMateUrl = request.trackMateUrl || 'http://localhost:8080/trackers';
-    
+
     // Generate a unique ID for this job data
     const jobDataId = 'trackmate_job_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    
+
     // Store full job data in extension storage (handles large descriptions/screenshots)
     chrome.storage.local.set({ [jobDataId]: jobData }, () => {
       // Only pass essential, small fields via URL to avoid 431 error
@@ -70,7 +70,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         jobUrl: (jobData.jobUrl || '').substring(0, 200), // Truncate URL if too long
         location: (jobData.location || '').substring(0, 100),
         minSalary: jobData.minSalary ? String(jobData.minSalary) : '',
-        maxSalary: jobData.maxSalary ? String(jobData.maxSalary) : ''
+        maxSalary: jobData.maxSalary ? String(jobData.maxSalary) : '',
+        datePosted: (jobData.datePosted || '').substring(0, 50),
+        deadline: (jobData.deadline || '').substring(0, 50),
+        status: jobData.status || 'Bookmarked',
+        excitement: jobData.excitement ? String(jobData.excitement) : '3'
         // Description and screenshot are in storage, not URL - NEVER include them
       });
 
@@ -127,7 +131,7 @@ async function captureScreenshot(tabId) {
     if (!tab) {
       throw new Error('Tab not found');
     }
-    
+
     const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, {
       format: 'png',
       quality: 100
@@ -149,7 +153,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       'lever.co',
       'greenhouse.io'
     ];
-    
+
     if (jobSites.some(site => tab.url.includes(site))) {
       // Notify that we're on a job page
       chrome.action.setBadgeText({ text: 'J', tabId });

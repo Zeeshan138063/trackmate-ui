@@ -9,7 +9,7 @@ class JobExtractor {
   // Clean HTML to markdown-like text
   cleanHtmlToMarkdown(element) {
     if (!element) return '';
-    
+
     // Clone to avoid modifying the actual page
     const clone = element.cloneNode(true);
 
@@ -91,28 +91,29 @@ class JobExtractor {
     for (const script of jsonLdScripts) {
       try {
         const jsonData = JSON.parse(script.textContent);
-        const job = Array.isArray(jsonData) 
-          ? jsonData.find(item => item['@type'] === 'JobPosting') 
+        const job = Array.isArray(jsonData)
+          ? jsonData.find(item => item['@type'] === 'JobPosting')
           : (jsonData['@type'] === 'JobPosting' ? jsonData : null);
 
         if (job) {
           data.position = job.title || '';
           data.company = job.hiringOrganization?.name || '';
-          data.location = job.jobLocation?.address?.addressLocality || 
-                         job.jobLocation?.address?.addressRegion || 
-                         job.jobLocation?.address?.addressCountry || '';
+          data.location = job.jobLocation?.address?.addressLocality ||
+            job.jobLocation?.address?.addressRegion ||
+            job.jobLocation?.address?.addressCountry || '';
           data.description = job.description || '';
           data.minSalary = job.baseSalary?.value?.minValue || null;
           data.maxSalary = job.baseSalary?.value?.maxValue || null;
           data.datePosted = job.datePosted || null;
-          
+          data.deadline = job.validThrough || null;
+
           // Clean HTML from description if present
           if (data.description && data.description.includes('<')) {
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = data.description;
             data.description = this.cleanHtmlToMarkdown(tempDiv);
           }
-          
+
           return data;
         }
       } catch (e) {
@@ -133,14 +134,15 @@ class JobExtractor {
       minSalary: null,
       maxSalary: null,
       datePosted: null,
+      deadline: null,
     };
 
-    data.position = document.querySelector('meta[property="og:title"]')?.content || 
-                    document.querySelector('meta[name="twitter:title"]')?.content ||
-                    document.title || '';
+    data.position = document.querySelector('meta[property="og:title"]')?.content ||
+      document.querySelector('meta[name="twitter:title"]')?.content ||
+      document.title || '';
     data.company = document.querySelector('meta[property="og:site_name"]')?.content || '';
     data.description = document.querySelector('meta[property="og:description"]')?.content ||
-                      document.querySelector('meta[name="description"]')?.content || '';
+      document.querySelector('meta[name="description"]')?.content || '';
 
     return data;
   }
@@ -148,7 +150,7 @@ class JobExtractor {
   // Extract from site-specific DOM
   extractFromSite(hostname) {
     let siteData = null;
-    
+
     if (hostname.includes('linkedin.com')) {
       siteData = this.extractLinkedIn();
     } else if (hostname.includes('indeed.com')) {
@@ -162,7 +164,7 @@ class JobExtractor {
     } else {
       siteData = this.extractGeneric();
     }
-    
+
     return siteData;
   }
 
@@ -177,6 +179,7 @@ class JobExtractor {
       minSalary: null,
       maxSalary: null,
       datePosted: null,
+      deadline: null,
     };
 
     // Job Title
@@ -231,11 +234,11 @@ class JobExtractor {
         break;
       }
     }
-    
+
     // Alternative: Try specific location element
     if (!data.location) {
       const locationEl = document.querySelector('.job-details-jobs-unified-top-card__primary-description span:first-child') ||
-                        document.querySelector('.topcard-layout__first-sub-title span:last-child');
+        document.querySelector('.topcard-layout__first-sub-title span:last-child');
       if (locationEl) {
         data.location = locationEl.textContent.trim();
       }
@@ -273,7 +276,7 @@ class JobExtractor {
         }
       }
     }
-    
+
     // Fallback: search entire page text
     if (!data.minSalary && !data.maxSalary) {
       const salaryText = document.body.textContent;
@@ -302,32 +305,33 @@ class JobExtractor {
       minSalary: null,
       maxSalary: null,
       datePosted: null,
+      deadline: null,
     };
 
     // Job Title
-    const titleEl = document.querySelector('h2[data-testid="job-title"]') || 
-                    document.querySelector('.jobsearch-JobInfoHeader-title');
+    const titleEl = document.querySelector('h2[data-testid="job-title"]') ||
+      document.querySelector('.jobsearch-JobInfoHeader-title');
     if (titleEl) {
       data.position = titleEl.textContent.trim();
     }
 
     // Company
     const companyEl = document.querySelector('[data-testid="inlineHeader-companyName"]') ||
-                      document.querySelector('.jobsearch-InlineCompanyRating');
+      document.querySelector('.jobsearch-InlineCompanyRating');
     if (companyEl) {
       data.company = companyEl.textContent.trim();
     }
 
     // Location
     const locationEl = document.querySelector('[data-testid="job-location"]') ||
-                       document.querySelector('.jobsearch-JobInfoHeader-subtitle');
+      document.querySelector('.jobsearch-JobInfoHeader-subtitle');
     if (locationEl) {
       data.location = locationEl.textContent.trim();
     }
 
     // Description - use cleanHtmlToMarkdown
     const descEl = document.querySelector('#jobDescriptionText') ||
-                   document.querySelector('.jobsearch-jobDescriptionText');
+      document.querySelector('.jobsearch-jobDescriptionText');
     if (descEl) {
       data.description = this.cleanHtmlToMarkdown(descEl);
     }
@@ -357,6 +361,7 @@ class JobExtractor {
       minSalary: null,
       maxSalary: null,
       datePosted: null,
+      deadline: null,
     };
 
     const titleEl = document.querySelector('.JobDetails_jobTitle__');
@@ -385,6 +390,7 @@ class JobExtractor {
       minSalary: null,
       maxSalary: null,
       datePosted: null,
+      deadline: null,
     };
 
     const titleEl = document.querySelector('.posting-headline h2');
@@ -410,6 +416,7 @@ class JobExtractor {
       minSalary: null,
       maxSalary: null,
       datePosted: null,
+      deadline: null,
     };
 
     const titleEl = document.querySelector('.app-title');
@@ -435,6 +442,7 @@ class JobExtractor {
       minSalary: null,
       maxSalary: null,
       datePosted: null,
+      deadline: null,
     };
 
     // Try to find job title - more comprehensive selectors
@@ -455,18 +463,18 @@ class JobExtractor {
       '[data-testid*="title"]',
       '[data-testid*="job"]'
     ];
-    
+
     for (const selector of titleSelectors) {
       const elements = document.querySelectorAll(selector);
       for (const el of elements) {
         const text = el.textContent.trim();
         // Filter out navigation, menu items, etc.
-        if (text && 
-            text.length > 5 && 
-            text.length < 150 &&
-            !text.toLowerCase().includes('menu') &&
-            !text.toLowerCase().includes('navigation') &&
-            !text.toLowerCase().includes('skip')) {
+        if (text &&
+          text.length > 5 &&
+          text.length < 150 &&
+          !text.toLowerCase().includes('menu') &&
+          !text.toLowerCase().includes('navigation') &&
+          !text.toLowerCase().includes('skip')) {
           data.position = text;
           break;
         }
@@ -488,22 +496,22 @@ class JobExtractor {
       '[class*="brand"]',
       '[class*="logo"]'
     ];
-    
+
     for (const selector of companySelectors) {
       const elements = document.querySelectorAll(selector);
       for (const el of elements) {
         const text = el.textContent.trim();
         // Filter out common false positives
-        if (text && 
-            text.length > 2 && 
-            text.length < 100 &&
-            !text.toLowerCase().includes('company') &&
-            !text.toLowerCase().includes('about') &&
-            !text.toLowerCase().includes('menu')) {
+        if (text &&
+          text.length > 2 &&
+          text.length < 100 &&
+          !text.toLowerCase().includes('company') &&
+          !text.toLowerCase().includes('about') &&
+          !text.toLowerCase().includes('menu')) {
           // Check if it's likely a company name (not a label)
           const parentText = el.parentElement?.textContent || '';
           if (!parentText.toLowerCase().includes('company name') &&
-              !parentText.toLowerCase().includes('employer:')) {
+            !parentText.toLowerCase().includes('employer:')) {
             data.company = text;
             break;
           }
@@ -521,7 +529,7 @@ class JobExtractor {
       '[data-testid*="location"]',
       '[class*="address"]'
     ];
-    
+
     for (const selector of locationSelectors) {
       const el = document.querySelector(selector);
       if (el) {
@@ -547,7 +555,7 @@ class JobExtractor {
       '[class*="job-description"]',
       '[class*="job-details"]'
     ];
-    
+
     for (const selector of descSelectors) {
       const el = document.querySelector(selector);
       if (el) {
@@ -576,7 +584,7 @@ class JobExtractor {
       /salary[:\s]+\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*-\s*\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)/i,
       /(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*-\s*(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*(?:per\s+year|annually|yearly)/i
     ];
-    
+
     for (const pattern of salaryPatterns) {
       const match = pageText.match(pattern);
       if (match) {
@@ -624,7 +632,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ success: true, data: jobData });
     return true;
   }
-  
+
   if (request.action === 'captureScreenshot') {
     // Screenshot will be handled by background script
     sendResponse({ success: true });

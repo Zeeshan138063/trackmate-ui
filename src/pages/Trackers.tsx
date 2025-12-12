@@ -3,12 +3,12 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { StatusCard } from "@/components/StatusCard";
 import { JobTable } from "@/components/JobTable";
@@ -97,8 +97,8 @@ export default function Trackers() {
   };
 
   const handleToggleColumn = (columnId: string) => {
-    setVisibleColumns(prev => 
-      prev.map(col => 
+    setVisibleColumns(prev =>
+      prev.map(col =>
         col.id === columnId ? { ...col, checked: !col.checked } : col
       )
     );
@@ -113,12 +113,12 @@ export default function Trackers() {
   };
 
   const handleExportReport = () => {
-    const csvContent = "data:text/csv;charset=utf-8," + 
+    const csvContent = "data:text/csv;charset=utf-8," +
       "Job Title,Company,Location,Status,Date Applied,Deadline,Salary Min,Salary Max,Excitement\n" +
-      jobs.map(job => 
+      jobs.map(job =>
         `"${job.position}","${job.company}","${job.location}","${job.status}","${job.dateApplied || 'N/A'}","${job.deadline || 'N/A'}","${job.minSalary || 'N/A'}","${job.maxSalary || 'N/A'}","${job.excitement}"`
       ).join("\n");
-    
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -126,7 +126,7 @@ export default function Trackers() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     toast.success("Report exported successfully!");
   };
 
@@ -141,7 +141,7 @@ export default function Trackers() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    
+
     toast.success("Data downloaded successfully!");
   };
 
@@ -185,7 +185,7 @@ export default function Trackers() {
       console.log('Processing extension job data for user:', user.email);
 
       const dataId = searchParams.get('dataId');
-      
+
       // If we have a dataId, fetch full data from extension storage
       if (dataId) {
         const fetchFullData = () => {
@@ -199,7 +199,7 @@ export default function Trackers() {
           const messageHandler = (event: MessageEvent) => {
             if (event.data.type === 'TRACKMATE_JOB_DATA_RESPONSE' && event.origin === window.location.origin) {
               window.removeEventListener('message', messageHandler);
-              
+
               const fullData = event.data.data;
               const jobData: Partial<Job> = fullData ? {
                 position: fullData.position || searchParams.get('position') || '',
@@ -209,8 +209,10 @@ export default function Trackers() {
                 description: fullData.description || undefined,
                 minSalary: fullData.minSalary || (searchParams.get('minSalary') ? parseInt(searchParams.get('minSalary')!) : undefined),
                 maxSalary: fullData.maxSalary || (searchParams.get('maxSalary') ? parseInt(searchParams.get('maxSalary')!) : undefined),
-                status: 'Bookmarked',
-                excitement: 3,
+                datePosted: fullData.datePosted || searchParams.get('datePosted') || undefined,
+                deadline: fullData.deadline || searchParams.get('deadline') || undefined,
+                status: (fullData.status as Job["status"]) || 'Bookmarked',
+                excitement: fullData.excitement ? Number(fullData.excitement) : 3,
               } : {
                 position: searchParams.get('position') || '',
                 company: searchParams.get('company') || '',
@@ -218,8 +220,10 @@ export default function Trackers() {
                 location: searchParams.get('location') || undefined,
                 minSalary: searchParams.get('minSalary') ? parseInt(searchParams.get('minSalary')!) : undefined,
                 maxSalary: searchParams.get('maxSalary') ? parseInt(searchParams.get('maxSalary')!) : undefined,
-                status: 'Bookmarked',
-                excitement: 3,
+                datePosted: searchParams.get('datePosted') || undefined,
+                deadline: searchParams.get('deadline') || undefined,
+                status: (searchParams.get('status') as Job["status"]) || 'Bookmarked',
+                excitement: searchParams.get('excitement') ? parseInt(searchParams.get('excitement')!) : 3,
               };
 
               // Validate required fields
@@ -237,7 +241,7 @@ export default function Trackers() {
           };
 
           window.addEventListener('message', messageHandler);
-          
+
           // Timeout fallback to URL params only
           setTimeout(() => {
             window.removeEventListener('message', messageHandler);
@@ -248,8 +252,10 @@ export default function Trackers() {
               location: searchParams.get('location') || undefined,
               minSalary: searchParams.get('minSalary') ? parseInt(searchParams.get('minSalary')!) : undefined,
               maxSalary: searchParams.get('maxSalary') ? parseInt(searchParams.get('maxSalary')!) : undefined,
-              status: 'Bookmarked',
-              excitement: 3,
+              status: (searchParams.get('status') as Job["status"]) || 'Bookmarked',
+              excitement: searchParams.get('excitement') ? parseInt(searchParams.get('excitement')!) : 3,
+              datePosted: searchParams.get('datePosted') || undefined,
+              deadline: searchParams.get('deadline') || undefined,
             };
 
             if (jobData.position && jobData.company) {
@@ -271,8 +277,10 @@ export default function Trackers() {
           location: searchParams.get('location') || undefined,
           minSalary: searchParams.get('minSalary') ? parseInt(searchParams.get('minSalary')!) : undefined,
           maxSalary: searchParams.get('maxSalary') ? parseInt(searchParams.get('maxSalary')!) : undefined,
-          status: 'Bookmarked',
-          excitement: 3,
+          status: (searchParams.get('status') as Job["status"]) || 'Bookmarked',
+          excitement: searchParams.get('excitement') ? parseInt(searchParams.get('excitement')!) : 3,
+          datePosted: searchParams.get('datePosted') || undefined,
+          deadline: searchParams.get('deadline') || undefined,
         };
 
         if (jobData.position && jobData.company) {
@@ -290,7 +298,7 @@ export default function Trackers() {
       toast.error('You must be logged in to add jobs');
       return;
     }
-    
+
     // The addJob function from useJobs already includes user_id: user.id
     // This ensures the job is associated with the logged-in user
     await addJob(job);
@@ -355,7 +363,7 @@ export default function Trackers() {
           </div>
 
           <div className="flex items-center space-x-2">
-            <ColumnsDropdown 
+            <ColumnsDropdown
               columns={visibleColumns}
               onToggleColumn={handleToggleColumn}
             />
@@ -387,8 +395,8 @@ export default function Trackers() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <AddJobDialog 
-              onAddJob={addJob} 
+            <AddJobDialog
+              onAddJob={addJob}
               initialData={extensionJobData}
               open={addDialogOpen}
               onOpenChange={setAddDialogOpen}

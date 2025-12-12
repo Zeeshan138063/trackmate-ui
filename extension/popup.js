@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      
+
       chrome.tabs.sendMessage(tab.id, { action: 'extractJobData' }, (response) => {
         if (chrome.runtime.lastError) {
           setStatus('Error: ' + chrome.runtime.lastError.message, 'error');
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      
+
       if (!tab || !tab.id) {
         setStatus('Error: Could not get active tab', 'error');
         captureBtn.disabled = false;
@@ -126,6 +126,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         description: currentJobData.description || '', // Will be stored, not in URL
         minSalary: currentJobData.minSalary || null,
         maxSalary: currentJobData.maxSalary || null,
+        datePosted: currentJobData.datePosted || null,
+        deadline: currentJobData.deadline || null,
+        status: 'Bookmarked', // Default status
+        excitement: 3, // Default excitement
         screenshot: currentScreenshot || null, // Will be stored, not in URL
         url: tab.url || ''
       };
@@ -197,7 +201,7 @@ function displayJobData(data) {
   salaryEl.textContent = salaryText;
   salaryEl.className = (data.minSalary || data.maxSalary) ? 'value' : 'value empty';
 
-  const descText = data.description ? 
+  const descText = data.description ?
     (data.description.length > 200 ? data.description.substring(0, 200) + '...' : data.description) :
     'Not found';
   descriptionEl.textContent = descText;
@@ -216,11 +220,11 @@ function displayScreenshot(screenshot) {
 function setStatus(message, type) {
   const statusDiv = document.getElementById('status');
   const statusText = document.getElementById('statusText');
-  
+
   statusDiv.className = `status ${type}`;
   statusText.textContent = message;
   statusDiv.style.display = 'flex';
-  
+
   if (type === 'info') {
     statusText.innerHTML = '<span class="loading"></span> ' + message;
   }
