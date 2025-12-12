@@ -37,26 +37,27 @@
       "run_at": "document_idle"
     },
     {
-      "http://localhost:*/*",
-      "http://127.0.0.1:*/*",
-      "http://*:8080/*",
-      "http://*:8081/*",
-      "http://*:5173/*"
-    ],
-    "js": [
-      "trackmate-bridge.js"
-    ],
-    "run_at": "document_start"
-  }
-],
-"web_accessible_resources": [
-  {
-    "resources": [
-      "popup.html"
-    ],
-    "matches": [
-      "<all_urls>"
-    ]
-  }
-]
+      "matches": [
+        "http://localhost:*/*",
+        "http://127.0.0.1:*/*",
+        "http://*:8080/*",
+        "http://*:8081/*",
+        "http://*:5173/*"
+      ],
+      "js": [
+        "trackmate-bridge.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "popup.html"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
 }
