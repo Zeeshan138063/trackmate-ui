@@ -27,10 +27,21 @@
         "https://www.glassdoor.com/Job/*",
         "https://jobs.lever.co/*",
         "https://boards.greenhouse.io/*",
-        "https://*/*"
+        "https://*/*",
+        "http://localhost:*/*",
+        "http://127.0.0.1:*/*"
       ],
       "js": ["content.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "http://localhost:*/*",
+        "http://127.0.0.1:*/*",
+        "http://*:8080/*"
+      ],
+      "js": ["trackmate-bridge.js"],
+      "run_at": "document_start"
     }
   ],
   "web_accessible_resources": [

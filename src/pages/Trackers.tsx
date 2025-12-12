@@ -166,32 +166,104 @@ export default function Trackers() {
         return;
       }
 
-      const jobData: Partial<Job> = {
-        position: searchParams.get('position') || '',
-        company: searchParams.get('company') || '',
-        jobUrl: searchParams.get('jobUrl') || undefined,
-        location: searchParams.get('location') || undefined,
-        description: searchParams.get('description') || undefined,
-        minSalary: searchParams.get('minSalary') ? parseInt(searchParams.get('minSalary')!) : undefined,
-        maxSalary: searchParams.get('maxSalary') ? parseInt(searchParams.get('maxSalary')!) : undefined,
-        status: 'Bookmarked',
-        excitement: 3,
-      };
+      const dataId = searchParams.get('dataId');
+      
+      // If we have a dataId, fetch full data from extension storage
+      if (dataId) {
+        const fetchFullData = () => {
+          // Request data from extension via postMessage (bridge script handles it)
+          window.postMessage({
+            type: 'TRACKMATE_FETCH_JOB_DATA',
+            dataId: dataId
+          }, window.location.origin);
 
-      // Validate required fields
-      if (!jobData.position || !jobData.company) {
-        toast.error('Invalid job data: missing required fields');
-        setSearchParams({});
-        return;
+          // Listen for response
+          const messageHandler = (event: MessageEvent) => {
+            if (event.data.type === 'TRACKMATE_JOB_DATA_RESPONSE' && event.origin === window.location.origin) {
+              window.removeEventListener('message', messageHandler);
+              
+              const fullData = event.data.data;
+              const jobData: Partial<Job> = fullData ? {
+                position: fullData.position || searchParams.get('position') || '',
+                company: fullData.company || searchParams.get('company') || '',
+                jobUrl: fullData.jobUrl || searchParams.get('jobUrl') || undefined,
+                location: fullData.location || searchParams.get('location') || undefined,
+                description: fullData.description || undefined,
+                minSalary: fullData.minSalary || (searchParams.get('minSalary') ? parseInt(searchParams.get('minSalary')!) : undefined),
+                maxSalary: fullData.maxSalary || (searchParams.get('maxSalary') ? parseInt(searchParams.get('maxSalary')!) : undefined),
+                status: 'Bookmarked',
+                excitement: 3,
+              } : {
+                position: searchParams.get('position') || '',
+                company: searchParams.get('company') || '',
+                jobUrl: searchParams.get('jobUrl') || undefined,
+                location: searchParams.get('location') || undefined,
+                minSalary: searchParams.get('minSalary') ? parseInt(searchParams.get('minSalary')!) : undefined,
+                maxSalary: searchParams.get('maxSalary') ? parseInt(searchParams.get('maxSalary')!) : undefined,
+                status: 'Bookmarked',
+                excitement: 3,
+              };
+
+              // Validate required fields
+              if (!jobData.position || !jobData.company) {
+                toast.error('Invalid job data: missing required fields');
+                setSearchParams({});
+                return;
+              }
+
+              setExtensionJobData(jobData);
+              setAddDialogOpen(true);
+              setSearchParams({});
+              toast.success(`Job data received from extension! Ready to add as ${user.email}`);
+            }
+          };
+
+          window.addEventListener('message', messageHandler);
+          
+          // Timeout fallback to URL params only
+          setTimeout(() => {
+            window.removeEventListener('message', messageHandler);
+            const jobData: Partial<Job> = {
+              position: searchParams.get('position') || '',
+              company: searchParams.get('company') || '',
+              jobUrl: searchParams.get('jobUrl') || undefined,
+              location: searchParams.get('location') || undefined,
+              minSalary: searchParams.get('minSalary') ? parseInt(searchParams.get('minSalary')!) : undefined,
+              maxSalary: searchParams.get('maxSalary') ? parseInt(searchParams.get('maxSalary')!) : undefined,
+              status: 'Bookmarked',
+              excitement: 3,
+            };
+
+            if (jobData.position && jobData.company) {
+              setExtensionJobData(jobData);
+              setAddDialogOpen(true);
+              setSearchParams({});
+              toast.success(`Job data received from extension! Ready to add as ${user.email}`);
+            }
+          }, 2000);
+        };
+
+        fetchFullData();
+      } else {
+        // Fallback: use URL params only (for backwards compatibility)
+        const jobData: Partial<Job> = {
+          position: searchParams.get('position') || '',
+          company: searchParams.get('company') || '',
+          jobUrl: searchParams.get('jobUrl') || undefined,
+          location: searchParams.get('location') || undefined,
+          minSalary: searchParams.get('minSalary') ? parseInt(searchParams.get('minSalary')!) : undefined,
+          maxSalary: searchParams.get('maxSalary') ? parseInt(searchParams.get('maxSalary')!) : undefined,
+          status: 'Bookmarked',
+          excitement: 3,
+        };
+
+        if (jobData.position && jobData.company) {
+          setExtensionJobData(jobData);
+          setAddDialogOpen(true);
+          setSearchParams({});
+          toast.success(`Job data received from extension! Ready to add as ${user.email}`);
+        }
       }
-
-      setExtensionJobData(jobData);
-      setAddDialogOpen(true);
-      
-      // Clean up URL parameters
-      setSearchParams({});
-      
-      toast.success(`Job data received from extension! Ready to add as ${user.email}`);
     }
   }, [searchParams, setSearchParams, isAuthenticated, user]);
 

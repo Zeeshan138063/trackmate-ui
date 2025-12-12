@@ -55,24 +55,54 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     const jobData = request.data;
     const trackMateUrl = request.trackMateUrl || 'http://localhost:8080/trackers';
     
-    // Open TrackMate with job data as URL parameters or in a new tab
-    const params = new URLSearchParams({
-      action: 'addJob',
-      position: jobData.position || '',
-      company: jobData.company || '',
-      jobUrl: jobData.jobUrl || '',
-      location: jobData.location || '',
-      minSalary: jobData.minSalary || '',
-      maxSalary: jobData.maxSalary || '',
-      description: jobData.description?.substring(0, 500) || '',
-      screenshot: jobData.screenshot || ''
-    });
+    // Generate a unique ID for this job data
+    const jobDataId = 'trackmate_job_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    
+    // Store full job data in extension storage (handles large descriptions/screenshots)
+    chrome.storage.local.set({ [jobDataId]: jobData }, () => {
+      // Only pass essential, small fields via URL to avoid 431 error
+      const params = new URLSearchParams({
+        action: 'addJob',
+        dataId: jobDataId, // Reference to stored data
+        position: (jobData.position || '').substring(0, 100), // Truncate for URL safety
+        company: (jobData.company || '').substring(0, 100),
+        jobUrl: jobData.jobUrl || '',
+        location: (jobData.location || '').substring(0, 100),
+        minSalary: jobData.minSalary || '',
+        maxSalary: jobData.maxSalary || ''
+        // Description and screenshot are in storage, not URL
+      });
 
-    chrome.tabs.create({
-      url: `${trackMateUrl}?${params.toString()}`
+      chrome.tabs.create({
+        url: `${trackMateUrl}?${params.toString()}`
+      });
+
+      // Clean up stored data after 1 hour (in case user doesn't save)
+      setTimeout(() => {
+        chrome.storage.local.remove([jobDataId]);
+      }, 3600000); // 1 hour
     });
 
     sendResponse({ success: true });
+    return true;
+  }
+
+  // Allow TrackMate page to fetch full job data by ID
+  if (request.action === 'getJobData') {
+    const dataId = request.dataId;
+    if (dataId) {
+      chrome.storage.local.get([dataId], (result) => {
+        if (result[dataId]) {
+          sendResponse({ success: true, data: result[dataId] });
+          // Optionally clean up after fetching
+          chrome.storage.local.remove([dataId]);
+        } else {
+          sendResponse({ success: false, error: 'Job data not found' });
+        }
+      });
+      return true;
+    }
+    sendResponse({ success: false, error: 'No data ID provided' });
     return true;
   }
 });
