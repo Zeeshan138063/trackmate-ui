@@ -6,24 +6,164 @@ class JobExtractor {
     this.listeners = [];
   }
 
-  // Extract job data based on current site
+  // Clean HTML to markdown-like text
+  cleanHtmlToMarkdown(element) {
+    if (!element) return '';
+    
+    // Clone to avoid modifying the actual page
+    const clone = element.cloneNode(true);
+
+    // Remove comments
+    const removeComments = (node) => {
+      for (let i = 0; i < node.childNodes.length; i++) {
+        const child = node.childNodes[i];
+        if (child.nodeType === 8) { // Comment node
+          node.removeChild(child);
+          i--;
+        } else if (child.nodeType === 1) {
+          removeComments(child);
+        }
+      }
+    };
+    removeComments(clone);
+
+    // List items
+    const lis = clone.querySelectorAll('li');
+    lis.forEach(li => {
+      li.textContent = `• ${li.textContent.trim()}\n`;
+    });
+
+    // Paragraphs and Divs (for block spacing)
+    const blocks = clone.querySelectorAll('p, div, h1, h2, h3, h4, h5, h6');
+    blocks.forEach(b => {
+      b.textContent = `${b.textContent.trim()}\n\n`;
+    });
+
+    // Bold/Strong
+    const bolds = clone.querySelectorAll('strong, b');
+    bolds.forEach(b => {
+      b.textContent = `**${b.textContent.trim()}**`;
+    });
+
+    // Br
+    clone.querySelectorAll('br').forEach(br => br.replaceWith(document.createTextNode('\n')));
+
+    return clone.textContent.replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  // Extract job data - tries multiple methods in order of quality
   extractJobData() {
     const url = window.location.href;
     const hostname = window.location.hostname;
 
-    if (hostname.includes('linkedin.com')) {
-      return this.extractLinkedIn();
-    } else if (hostname.includes('indeed.com')) {
-      return this.extractIndeed();
-    } else if (hostname.includes('glassdoor.com')) {
-      return this.extractGlassdoor();
-    } else if (hostname.includes('lever.co')) {
-      return this.extractLever();
-    } else if (hostname.includes('greenhouse.io')) {
-      return this.extractGreenhouse();
-    } else {
-      return this.extractGeneric();
+    // First, try JSON-LD (Schema.org/JobPosting) - highest quality
+    const jsonLdData = this.extractFromJsonLd();
+    if (jsonLdData && jsonLdData.position) {
+      return jsonLdData;
     }
+
+    // Then try meta tags (OpenGraph/Twitter)
+    const metaData = this.extractFromMetaTags();
+    if (metaData && metaData.position) {
+      // Merge with site-specific extraction
+      const siteData = this.extractFromSite(hostname);
+      return { ...metaData, ...siteData };
+    }
+
+    // Finally, use site-specific DOM extraction
+    return this.extractFromSite(hostname);
+  }
+
+  // Extract from JSON-LD (Schema.org/JobPosting) - best quality
+  extractFromJsonLd() {
+    const data = {
+      position: '',
+      company: '',
+      location: '',
+      description: '',
+      jobUrl: window.location.href,
+      minSalary: null,
+      maxSalary: null,
+      datePosted: null,
+    };
+
+    const jsonLdScripts = document.querySelectorAll('script[type="application/ld+json"]');
+    for (const script of jsonLdScripts) {
+      try {
+        const jsonData = JSON.parse(script.textContent);
+        const job = Array.isArray(jsonData) 
+          ? jsonData.find(item => item['@type'] === 'JobPosting') 
+          : (jsonData['@type'] === 'JobPosting' ? jsonData : null);
+
+        if (job) {
+          data.position = job.title || '';
+          data.company = job.hiringOrganization?.name || '';
+          data.location = job.jobLocation?.address?.addressLocality || 
+                         job.jobLocation?.address?.addressRegion || 
+                         job.jobLocation?.address?.addressCountry || '';
+          data.description = job.description || '';
+          data.minSalary = job.baseSalary?.value?.minValue || null;
+          data.maxSalary = job.baseSalary?.value?.maxValue || null;
+          data.datePosted = job.datePosted || null;
+          
+          // Clean HTML from description if present
+          if (data.description && data.description.includes('<')) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = data.description;
+            data.description = this.cleanHtmlToMarkdown(tempDiv);
+          }
+          
+          return data;
+        }
+      } catch (e) {
+        console.error('Error parsing JSON-LD', e);
+      }
+    }
+    return null;
+  }
+
+  // Extract from meta tags (OpenGraph/Twitter)
+  extractFromMetaTags() {
+    const data = {
+      position: '',
+      company: '',
+      location: '',
+      description: '',
+      jobUrl: window.location.href,
+      minSalary: null,
+      maxSalary: null,
+      datePosted: null,
+    };
+
+    data.position = document.querySelector('meta[property="og:title"]')?.content || 
+                    document.querySelector('meta[name="twitter:title"]')?.content ||
+                    document.title || '';
+    data.company = document.querySelector('meta[property="og:site_name"]')?.content || '';
+    data.description = document.querySelector('meta[property="og:description"]')?.content ||
+                      document.querySelector('meta[name="description"]')?.content || '';
+
+    return data;
+  }
+
+  // Extract from site-specific DOM
+  extractFromSite(hostname) {
+    let siteData = null;
+    
+    if (hostname.includes('linkedin.com')) {
+      siteData = this.extractLinkedIn();
+    } else if (hostname.includes('indeed.com')) {
+      siteData = this.extractIndeed();
+    } else if (hostname.includes('glassdoor.com')) {
+      siteData = this.extractGlassdoor();
+    } else if (hostname.includes('lever.co')) {
+      siteData = this.extractLever();
+    } else if (hostname.includes('greenhouse.io')) {
+      siteData = this.extractGreenhouse();
+    } else {
+      siteData = this.extractGeneric();
+    }
+    
+    return siteData;
   }
 
   // Extract from LinkedIn
@@ -69,9 +209,10 @@ class JobExtractor {
       }
     }
 
-    // Location
+    // Location - improved parsing
     const locationSelectors = [
       '.job-details-jobs-unified-top-card__primary-description-without-tagline',
+      '.job-details-jobs-unified-top-card__primary-description',
       '.jobs-details-top-card__bullet',
       '.topcard__flavor--bullet'
     ];
@@ -79,40 +220,71 @@ class JobExtractor {
       const element = document.querySelector(selector);
       if (element) {
         const text = element.textContent.trim();
-        // Extract location (usually after company name)
-        const parts = text.split('·');
-        if (parts.length > 1) {
-          data.location = parts[parts.length - 1].trim();
+        // Format often: "Company · Location · Posted x days ago"
+        const parts = text.split('·').map(s => s.trim());
+        if (parts.length >= 2) {
+          // Usually location is the second part
+          data.location = parts[1];
         } else {
           data.location = text;
         }
         break;
       }
     }
+    
+    // Alternative: Try specific location element
+    if (!data.location) {
+      const locationEl = document.querySelector('.job-details-jobs-unified-top-card__primary-description span:first-child') ||
+                        document.querySelector('.topcard-layout__first-sub-title span:last-child');
+      if (locationEl) {
+        data.location = locationEl.textContent.trim();
+      }
+    }
 
-    // Description
+    // Description - use cleanHtmlToMarkdown for better formatting
     const descSelectors = [
       '.jobs-description__content',
+      '.show-more-less-html__markup',
       '.jobs-box__html-content',
       '#job-details'
     ];
     for (const selector of descSelectors) {
       const element = document.querySelector(selector);
       if (element) {
-        data.description = element.textContent.trim();
+        data.description = this.cleanHtmlToMarkdown(element);
         break;
       }
     }
 
-    // Salary (if available)
-    const salaryText = document.body.textContent;
-    const salaryMatch = salaryText.match(/\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*-\s*\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)/);
-    if (salaryMatch) {
-      const min = this.parseSalary(salaryMatch[1]);
-      const max = this.parseSalary(salaryMatch[2]);
-      if (min && max) {
-        data.minSalary = min;
-        data.maxSalary = max;
+    // Salary - check job insights first, then page text
+    const insightEls = document.querySelectorAll('.job-details-jobs-unified-top-card__job-insight');
+    for (const el of insightEls) {
+      const text = el.textContent;
+      if (text.includes('$') && (text.includes('/yr') || text.includes('year') || text.includes('hr'))) {
+        const salaryMatch = text.match(/\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*-\s*\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)/);
+        if (salaryMatch) {
+          const min = this.parseSalary(salaryMatch[1]);
+          const max = this.parseSalary(salaryMatch[2]);
+          if (min && max) {
+            data.minSalary = min;
+            data.maxSalary = max;
+            break;
+          }
+        }
+      }
+    }
+    
+    // Fallback: search entire page text
+    if (!data.minSalary && !data.maxSalary) {
+      const salaryText = document.body.textContent;
+      const salaryMatch = salaryText.match(/\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*-\s*\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)/);
+      if (salaryMatch) {
+        const min = this.parseSalary(salaryMatch[1]);
+        const max = this.parseSalary(salaryMatch[2]);
+        if (min && max) {
+          data.minSalary = min;
+          data.maxSalary = max;
+        }
       }
     }
 
@@ -153,11 +325,11 @@ class JobExtractor {
       data.location = locationEl.textContent.trim();
     }
 
-    // Description
+    // Description - use cleanHtmlToMarkdown
     const descEl = document.querySelector('#jobDescriptionText') ||
                    document.querySelector('.jobsearch-jobDescriptionText');
     if (descEl) {
-      data.description = descEl.textContent.trim();
+      data.description = this.cleanHtmlToMarkdown(descEl);
     }
 
     // Salary
@@ -197,7 +369,7 @@ class JobExtractor {
     if (locationEl) data.location = locationEl.textContent.trim();
 
     const descEl = document.querySelector('.JobDetails_jobDescription__');
-    if (descEl) data.description = descEl.textContent.trim();
+    if (descEl) data.description = this.cleanHtmlToMarkdown(descEl);
 
     return data;
   }
@@ -222,7 +394,7 @@ class JobExtractor {
     if (companyEl) data.company = companyEl.textContent.trim();
 
     const descEl = document.querySelector('.section');
-    if (descEl) data.description = descEl.textContent.trim();
+    if (descEl) data.description = this.cleanHtmlToMarkdown(descEl);
 
     return data;
   }
@@ -247,7 +419,7 @@ class JobExtractor {
     if (locationEl) data.location = locationEl.textContent.trim();
 
     const descEl = document.querySelector('#content');
-    if (descEl) data.description = descEl.textContent.trim();
+    if (descEl) data.description = this.cleanHtmlToMarkdown(descEl);
 
     return data;
   }
@@ -361,7 +533,7 @@ class JobExtractor {
       }
     }
 
-    // Description - get main content with better selectors
+    // Description - get main content with better selectors and markdown conversion
     const descSelectors = [
       '[class*="description"]',
       '[class*="details"]',
@@ -379,7 +551,8 @@ class JobExtractor {
     for (const selector of descSelectors) {
       const el = document.querySelector(selector);
       if (el) {
-        const text = el.textContent.trim();
+        // Use cleanHtmlToMarkdown for better formatting
+        const text = this.cleanHtmlToMarkdown(el);
         // Make sure it's substantial content
         if (text && text.length > 50) {
           // Remove common navigation/header text
