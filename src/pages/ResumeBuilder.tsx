@@ -60,6 +60,12 @@ const savedResumes = [
 
 export default function ResumeBuilder() {
   const [activeTab, setActiveTab] = useState("resumes");
+  const [defaultResumeId, setDefaultResumeId] = useState<number>(1); // Default to the first one for now
+
+  const handleSetDefault = (id: number) => {
+    setDefaultResumeId(id);
+    // In a real app, you would save this to local storage or backend
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -88,7 +94,7 @@ export default function ResumeBuilder() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {savedResumes.map((resume) => (
-              <Card key={resume.id} className="hover:shadow-md transition-shadow">
+              <Card key={resume.id} className={`hover:shadow-md transition-shadow ${defaultResumeId === resume.id ? 'border-primary border-2' : ''}`}>
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-3">
@@ -96,8 +102,13 @@ export default function ResumeBuilder() {
                         <FileText className="h-6 w-6 text-primary" />
                       </div>
                       <div>
-                        <CardTitle className="text-lg">{resume.name}</CardTitle>
-                        <CardDescription className="flex items-center space-x-2">
+                        <div className="flex items-center gap-2">
+                          <CardTitle className="text-lg">{resume.name}</CardTitle>
+                          {defaultResumeId === resume.id && (
+                            <Badge variant="outline" className="bg-primary/10 text-primary border-0 text-xs">Default</Badge>
+                          )}
+                        </div>
+                        <CardDescription className="flex items-center space-x-2 mt-1">
                           <span>{resume.template}</span>
                           <Badge variant={resume.status === "Complete" ? "default" : "secondary"}>
                             {resume.status}
@@ -111,19 +122,16 @@ export default function ResumeBuilder() {
                   <p className="text-sm text-muted-foreground">
                     Last modified: {resume.lastModified}
                   </p>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button size="sm" variant="outline">
                       <Edit className="h-4 w-4 mr-1" />
                       Edit
                     </Button>
-                    <Button size="sm" variant="outline">
-                      <Eye className="h-4 w-4 mr-1" />
-                      Preview
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <Download className="h-4 w-4 mr-1" />
-                      Download
-                    </Button>
+                    {defaultResumeId !== resume.id && (
+                      <Button size="sm" variant="ghost" onClick={() => handleSetDefault(resume.id)}>
+                        Set Default
+                      </Button>
+                    )}
                     <Button size="sm" variant="ghost">
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -217,7 +225,7 @@ export default function ResumeBuilder() {
                   <CardTitle>Professional Summary</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Textarea 
+                  <Textarea
                     placeholder="Write a compelling summary of your professional background and key achievements..."
                     rows={4}
                   />
@@ -258,7 +266,7 @@ export default function ResumeBuilder() {
                     </div>
                     <div>
                       <label className="text-sm font-medium mb-2 block">Description</label>
-                      <Textarea 
+                      <Textarea
                         placeholder="Describe your responsibilities and achievements..."
                         rows={3}
                       />
@@ -301,14 +309,14 @@ export default function ResumeBuilder() {
                       <p className="text-gray-600">Software Engineer</p>
                       <p className="text-sm text-gray-500">john.doe@email.com | +1 (555) 123-4567 | San Francisco, CA</p>
                     </div>
-                    
+
                     <div className="mb-6">
                       <h2 className="text-lg font-semibold mb-2 border-b">Professional Summary</h2>
                       <p className="text-sm text-gray-700">
                         Experienced software engineer with expertise in full-stack development...
                       </p>
                     </div>
-                    
+
                     <div className="mb-6">
                       <h2 className="text-lg font-semibold mb-2 border-b">Experience</h2>
                       <div className="mb-3">
@@ -319,7 +327,7 @@ export default function ResumeBuilder() {
                         </p>
                       </div>
                     </div>
-                    
+
                     <div>
                       <h2 className="text-lg font-semibold mb-2 border-b">Skills</h2>
                       <p className="text-sm text-gray-700">
