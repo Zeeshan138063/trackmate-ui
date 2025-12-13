@@ -82,7 +82,6 @@ export function useJobs() {
           date_applied: newJob.dateApplied,
           follow_up: newJob.followUp,
           excitement: newJob.excitement,
-          excitement: newJob.excitement,
           checklist: newJob.checklist || {},
           user_id: user.id,
         }])
@@ -108,7 +107,6 @@ export function useJobs() {
         dateSaved: data.date_saved,
         deadline: data.deadline || undefined,
         dateApplied: data.date_applied || undefined,
-        followUp: data.follow_up || undefined,
         followUp: data.follow_up || undefined,
         excitement: data.excitement,
         checklist: data.checklist || {},
@@ -149,7 +147,6 @@ export function useJobs() {
           deadline: updatedJob.deadline,
           date_applied: updatedJob.dateApplied,
           follow_up: updatedJob.followUp,
-          excitement: updatedJob.excitement,
           excitement: updatedJob.excitement,
           checklist: updatedJob.checklist,
         })

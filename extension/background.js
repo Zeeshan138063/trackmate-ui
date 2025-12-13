@@ -103,6 +103,35 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
+  if (request.action === 'sendContactToTrackMate') {
+    const contactData = request.data;
+    // Construct URL to Connections page
+    const baseUrl = request.trackMateUrl.replace(/\/trackers\/?$/, ''); // strip /trackers
+    const connectionsUrl = `${baseUrl}/connections`; // assume /connections route
+
+    const dataId = 'trackmate_contact_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+    chrome.storage.local.set({ [dataId]: contactData }, () => {
+      const params = new URLSearchParams({
+        action: 'addContact',
+        dataId: dataId,
+        name: (contactData.name || '').substring(0, 100),
+        company: (contactData.company || '').substring(0, 100)
+      });
+
+      chrome.tabs.create({
+        url: `${connectionsUrl}?${params.toString()}`
+      });
+
+      setTimeout(() => {
+        chrome.storage.local.remove([dataId]);
+      }, 3600000);
+    });
+
+    sendResponse({ success: true });
+    return true;
+  }
+
   // Allow TrackMate page to fetch full job data by ID
   if (request.action === 'getJobData') {
     const dataId = request.dataId;

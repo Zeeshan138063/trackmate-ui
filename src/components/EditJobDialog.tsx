@@ -26,6 +26,24 @@ import { Badge } from "@/components/ui/badge";
 import { Sparkles, FileText, CheckCircle2, AlertCircle } from "lucide-react";
 import { JobChecklist } from "@/components/JobChecklist";
 import { JobChecklist as JobChecklistType } from "@/types/job";
+import { useContacts } from "@/hooks/useContacts";
+import { ContactCard } from "@/components/ContactCard";
+import { AddContactDialog } from "@/components/AddContactDialog";
+import { Contact, JobContact } from "@/types/contact";
+import { Users, Plus, Link as LinkIcon, X } from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface EditJobDialogProps {
   job: Job | null;
@@ -42,6 +60,20 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
   const [matchResult, setMatchResult] = useState<AIMatchResult | null>(null);
   const [isGeneratingLetter, setIsGeneratingLetter] = useState(false);
   const [coverLetter, setCoverLetter] = useState("");
+
+  // Contacts state
+  const {
+    contacts: allContacts,
+    fetchJobContacts,
+    linkContactToJob,
+    removeContactFromJob,
+    addContact,
+    updateContact
+  } = useContacts();
+  const [jobContacts, setJobContacts] = useState<JobContact[]>([]);
+  const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
+  const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);
+  const [editingContact, setEditingContact] = useState<Contact | null>(null);
 
   const [formData, setFormData] = useState({
     position: "",
@@ -85,9 +117,12 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
         setCoverLetter("");
         setActiveTab("details");
         setPrevJobId(job.id);
+
+        // Fetch contacts for this job
+        fetchJobContacts(job.id).then(setJobContacts);
       }
     }
-  }, [job, prevJobId]);
+  }, [job, prevJobId, fetchJobContacts]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -192,6 +227,47 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
     }
   };
 
+  const handleAddContact = async (contactData: Omit<Contact, "id" | "user_id" | "created_at">) => {
+    if (!job) return;
+    const newContact = await addContact(contactData);
+    if (newContact) {
+      const linked = await linkContactToJob(job.id, newContact.id, contactData.position || "Contact");
+      if (linked) {
+        setJobContacts(prev => [...prev, linked as unknown as JobContact]);
+      }
+    }
+  };
+
+  const handleUpdateContact = async (contactData: Omit<Contact, "id" | "user_id" | "created_at">) => {
+    if (editingContact) {
+      await updateContact(editingContact.id, contactData);
+      setJobContacts(prev => prev.map(jc =>
+        jc.contact?.id === editingContact.id
+          ? { ...jc, contact: { ...jc.contact, ...contactData } as Contact }
+          : jc
+      ));
+      setEditingContact(null);
+    }
+  };
+
+  const handleLinkContact = async (contactId: string) => {
+    if (!job) return;
+    const contact = allContacts.find(c => c.id === contactId);
+    const linked = await linkContactToJob(job.id, contactId, contact?.position || "Contact");
+    if (linked) {
+      setJobContacts(prev => [...prev, linked as unknown as JobContact]);
+      setIsLinkPopoverOpen(false);
+    }
+  };
+
+  const handleRemoveContact = async (contactId: string) => {
+    if (!job) return;
+    const success = await removeContactFromJob(job.id, contactId);
+    if (success) {
+      setJobContacts(prev => prev.filter(jc => jc.contact_id !== contactId));
+    }
+  };
+
   if (!job) return null;
 
   return (
@@ -209,9 +285,10 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
           <div className="px-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="checklist">Check List</TabsTrigger>
+              <TabsTrigger value="contacts">Contacts</TabsTrigger>
               <TabsTrigger value="match">AI Match Score</TabsTrigger>
               <TabsTrigger value="cover-letter">Cover Letter</TabsTrigger>
             </TabsList>
@@ -398,6 +475,88 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
                 onToggle={handleChecklistToggle}
               />
               {/* Auto-save enabled, no manual button needed */}
+            </TabsContent>
+
+            <TabsContent value="contacts" className="mt-0 space-y-6">
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Job Contacts
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      People associated with this application (Recruiters, Interviewers, etc.)
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Popover open={isLinkPopoverOpen} onOpenChange={setIsLinkPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <LinkIcon className="mr-2 h-4 w-4" />
+                          Link Existing
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0 w-[250px]" align="end">
+                        <Command>
+                          <CommandInput placeholder="Search contacts..." />
+                          <CommandList>
+                            <CommandEmpty>No contacts found.</CommandEmpty>
+                            <CommandGroup>
+                              {allContacts.filter(c => !jobContacts.some(jc => jc.contact_id === c.id)).map(contact => (
+                                <CommandItem
+                                  key={contact.id}
+                                  onSelect={() => handleLinkContact(contact.id)}
+                                  className="cursor-pointer"
+                                >
+                                  {contact.name}
+                                  {contact.company && <span className="ml-2 text-muted-foreground text-xs">({contact.company})</span>}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+
+                    <Button size="sm" onClick={() => setIsContactDialogOpen(true)}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add New
+                    </Button>
+                  </div>
+                </div>
+
+                {jobContacts.length === 0 ? (
+                  <div className="text-center py-8 bg-muted/30 rounded-lg border border-dashed">
+                    <p className="text-muted-foreground text-sm">No contacts linked to this job yet.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4">
+                    {jobContacts.map(jc => jc.contact && (
+                      <ContactCard
+                        key={jc.id}
+                        contact={jc.contact}
+                        interactionType={jc.interaction_type}
+                        onEdit={(c) => {
+                          setEditingContact(c);
+                          setIsContactDialogOpen(true);
+                        }}
+                        onDelete={() => handleRemoveContact(jc.contact!.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <AddContactDialog
+                open={isContactDialogOpen}
+                onOpenChange={(open: boolean) => {
+                  setIsContactDialogOpen(open);
+                  if (!open) setEditingContact(null);
+                }}
+                onSave={editingContact ? handleUpdateContact : handleAddContact}
+                initialData={editingContact}
+              />
             </TabsContent>
 
             <TabsContent value="match" className="mt-0 space-y-6">

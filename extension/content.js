@@ -55,7 +55,17 @@ class JobExtractor {
   extractJobData() {
     const url = window.location.href;
     const hostname = window.location.hostname;
+    const path = window.location.pathname;
 
+    // Check if it's a LinkedIn Profile
+    if (hostname.includes('linkedin.com') && path.includes('/in/')) {
+      return {
+        type: 'profile',
+        ...this.extractProfileData()
+      };
+    }
+
+    // Default to Job Extraction
     // First, try JSON-LD (Schema.org/JobPosting) - highest quality
     const jsonLdData = this.extractFromJsonLd();
     if (jsonLdData && jsonLdData.position) {
@@ -623,6 +633,87 @@ class JobExtractor {
       return Math.round(num * 1000);
     }
     return Math.round(num);
+  }
+
+  // Extract LinkedIn Profile Data
+  extractProfileData() {
+    const data = {
+      name: '',
+      headline: '',
+      company: '',
+      position: '',
+      location: '',
+      about: '',
+      profileUrl: window.location.href,
+      photoUrl: ''
+    };
+
+    // Name
+    const nameEl = document.querySelector('h1.text-heading-xlarge') ||
+      document.querySelector('h1.top-card-layout__title');
+    if (nameEl) data.name = nameEl.textContent.trim();
+
+    // Headline (often contains "Role at Company")
+    const headlineEl = document.querySelector('div.text-body-medium') ||
+      document.querySelector('div.top-card-layout__headline');
+    if (headlineEl) {
+      data.headline = headlineEl.textContent.trim();
+
+      // Try to parse Position and Company from headline "Position at Company"
+      if (data.headline.includes(' at ')) {
+        const parts = data.headline.split(' at ');
+        if (parts.length >= 2) {
+          data.position = parts[0].trim();
+          data.company = parts.slice(1).join(' at ').trim(); // Handle "at" in company name
+        } else {
+          data.position = data.headline;
+        }
+      } else {
+        data.position = data.headline;
+      }
+    }
+
+    // Location
+    const locEl = document.querySelector('span.text-body-small.inline.t-black--light.break-words') ||
+      document.querySelector('div.top-card-layout__entity-info');
+    if (locEl) data.location = locEl.textContent.trim();
+
+    // About/Notes
+    const aboutEl = document.querySelector('#about ~ .display-flex .inline-show-more-text') ||
+      document.querySelector('#about ~ div.display-flex span.visually-hidden'); // often hidden/truncated
+    // Fallback for about section
+    if (!data.about) {
+      // Look for the "About" section header, then find the text sibling
+      const headings = Array.from(document.querySelectorAll('span, h2'));
+      const aboutHeader = headings.find(h => h.textContent.trim() === 'About');
+      if (aboutHeader) {
+        const container = aboutHeader.closest('section');
+        if (container) {
+          const textDiv = container.querySelector('.inline-show-more-text, .pv-about-section__summary-text');
+          if (textDiv) data.about = textDiv.textContent.trim();
+        }
+      }
+    }
+
+    // Current Company (Experince Section) - more reliable than headline
+    // This is tricky due to dynamic loading, but simple heuristic:
+    // Look for first item in experience list
+    const expItem = document.querySelector('#experience ~ .pvs-list__outer-container .pvs-list__item--line-separated');
+    if (expItem) {
+      const spans = Array.from(expItem.querySelectorAll('span[aria-hidden="true"]'));
+      if (spans.length >= 2) {
+        // Usually first span is role, second is company, or vice versa depending on layout
+        // LinkedIn structure varies wildly.
+        // Let's rely on Headline for now as it's easier, or maybe leave company empty for user to fill
+      }
+    }
+
+    // Profile Photo
+    const imgEl = document.querySelector('img.pv-top-card-profile-picture__image') ||
+      document.querySelector('img.profile-photo-edit__preview');
+    if (imgEl) data.photoUrl = imgEl.src;
+
+    return data;
   }
 
   // Get current job data

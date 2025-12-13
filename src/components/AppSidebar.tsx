@@ -10,7 +10,8 @@ import {
   HelpCircle,
   Settings,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Users
 } from "lucide-react";
 
 import {
@@ -35,6 +36,7 @@ const navigationItems = [
   { title: "Interview Feedback", url: "/interview-feedback", icon: MessageSquare },
   { title: "Work Styles", url: "/work-styles", icon: Briefcase },
   { title: "Job Search", url: "/job-search", icon: Search },
+  { title: "Connections", url: "/connections", icon: Users },
 ];
 
 const bottomItems = [
@@ -50,8 +52,8 @@ export function AppSidebar() {
 
   const isActive = (path: string) => currentPath === path;
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive 
-      ? "bg-primary/10 text-primary font-medium border-r-2 border-primary" 
+    isActive
+      ? "bg-primary/10 text-primary font-medium border-r-2 border-primary"
       : "hover:bg-muted/50 text-muted-foreground hover:text-foreground";
 
   return (

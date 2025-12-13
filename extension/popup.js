@@ -40,8 +40,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (response && response.success) {
           currentJobData = response.data;
-          displayJobData(currentJobData);
-          setStatus('Job data extracted successfully!', 'success');
+
+          if (currentJobData.type === 'profile') {
+            displayContactData(currentJobData);
+            setStatus('Profile data extracted successfully!', 'success');
+            document.querySelector('.header p').textContent = 'Capture Contact';
+          } else {
+            displayJobData(currentJobData);
+            setStatus('Job data extracted successfully!', 'success');
+            document.querySelector('.header p').textContent = 'Capture Job Details';
+          }
+
           saveBtn.style.display = 'block';
           openBtn.style.display = 'block';
         } else {
@@ -119,40 +128,75 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Ensure we're not sending large data - it will be stored in extension storage
       // Gather data from inputs (allowing user edits)
-      const jobDataToSend = {
-        position: document.getElementById('position').value || '',
-        company: document.getElementById('company').value || '',
-        jobUrl: currentJobData.jobUrl || tab.url || '',
-        location: document.getElementById('location').value || '',
-        description: document.getElementById('description').value || '',
-        minSalary: document.getElementById('minSalary').value ? parseInt(document.getElementById('minSalary').value) : null,
-        maxSalary: document.getElementById('maxSalary').value ? parseInt(document.getElementById('maxSalary').value) : null,
-        datePosted: document.getElementById('datePosted').value || null,
-        deadline: document.getElementById('deadline').value || null,
-        status: 'Bookmarked', // Default status
-        excitement: 3, // Default excitement
-        screenshot: currentScreenshot || null, // Will be stored, not in URL
-        url: tab.url || ''
-      };
+      // Determine mode
+      const isProfile = currentJobData.type === 'profile';
 
-      chrome.runtime.sendMessage(
-        {
-          action: 'sendToTrackMate',
-          data: jobDataToSend,
-          trackMateUrl: trackMateUrl
-        },
-        (response) => {
-          if (response && response.success) {
-            setStatus('Opening TrackMate with job data...', 'success');
-            setTimeout(() => {
-              setStatus('Job data sent to TrackMate!', 'success');
-            }, 1000);
-          } else {
-            setStatus('Failed to send to TrackMate', 'error');
+      if (isProfile) {
+        // Contact Mode
+        const contactDataToSend = {
+          name: document.getElementById('contactName').value || '',
+          position: document.getElementById('contactPosition').value || '',
+          company: document.getElementById('contactCompany').value || '',
+          location: document.getElementById('contactLocation').value || '',
+          relationship: document.getElementById('contactRelationship').value || '',
+          notes: document.getElementById('contactNotes').value || '',
+          linkedin_url: currentJobData.profileUrl || tab.url || '',
+          photo_url: currentJobData.photoUrl || ''
+        };
+
+        chrome.runtime.sendMessage(
+          {
+            action: 'sendContactToTrackMate', // New action
+            data: contactDataToSend,
+            trackMateUrl: trackMateUrl
+          },
+          (response) => {
+            if (response && response.success) {
+              setStatus('Opening TrackMate with contact...', 'success');
+              setTimeout(() => setStatus('Contact sent!', 'success'), 1000);
+            } else {
+              setStatus('Failed to send contact', 'error');
+            }
+            saveBtn.disabled = false;
           }
-          saveBtn.disabled = false;
-        }
-      );
+        );
+      } else {
+        // Job Mode (Existing logic)
+        const jobDataToSend = {
+          position: document.getElementById('position').value || '',
+          company: document.getElementById('company').value || '',
+          jobUrl: currentJobData.jobUrl || tab.url || '',
+          location: document.getElementById('location').value || '',
+          description: document.getElementById('description').value || '',
+          minSalary: document.getElementById('minSalary').value ? parseInt(document.getElementById('minSalary').value) : null,
+          maxSalary: document.getElementById('maxSalary').value ? parseInt(document.getElementById('maxSalary').value) : null,
+          datePosted: document.getElementById('datePosted').value || null,
+          deadline: document.getElementById('deadline').value || null,
+          status: 'Bookmarked', // Default status
+          excitement: 3, // Default excitement
+          screenshot: currentScreenshot || null, // Will be stored, not in URL
+          url: tab.url || ''
+        };
+
+        chrome.runtime.sendMessage(
+          {
+            action: 'sendToTrackMate',
+            data: jobDataToSend,
+            trackMateUrl: trackMateUrl
+          },
+          (response) => {
+            if (response && response.success) {
+              setStatus('Opening TrackMate with job data...', 'success');
+              setTimeout(() => {
+                setStatus('Job data sent to TrackMate!', 'success');
+              }, 1000);
+            } else {
+              setStatus('Failed to send to TrackMate', 'error');
+            }
+            saveBtn.disabled = false;
+          }
+        );
+      }
     } catch (error) {
       setStatus('Error: ' + error.message, 'error');
       saveBtn.disabled = false;
@@ -184,6 +228,30 @@ function displayJobData(data) {
   document.getElementById('datePosted').value = data.datePosted || '';
   document.getElementById('deadline').value = data.deadline || '';
   document.getElementById('description').value = data.description || '';
+}
+
+// Display contact data
+function displayContactData(data) {
+  document.getElementById('jobData').style.display = 'none';
+  const contactDiv = document.getElementById('contactData');
+  contactDiv.style.display = 'block';
+
+  document.getElementById('contactName').value = data.name || '';
+  document.getElementById('contactPosition').value = data.position || '';
+  document.getElementById('contactCompany').value = data.company || '';
+  document.getElementById('contactLocation').value = data.location || '';
+  document.getElementById('contactNotes').value = data.about || '';
+
+  // Photo
+  if (data.photoUrl) {
+    document.getElementById('contactPhoto').src = data.photoUrl;
+    document.getElementById('contactPhoto').style.display = 'inline-block';
+  } else {
+    document.getElementById('contactPhoto').style.display = 'none';
+  }
+
+  // Disable capture btn for profile mode if not needed, or keep it
+  document.getElementById('captureBtn').style.display = 'none'; // Hide screenshot for profile for simplicity
 }
 
 // Display screenshot

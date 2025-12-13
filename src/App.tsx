@@ -16,6 +16,7 @@ import WorkStyles from "./pages/WorkStyles";
 import JobSearch from "./pages/JobSearch";
 import Support from "./pages/Support";
 import Settings from "./pages/Settings";
+import Connections from "./pages/Connections";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -88,6 +89,13 @@ const App = () => (
             <ProtectedRoute>
               <Layout>
                 <Settings />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/connections" element={
+            <ProtectedRoute>
+              <Layout>
+                <Connections />
               </Layout>
             </ProtectedRoute>
           } />
