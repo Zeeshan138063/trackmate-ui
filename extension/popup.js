@@ -140,10 +140,23 @@ document.addEventListener('DOMContentLoaded', async () => {
           location: document.getElementById('contactLocation').value || '',
           relationship: document.getElementById('contactRelationship').value || '',
           notes: document.getElementById('contactNotes').value || '',
-          linkedin_url: currentJobData.profileUrl || tab.url || '',
+          linkedin_url: document.getElementById('contactLinkedin').value || currentJobData.profileUrl || tab.url || '',
           photo_url: currentJobData.photoUrl || ''
         };
 
+        // Attempt direct save first
+        const savedDirectly = await saveContactDirectly(contactDataToSend);
+
+        if (savedDirectly) {
+          setStatus('Contact saved directly to TrackMate!', 'success');
+          setTimeout(() => {
+            setStatus('You can view it in the app.', 'success');
+          }, 1000);
+          saveBtn.disabled = false;
+          return;
+        }
+
+        // Fallback to old method if direct save fails
         chrome.runtime.sendMessage(
           {
             action: 'sendContactToTrackMate', // New action
@@ -240,6 +253,7 @@ function displayContactData(data) {
   document.getElementById('contactPosition').value = data.position || '';
   document.getElementById('contactCompany').value = data.company || '';
   document.getElementById('contactLocation').value = data.location || '';
+  document.getElementById('contactLinkedin').value = data.profileUrl || '';
   document.getElementById('contactNotes').value = data.about || '';
 
   // Photo
@@ -274,5 +288,112 @@ function setStatus(message, type) {
   if (type === 'info') {
     statusText.innerHTML = '<span class="loading"></span> ' + message;
   }
+}
+
+// --- Direct API Integration ---
+
+const SUPABASE_URL = "https://jdplobgtxzncwxhordah.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkcGxvYmd0eHpuY3d4aG9yZGFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2MzcwMzksImV4cCI6MjA3MTIxMzAzOX0.ior862XnLyAtFwo-h2Umhj8tADMlv1dZOUwLCZWOV-c";
+
+async function saveContactDirectly(contactData) {
+  try {
+    setStatus('Looking for active TrackMate tab...', 'info');
+    const token = await getAuthToken();
+
+    if (!token) {
+      console.log("No auth token found, falling back to redirect.");
+      return false;
+    }
+
+    setStatus('Saving contact via API...', 'info');
+
+    // Check if user exists (and get user_id from token hopefully, but Supabase standard JWT has sub)
+    // Actually, we need to decode JWT to get 'sub' (user_id) OR just trust RLS to assign it?
+    // Supabase REST API automatically assigns user_id matching the authenticated user? 
+    // Typically: Yes if the table column has default value `auth.uid()`, OR we must send it.
+    // Let's check if we need to send user_id. 
+    // Standard pattern: Table `contacts` usually has `user_id` text/uuid. 
+    // If RLS is enabled and policies are "insert with check (auth.uid() = user_id)", we must enable RLS.
+    // We will assume the API handles it or we decode the token.
+
+    let userId = null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      userId = payload.sub;
+    } catch (e) {
+      console.error("Failed to decode token", e);
+    }
+
+    if (!userId) return false;
+
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/contacts`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        name: contactData.name,
+        company: contactData.company,
+        position: contactData.position,
+        location: contactData.location,
+        relationship: contactData.relationship,
+        notes: contactData.notes,
+        linkedin_url: contactData.linkedin_url,
+        // photo_url: contactData.photo_url // ensure db column exists, if not omit
+        email: '', // Add generic empty fields to match schema if needed
+        phone: ''
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      console.error("API Error:", err);
+      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    }
+
+    return true;
+
+  } catch (e) {
+    console.error("Direct save failed:", e);
+    return false;
+  }
+}
+
+async function getAuthToken() {
+  // Find tabs matching TrackMate (localhost)
+  const tabs = await chrome.tabs.query({ url: ['http://localhost:8080/*', 'http://localhost:5173/*', 'http://127.0.0.1:8080/*'] });
+
+  for (const tab of tabs) {
+    try {
+      const results = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => {
+          // Try standard Supabase key patterns
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
+              const val = localStorage.getItem(key);
+              try {
+                const parsed = JSON.parse(val);
+                return parsed.access_token;
+              } catch (e) { }
+            }
+          }
+          return null;
+        }
+      });
+
+      if (results && results[0] && results[0].result) {
+        return results[0].result;
+      }
+    } catch (e) {
+      console.warn("Script exec failed on tab", tab.id, e);
+    }
+  }
+  return null;
 }
 
