@@ -14,6 +14,20 @@ export interface Job {
   dateApplied?: string;
   followUp?: string;
   excitement: number; // 1-5 stars
+  checklist?: JobChecklist;
+}
+
+export type JobChecklist = Record<string, boolean>;
+
+export interface ChecklistItem {
+  id: string;
+  label: string;
+}
+
+export interface ChecklistSection {
+  id: string;
+  title: string;
+  items: ChecklistItem[];
 }
 
 export interface JobStats {

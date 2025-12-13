@@ -13,7 +13,7 @@ export function useJobs() {
 
   const fetchJobs = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
       // Only fetch jobs for the current logged-in user
@@ -45,6 +45,7 @@ export function useJobs() {
         dateApplied: job.date_applied || undefined,
         followUp: job.follow_up || undefined,
         excitement: job.excitement,
+        checklist: job.checklist || {},
       })) || [];
 
       setJobs(transformedJobs);
@@ -81,6 +82,8 @@ export function useJobs() {
           date_applied: newJob.dateApplied,
           follow_up: newJob.followUp,
           excitement: newJob.excitement,
+          excitement: newJob.excitement,
+          checklist: newJob.checklist || {},
           user_id: user.id,
         }])
         .select()
@@ -106,11 +109,13 @@ export function useJobs() {
         deadline: data.deadline || undefined,
         dateApplied: data.date_applied || undefined,
         followUp: data.follow_up || undefined,
+        followUp: data.follow_up || undefined,
         excitement: data.excitement,
+        checklist: data.checklist || {},
       };
 
       setJobs(prev => [transformedJob, ...prev]);
-      
+
       toast({
         title: "Job added successfully",
         description: `${newJob.position} at ${newJob.company} has been added.`,
@@ -145,6 +150,8 @@ export function useJobs() {
           date_applied: updatedJob.dateApplied,
           follow_up: updatedJob.followUp,
           excitement: updatedJob.excitement,
+          excitement: updatedJob.excitement,
+          checklist: updatedJob.checklist,
         })
         .eq('id', updatedJob.id)
         .eq('user_id', user.id);
@@ -153,7 +160,7 @@ export function useJobs() {
         throw error;
       }
 
-      setJobs(prev => prev.map(job => 
+      setJobs(prev => prev.map(job =>
         job.id === updatedJob.id ? updatedJob : job
       ));
 
@@ -186,7 +193,7 @@ export function useJobs() {
       }
 
       setJobs(prev => prev.filter(job => job.id !== jobId));
-      
+
       toast({
         title: "Job deleted successfully",
         description: "The job has been removed from your tracker.",

@@ -1,3 +1,5 @@
+import { generateText } from 'ai';
+import { getProvider, AIProviderId } from './ai-providers/registry';
 
 export interface AIMatchResult {
     score: number;
@@ -9,52 +11,14 @@ export interface AICoverLetterResult {
     coverLetter: string;
 }
 
-const callGemini = async (prompt: string, apiKey: string) => {
-    let modelName = localStorage.getItem("GEMINI_MODEL_NAME") || "gemini-1.5-flash";
-
-    // Sanitize model name to remove 'models/' prefix if user added it
-    modelName = modelName.replace(/^models\//, '');
-
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
-
-    const response = await fetch(`${apiUrl}?key=${apiKey}`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            contents: [
-                {
-                    parts: [{ text: prompt }]
-                }
-            ]
-        }),
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Gemini API Error Details:", errorData);
-
-        if (response.status === 429) {
-            throw new Error("Gemini API Rate Limit Exceeded. You are likely on the free tier. Please wait a minute and try again.");
-        }
-
-        throw new Error(`Gemini API Error: ${response.status} ${response.statusText} - ${errorData.error?.message || ''}`);
-    }
-
-    const data = await response.json();
-    if (!data.candidates || data.candidates.length === 0) {
-        throw new Error("Gemini API returned no candidates. The model might be overloaded or the prompt blocked.");
-    }
-    return data.candidates[0].content.parts[0].text;
-};
-
 export const AIHelper = {
 
     analyzeMatch: async (jobDescription: string, resumeContent: string): Promise<AIMatchResult> => {
-        const apiKey = localStorage.getItem("GEMINI_API_KEY");
-        if (!apiKey) {
-            throw new Error("Please configure your Gemini API Key in Settings first.");
+        const providerId = (localStorage.getItem('AI_PROVIDER') as AIProviderId) || 'gemini';
+        const model = getProvider(providerId);
+
+        if (!model) {
+            throw new Error(`Please configure your ${providerId} API Key in Settings first.`);
         }
 
         const prompt = `
@@ -76,21 +40,26 @@ export const AIHelper = {
     `;
 
         try {
-            const responseText = await callGemini(prompt, apiKey);
+            const { text } = await generateText({
+                model,
+                prompt,
+            });
+
             // Clean up potential markdown code blocks
-            const jsonString = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+            const jsonString = text.replace(/```json/g, "").replace(/```/g, "").trim();
             return JSON.parse(jsonString);
         } catch (error) {
             console.error("AI Match Error:", error);
-            // Fallback or re-throw
             throw error;
         }
     },
 
     generateCoverLetter: async (jobDescription: string, resumeContent: string, jobTitle: string, companyName: string): Promise<AICoverLetterResult> => {
-        const apiKey = localStorage.getItem("GEMINI_API_KEY");
-        if (!apiKey) {
-            throw new Error("Please configure your Gemini API Key in Settings first.");
+        const providerId = (localStorage.getItem('AI_PROVIDER') as AIProviderId) || 'gemini';
+        const model = getProvider(providerId);
+
+        if (!model) {
+            throw new Error(`Please configure your ${providerId} API Key in Settings first.`);
         }
 
         const prompt = `
@@ -110,8 +79,11 @@ export const AIHelper = {
     `;
 
         try {
-            const coverLetter = await callGemini(prompt, apiKey);
-            return { coverLetter };
+            const { text } = await generateText({
+                model,
+                prompt,
+            });
+            return { coverLetter: text };
         } catch (error) {
             console.error("AI Cover Letter Error:", error);
             throw error;
@@ -119,13 +91,20 @@ export const AIHelper = {
     },
 
     validateConnection: async (): Promise<boolean> => {
-        const apiKey = localStorage.getItem("GEMINI_API_KEY");
-        if (!apiKey) {
-            throw new Error("API Key is missing.");
+        // This is primarily used by the Settings page connection test
+        const providerId = (localStorage.getItem('AI_PROVIDER') as AIProviderId) || 'gemini';
+        const model = getProvider(providerId);
+
+        if (!model) {
+            throw new Error("Provider not configured correctly.");
         }
+
         try {
-            await callGemini("Reply with 'OK' if you can read this.", apiKey);
-            return true;
+            const { text } = await generateText({
+                model,
+                prompt: "Reply with 'OK' if you can read this.",
+            });
+            return text.length > 0;
         } catch (error) {
             console.error("Connection Validation Error:", error);
             throw error;

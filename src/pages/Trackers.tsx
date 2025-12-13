@@ -155,6 +155,13 @@ export default function Trackers() {
     setEditingJob(null);
   };
 
+  const handleAutoSave = (updatedJob: Job) => {
+    // Save to DB
+    updateJob(updatedJob);
+    // Keep local state in sync so dialog doesn't close or show stale data
+    setEditingJob(updatedJob);
+  };
+
   // Handle extension job data from URL parameters
   useEffect(() => {
     const action = searchParams.get('action');
@@ -432,6 +439,7 @@ export default function Trackers() {
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
           onUpdateJob={handleUpdateJob}
+          onAutoSave={handleAutoSave}
         />
       </div>
     </div>

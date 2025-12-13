@@ -24,17 +24,20 @@ import { AIHelper, AIMatchResult } from "@/utils/ai-helper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, FileText, CheckCircle2, AlertCircle } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { JobChecklist } from "@/components/JobChecklist";
+import { JobChecklist as JobChecklistType } from "@/types/job";
 
 interface EditJobDialogProps {
   job: Job | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdateJob: (job: Job) => void;
+  onAutoSave?: (job: Job) => void;
 }
 
-export function EditJobDialog({ job, open, onOpenChange, onUpdateJob }: EditJobDialogProps) {
+export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave }: EditJobDialogProps) {
   const [activeTab, setActiveTab] = useState("details");
+  const [prevJobId, setPrevJobId] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [matchResult, setMatchResult] = useState<AIMatchResult | null>(null);
   const [isGeneratingLetter, setIsGeneratingLetter] = useState(false);
@@ -54,6 +57,7 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob }: EditJobD
     dateApplied: "",
     followUp: "",
     excitement: 3,
+    checklist: {} as JobChecklistType,
   });
 
   useEffect(() => {
@@ -72,13 +76,18 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob }: EditJobD
         dateApplied: job.dateApplied || "",
         followUp: job.followUp || "",
         excitement: job.excitement,
+        checklist: job.checklist || {},
       });
-      // Reset AI states when opening new job
-      setMatchResult(null);
-      setCoverLetter("");
-      setActiveTab("details");
+
+      // Only reset UI state if we're opening a DIFFERENT job
+      if (job.id !== prevJobId) {
+        setMatchResult(null);
+        setCoverLetter("");
+        setActiveTab("details");
+        setPrevJobId(job.id);
+      }
     }
-  }, [job]);
+  }, [job, prevJobId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,6 +109,7 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob }: EditJobD
       dateApplied: formData.dateApplied || undefined,
       followUp: formData.followUp || undefined,
       excitement: formData.excitement,
+      checklist: formData.checklist,
     };
 
     onUpdateJob(updatedJob);
@@ -145,6 +155,43 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob }: EditJobD
     }
   };
 
+  const handleChecklistToggle = (id: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      checklist: {
+        ...prev.checklist,
+        [id]: checked
+      }
+    }));
+
+    if (onAutoSave && job) {
+      // Construct updated job for auto-save
+      // We use the PREVIOUS formData but with the NEW checklist value
+      // This is because setFormData is async/batched
+      const updatedChecklist = { ...formData.checklist, [id]: checked };
+
+      const updatedJob: Job = {
+        ...job,
+        position: formData.position,
+        jobUrl: formData.jobUrl || undefined,
+        company: formData.company,
+        location: formData.location || undefined,
+        description: formData.description || undefined,
+        minSalary: formData.minSalary ? parseInt(formData.minSalary) : undefined,
+        maxSalary: formData.maxSalary ? parseInt(formData.maxSalary) : undefined,
+        status: formData.status,
+        datePosted: formData.datePosted || undefined,
+        deadline: formData.deadline || undefined,
+        dateApplied: formData.dateApplied || undefined,
+        followUp: formData.followUp || undefined,
+        excitement: formData.excitement,
+        checklist: updatedChecklist,
+      };
+
+      onAutoSave(updatedJob);
+    }
+  };
+
   if (!job) return null;
 
   return (
@@ -162,14 +209,15 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob }: EditJobD
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
           <div className="px-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="checklist">Check List</TabsTrigger>
               <TabsTrigger value="match">AI Match Score</TabsTrigger>
               <TabsTrigger value="cover-letter">Cover Letter</TabsTrigger>
             </TabsList>
           </div>
 
-          <ScrollArea className="flex-1 p-6">
+          <div className="flex-1 p-6 overflow-y-auto">
             <TabsContent value="details" className="mt-0 space-y-4">
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Basic Job Information */}
@@ -342,6 +390,16 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob }: EditJobD
               </form>
             </TabsContent>
 
+
+
+            <TabsContent value="checklist" className="mt-0">
+              <JobChecklist
+                checklist={formData.checklist}
+                onToggle={handleChecklistToggle}
+              />
+              {/* Auto-save enabled, no manual button needed */}
+            </TabsContent>
+
             <TabsContent value="match" className="mt-0 space-y-6">
               <div className="flex flex-col items-center justify-center space-y-4 py-6 text-center">
                 {!matchResult ? (
@@ -448,9 +506,9 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob }: EditJobD
                 )}
               </div>
             </TabsContent>
-          </ScrollArea>
+          </div>
         </Tabs>
       </DialogContent>
-    </Dialog>
+    </Dialog >
   );
 }

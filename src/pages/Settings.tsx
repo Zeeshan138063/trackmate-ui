@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { User, Bell, Shield, CreditCard, Download, Trash2, Sparkles } from "lucide-react";
 import { AIHelper } from "@/utils/ai-helper";
+import { PROVIDERS, AIProviderId } from "@/utils/ai-providers/registry";
 
 export default function Settings() {
   const [notifications, setNotifications] = useState({
@@ -19,22 +20,57 @@ export default function Settings() {
     weeklyDigest: true
   });
 
-  const [apiKey, setApiKey] = useState("");
-  const [modelName, setModelName] = useState("gemini-2.5-flash");
+  const [provider, setProvider] = useState<AIProviderId>("gemini");
+
+  // Provider-specific config states
+  const [geminiConfig, setGeminiConfig] = useState({ key: "", model: "gemini-2.5-flash" });
+  const [openaiConfig, setOpenaiConfig] = useState({ key: "", model: "gpt-4o" });
+  const [deepseekConfig, setDeepseekConfig] = useState({ key: "", model: "deepseek-chat" });
+  const [huggingfaceConfig, setHuggingfaceConfig] = useState({ key: "", model: "meta-llama/Meta-Llama-3-8B-Instruct" });
+
   const [testingConnection, setTestingConnection] = useState(false);
   const [testStatus, setTestStatus] = useState<{ success: boolean; message: string } | null>(null);
 
   useEffect(() => {
-    const storedKey = localStorage.getItem("GEMINI_API_KEY");
-    if (storedKey) setApiKey(storedKey);
+    // Load general settings
+    const storedProvider = localStorage.getItem("AI_PROVIDER") as AIProviderId;
+    if (storedProvider) setProvider(storedProvider);
 
-    const storedModel = localStorage.getItem("GEMINI_MODEL_NAME");
-    if (storedModel) setModelName(storedModel);
+    // Load provider configs
+    setGeminiConfig({
+      key: localStorage.getItem("GEMINI_API_KEY") || "",
+      model: localStorage.getItem("GEMINI_MODEL_NAME") || "gemini-2.5-flash"
+    });
+    setOpenaiConfig({
+      key: localStorage.getItem("OPENAI_API_KEY") || "",
+      model: localStorage.getItem("OPENAI_MODEL_NAME") || "gpt-4o"
+    });
+    setDeepseekConfig({
+      key: localStorage.getItem("DEEPSEEK_API_KEY") || "",
+      model: localStorage.getItem("DEEPSEEK_MODEL_NAME") || "deepseek-chat"
+    });
+    setHuggingfaceConfig({
+      key: localStorage.getItem("HUGGINGFACE_API_KEY") || "",
+      model: localStorage.getItem("HUGGINGFACE_MODEL_NAME") || "meta-llama/Meta-Llama-3-8B-Instruct"
+    });
   }, []);
 
-  const handleSaveApiKey = () => {
-    localStorage.setItem("GEMINI_API_KEY", apiKey);
-    localStorage.setItem("GEMINI_MODEL_NAME", modelName);
+  const handleSaveSettings = () => {
+    localStorage.setItem("AI_PROVIDER", provider);
+
+    // Save all configs
+    localStorage.setItem("GEMINI_API_KEY", geminiConfig.key);
+    localStorage.setItem("GEMINI_MODEL_NAME", geminiConfig.model);
+
+    localStorage.setItem("OPENAI_API_KEY", openaiConfig.key);
+    localStorage.setItem("OPENAI_MODEL_NAME", openaiConfig.model);
+
+    localStorage.setItem("DEEPSEEK_API_KEY", deepseekConfig.key);
+    localStorage.setItem("DEEPSEEK_MODEL_NAME", deepseekConfig.model);
+
+    localStorage.setItem("HUGGINGFACE_API_KEY", huggingfaceConfig.key);
+    localStorage.setItem("HUGGINGFACE_MODEL_NAME", huggingfaceConfig.model);
+
     setTestStatus({ success: true, message: "Settings saved! Click 'Test Connection' to verify." });
   };
 
@@ -42,9 +78,8 @@ export default function Settings() {
     setTestingConnection(true);
     setTestStatus(null);
     try {
-      // Temporarily save to ensure helper uses current values
-      localStorage.setItem("GEMINI_API_KEY", apiKey);
-      localStorage.setItem("GEMINI_MODEL_NAME", modelName);
+      // Ensure values are saved first so helper reads fresh data
+      handleSaveSettings();
 
       await AIHelper.validateConnection();
       setTestStatus({ success: true, message: "Connection successful! The API Key and Model Name are valid." });
@@ -235,31 +270,117 @@ export default function Settings() {
             <CardContent className="space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="geminiKey">Gemini API Key</Label>
-                  <Input
-                    id="geminiKey"
-                    type="password"
-                    placeholder="AIzaSy..."
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                  />
+                  <Label htmlFor="providerSelect">Select AI Provider</Label>
+                  <Select value={provider} onValueChange={(val) => setProvider(val as AIProviderId)}>
+                    <SelectTrigger id="providerSelect">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PROVIDERS.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="modelName">Model Name</Label>
-                  <Input
-                    id="modelName"
-                    placeholder="gemini-2.5-flash"
-                    value={modelName}
-                    onChange={(e) => setModelName(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Default: gemini-2.5-flash. You can try 'gemini-1.5-pro' or others if available.
-                  </p>
-                </div>
+                {provider === "gemini" && (
+                  <div className="space-y-4 border-l-2 border-primary/20 pl-4 py-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="geminiKey">Gemini API Key</Label>
+                      <Input
+                        id="geminiKey"
+                        type="password"
+                        placeholder="AIzaSy..."
+                        value={geminiConfig.key}
+                        onChange={(e) => setGeminiConfig({ ...geminiConfig, key: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="geminiModel">Model Name</Label>
+                      <Input
+                        id="geminiModel"
+                        value={geminiConfig.model}
+                        onChange={(e) => setGeminiConfig({ ...geminiConfig, model: e.target.value })}
+                      />
+                      <p className="text-xs text-muted-foreground">Default: gemini-2.5-flash</p>
+                    </div>
+                  </div>
+                )}
+
+                {provider === "openai" && (
+                  <div className="space-y-4 border-l-2 border-primary/20 pl-4 py-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="openaiKey">OpenAI API Key</Label>
+                      <Input
+                        id="openaiKey"
+                        type="password"
+                        placeholder="sk-..."
+                        value={openaiConfig.key}
+                        onChange={(e) => setOpenaiConfig({ ...openaiConfig, key: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="openaiModel">Model Name</Label>
+                      <Input
+                        id="openaiModel"
+                        value={openaiConfig.model}
+                        onChange={(e) => setOpenaiConfig({ ...openaiConfig, model: e.target.value })}
+                      />
+                      <p className="text-xs text-muted-foreground">Default: gpt-4o</p>
+                    </div>
+                  </div>
+                )}
+
+                {provider === "deepseek" && (
+                  <div className="space-y-4 border-l-2 border-primary/20 pl-4 py-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="deepseekKey">DeepSeek API Key</Label>
+                      <Input
+                        id="deepseekKey"
+                        type="password"
+                        placeholder="sk-..."
+                        value={deepseekConfig.key}
+                        onChange={(e) => setDeepseekConfig({ ...deepseekConfig, key: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="deepseekModel">Model Name</Label>
+                      <Input
+                        id="deepseekModel"
+                        value={deepseekConfig.model}
+                        onChange={(e) => setDeepseekConfig({ ...deepseekConfig, model: e.target.value })}
+                      />
+                      <p className="text-xs text-muted-foreground">Default: deepseek-chat</p>
+                    </div>
+                  </div>
+                )}
+
+                {provider === "huggingface" && (
+                  <div className="space-y-4 border-l-2 border-primary/20 pl-4 py-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="hfKey">Hugging Face API Key</Label>
+                      <Input
+                        id="hfKey"
+                        type="password"
+                        placeholder="hf_..."
+                        value={huggingfaceConfig.key}
+                        onChange={(e) => setHuggingfaceConfig({ ...huggingfaceConfig, key: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="hfModel">Model URL / ID</Label>
+                      <Input
+                        id="hfModel"
+                        value={huggingfaceConfig.model}
+                        onChange={(e) => setHuggingfaceConfig({ ...huggingfaceConfig, model: e.target.value })}
+                      />
+                      <p className="text-xs text-muted-foreground">e.g. meta-llama/Meta-Llama-3-8B-Instruct</p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex gap-2">
-                  <Button onClick={handleSaveApiKey}>Save Settings</Button>
+                  <Button onClick={handleSaveSettings}>Save Settings</Button>
                   <Button variant="outline" onClick={handleTestConnection} disabled={testingConnection}>
                     {testingConnection ? "Testing..." : "Test Connection"}
                   </Button>
@@ -272,7 +393,7 @@ export default function Settings() {
                 )}
 
                 <p className="text-sm text-muted-foreground pt-2">
-                  Your key is stored locally in your browser. Get a free key from <a href="https://aistudio.google.com/app/apikey" target="_blank" className="underline text-primary" rel="noreferrer">Google AI Studio</a>.
+                  Get free keys from their respective providers (Google AI Studio, OpenAI, DeepSeek, Hugging Face).
                 </p>
               </div>
             </CardContent>
