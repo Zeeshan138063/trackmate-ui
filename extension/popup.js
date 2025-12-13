@@ -153,11 +153,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (savedDirectly) {
           setStatus('Contact saved directly to TrackMate!', 'success');
           // Disable save button to prevent double submits
-          saveBtn.disabled = true; 
+          saveBtn.disabled = true;
           saveBtn.textContent = 'Saved';
         } else {
-             // Error already logged in setStatus by saveContactDirectly, but we can be explicit
-             saveBtn.disabled = false;
+          // Error already logged in setStatus by saveContactDirectly, but we can be explicit
+          saveBtn.disabled = false;
         }
       } else {
         // Job Mode (Existing logic)
@@ -330,7 +330,7 @@ async function saveContactDirectly(contactData) {
         notes: contactData.notes,
         linkedin_url: contactData.linkedin_url,
         // Default empty fields for schema compliance
-        email: '', 
+        email: '',
         phone: '',
         country: ''
       })
@@ -348,9 +348,9 @@ async function saveContactDirectly(contactData) {
     console.error("Direct save failed:", e);
     // More specific error messages for user
     if (e.message.includes("401") || e.message.includes("403")) {
-         setStatus("Auth Error: Re-login to TrackMate tab.", "error");
+      setStatus("Auth Error: Re-login to TrackMate tab.", "error");
     } else {
-         setStatus(`Error saving: ${e.message}`, "error");
+      setStatus(`Error saving: ${e.message}`, "error");
     }
     return false;
   }

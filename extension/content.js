@@ -788,7 +788,12 @@ class JobExtractor {
       const el = document.querySelector(selector);
       if (el) {
         const text = el.textContent.trim();
-        if (text && !text.includes('Contact info') && !text.includes('connections')) {
+        const lowerText = text.toLowerCase();
+        if (text &&
+          !lowerText.includes('contact info') &&
+          !lowerText.includes('connections') &&
+          !lowerText.includes('connection') &&
+          !lowerText.includes('degree')) {
           data.location = text;
           break;
         }
@@ -814,14 +819,16 @@ class JobExtractor {
             // Get the text, ignoring the "see more" buttons
             // Text often in a specific span with aria-hidden=true for visual
             const visibleSpan = textContainer.querySelector('span[aria-hidden="true"]');
+
+            // Use cleanHtmlToMarkdown to preserve line breaks and formatting
             if (visibleSpan) {
-              data.about = visibleSpan.textContent.trim();
+              data.about = this.cleanHtmlToMarkdown(visibleSpan);
             } else {
-              data.about = textContainer.textContent.trim();
+              data.about = this.cleanHtmlToMarkdown(textContainer);
             }
 
             // Clean up "…see more"
-            data.about = data.about.replace('…see more', '').trim();
+            data.about = data.about.replace(/…\s*see more/i, '').trim();
           }
         }
       }
