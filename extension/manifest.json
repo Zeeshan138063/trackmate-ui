@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TrackMate Job Capture",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Capture job details and screenshots from job posting pages",
   "permissions": [
     "activeTab",
