@@ -47,7 +47,7 @@ export function ContactDetailsDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between pr-8">
                         <DialogTitle className="text-xl">Contact Details</DialogTitle>
                         {onEdit && (
                             <Button variant="outline" size="sm" onClick={() => {
