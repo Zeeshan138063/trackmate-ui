@@ -175,6 +175,7 @@ async function captureScreenshot(tabId) {
 // Listen for tab updates to detect job pages
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url) {
+    // Check for Job Sites
     const jobSites = [
       'linkedin.com/jobs',
       'indeed.com/viewjob',
@@ -183,10 +184,19 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       'greenhouse.io'
     ];
 
+    // Check for Profile Sites
+    const profileSites = [
+      'linkedin.com/in/'
+    ];
+
     if (jobSites.some(site => tab.url.includes(site))) {
-      // Notify that we're on a job page
-      chrome.action.setBadgeText({ text: 'J', tabId });
+      chrome.action.setBadgeText({ text: 'JOB', tabId });
       chrome.action.setBadgeBackgroundColor({ color: '#10b981' });
+    } else if (profileSites.some(site => tab.url.includes(site))) {
+      chrome.action.setBadgeText({ text: 'USER', tabId });
+      chrome.action.setBadgeBackgroundColor({ color: '#3b82f6' }); // Blue for people
+    } else {
+      chrome.action.setBadgeText({ text: '', tabId });
     }
   }
 });
