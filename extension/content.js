@@ -677,6 +677,13 @@ class JobExtractor {
           data.position = parts[0].trim();
           // company will be set later by specific selector, but fallback here
         }
+      } else if (data.headline.includes('@')) {
+        // "Role @ Company" format
+        const parts = data.headline.split('@');
+        if (parts.length >= 2) {
+          data.position = parts[0].trim();
+          data.company = parts.slice(1).join('@').trim();
+        }
       } else if (data.headline.includes('|')) {
         // "Role | Company | Skills" format
         const parts = data.headline.split('|').map(s => s.trim());
@@ -691,7 +698,9 @@ class JobExtractor {
       'button[aria-label*="Current company:"]',
       'div[aria-label*="Current company"]',
       '.pv-text-details__right-panel button',
-      '.pv-text-details__right-panel div'
+      '.pv-text-details__right-panel div',
+      'ul.pv-text-details__right-panel li button',
+      '.pv-text-details__right-panel__item-text' // New selector
     ];
 
     for (const selector of companySelectors) {
@@ -706,7 +715,13 @@ class JobExtractor {
           if (match) text = match[1].trim();
         }
         if (text) {
-          data.company = text;
+          // Remove duplicates sometimes found in text content like "Company Name\nCompany Name"
+          const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+          if (lines.length > 0) {
+            data.company = lines[0]; // Take first line
+          } else {
+            data.company = text;
+          }
           break;
         }
       }
@@ -731,29 +746,58 @@ class JobExtractor {
               // Usually span[0] is role, span[1] is company details (e.g. "Google · Full-time")
               const companyText = spans[1].textContent.split('·')[0].trim();
               data.company = companyText;
+            } else if (spans.length === 1) {
+              data.company = spans[0].textContent.trim();
             }
           }
         }
       }
     }
 
+    // If we still don't have company but parsed it from headline, use that as last resort
+    if (!data.company && data.headline.includes('@')) {
+      const parts = data.headline.split('@');
+      if (parts.length >= 2) data.company = parts.slice(1).join('@').trim();
+    }
+    if (!data.company && data.headline.includes(' at ')) {
+      const parts = data.headline.split(' at ');
+      if (parts.length >= 2) data.company = parts.slice(1).join(' at ').trim();
+    }
+
+
     // Location
     const locEl = document.querySelector('span.text-body-small.inline.t-black--light.break-words') ||
       document.querySelector('div.top-card-layout__entity-info');
     if (locEl) data.location = locEl.textContent.trim();
 
-    // About
-    const aboutEl = document.querySelector('#about ~ .display-flex .inline-show-more-text') ||
-      document.querySelector('#about ~ div.display-flex span.visually-hidden');
-
+    // About - Improved traversal
     if (!data.about) {
-      const headings = Array.from(document.querySelectorAll('span, h2'));
-      const aboutHeader = headings.find(h => h.textContent.trim() === 'About');
+      // Find "About" header (h2 usually)
+      const allHeaders = Array.from(document.querySelectorAll('h2 span[aria-hidden="true"], h2'));
+      const aboutHeader = allHeaders.find(h => h.textContent.trim() === 'About');
+
       if (aboutHeader) {
-        const container = aboutHeader.closest('section');
-        if (container) {
-          const textDiv = container.querySelector('.inline-show-more-text, .pv-about-section__summary-text');
-          if (textDiv) data.about = textDiv.textContent.trim();
+        // Go up to the section container
+        const section = aboutHeader.closest('section');
+        if (section) {
+          // Look for the text body container. Usually .inline-show-more-text or a plain span/div
+          const textContainer = section.querySelector('.inline-show-more-text') ||
+            section.querySelector('.pv-about-section__summary-text') ||
+            section.querySelector('div.display-flex.ph5');
+
+          if (textContainer) {
+            // Get the text, ignoring the "see more" buttons
+            // Text often in a specific span with aria-hidden=true for visual
+            const visibleSpan = textContainer.querySelector('span[aria-hidden="true"]');
+            if (visibleSpan) {
+              data.about = visibleSpan.textContent.trim();
+            } else {
+              data.about = textContainer.textContent.trim();
+            }
+
+            // Clean up "…see more"
+            data.about = data.about.replace('…see more', '').trim();
+          }
         }
       }
     }
