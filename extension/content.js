@@ -802,22 +802,31 @@ class JobExtractor {
 
     // About - Improved traversal
     if (!data.about) {
-      // Find "About" header (h2 usually)
-      const allHeaders = Array.from(document.querySelectorAll('h2 span[aria-hidden="true"], h2'));
-      const aboutHeader = allHeaders.find(h => h.textContent.trim() === 'About');
+      // Strategy 1: Find "About" header and look within its section
+      const allHeaders = Array.from(document.querySelectorAll('h2 span[aria-hidden="true"], h2, div#about, section#about'));
+      const aboutHeader = allHeaders.find(h => h.textContent.trim().toLowerCase() === 'about');
 
       if (aboutHeader) {
         // Go up to the section container
-        const section = aboutHeader.closest('section');
+        const section = aboutHeader.closest('section') || aboutHeader.closest('div.artdeco-card');
         if (section) {
-          // Look for the text body container. Usually .inline-show-more-text or a plain span/div
-          const textContainer = section.querySelector('.inline-show-more-text') ||
-            section.querySelector('.pv-about-section__summary-text') ||
-            section.querySelector('div.display-flex.ph5');
+          // Look for text containers
+          const textSelects = [
+            '.inline-show-more-text',
+            '.pv-about-section__summary-text',
+            'div.display-flex.ph5',
+            '.pv-shared-text-with-see-more',
+            '[class*="about"] [class*="text"]'
+          ];
+
+          let textContainer = null;
+          for (const s of textSelects) {
+            textContainer = section.querySelector(s);
+            if (textContainer) break;
+          }
 
           if (textContainer) {
             // Get the text, ignoring the "see more" buttons
-            // Text often in a specific span with aria-hidden=true for visual
             const visibleSpan = textContainer.querySelector('span[aria-hidden="true"]');
 
             // Use cleanHtmlToMarkdown to preserve line breaks and formatting
@@ -826,9 +835,19 @@ class JobExtractor {
             } else {
               data.about = this.cleanHtmlToMarkdown(textContainer);
             }
+          }
 
-            // Clean up "…see more"
-            data.about = data.about.replace(/…\s*see more/i, '').trim();
+          // Fallback: if no specific container found, try to grab text from the section body excluding the header
+          if (!data.about) {
+            const clone = section.cloneNode(true);
+            const headerInClone = clone.querySelector('h2');
+            if (headerInClone) headerInClone.remove();
+            data.about = this.cleanHtmlToMarkdown(clone);
+          }
+
+          // Clean up "…see more"
+          if (data.about) {
+            data.about = data.about.replace(/…\s*see more/gi, '').trim();
           }
         }
       }
