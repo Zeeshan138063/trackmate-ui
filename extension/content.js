@@ -648,28 +648,92 @@ class JobExtractor {
       photoUrl: ''
     };
 
-    // Name
-    const nameEl = document.querySelector('h1.text-heading-xlarge') ||
-      document.querySelector('h1.top-card-layout__title');
-    if (nameEl) data.name = nameEl.textContent.trim();
+    // Name - Improved selectors
+    const nameSelectors = [
+      'h1.text-heading-xlarge',
+      'h1.top-card-layout__title',
+      '.pv-text-details__left-panel h1',
+      '.artdeco-hoverable-trigger h1',
+      'h1'
+    ];
+    for (const selector of nameSelectors) {
+      const el = document.querySelector(selector);
+      if (el) {
+        data.name = el.textContent.trim();
+        break;
+      }
+    }
 
-    // Headline (often contains "Role at Company")
+    // Headline
     const headlineEl = document.querySelector('div.text-body-medium') ||
       document.querySelector('div.top-card-layout__headline');
     if (headlineEl) {
       data.headline = headlineEl.textContent.trim();
 
-      // Try to parse Position and Company from headline "Position at Company"
+      // Parse Position and Company from Headline
       if (data.headline.includes(' at ')) {
         const parts = data.headline.split(' at ');
         if (parts.length >= 2) {
           data.position = parts[0].trim();
-          data.company = parts.slice(1).join(' at ').trim(); // Handle "at" in company name
-        } else {
-          data.position = data.headline;
+          // company will be set later by specific selector, but fallback here
         }
+      } else if (data.headline.includes('|')) {
+        // "Role | Company | Skills" format
+        const parts = data.headline.split('|').map(s => s.trim());
+        if (parts.length > 0) data.position = parts[0];
       } else {
         data.position = data.headline;
+      }
+    }
+
+    // Company - Try specific top card selectors first (often "Current Company")
+    const companySelectors = [
+      'button[aria-label*="Current company:"]',
+      'div[aria-label*="Current company"]',
+      '.pv-text-details__right-panel button',
+      '.pv-text-details__right-panel div'
+    ];
+
+    for (const selector of companySelectors) {
+      const el = document.querySelector(selector);
+      if (el) {
+        let text = el.textContent.trim();
+        // Clean up accessible text if needed
+        if (el.getAttribute('aria-label') && el.getAttribute('aria-label').includes('Current company:')) {
+          // Extracts "Current company: Google. Click to..."
+          const label = el.getAttribute('aria-label');
+          const match = label.match(/Current company:([^.]+)/);
+          if (match) text = match[1].trim();
+        }
+        if (text) {
+          data.company = text;
+          break;
+        }
+      }
+    }
+
+    // Fallback: Check Experience Section for first item
+    if (!data.company) {
+      // Find experience section by ID or text
+      const headers = Array.from(document.querySelectorAll('h2, span'));
+      const expHeader = headers.find(h => h.textContent.trim().toLowerCase() === 'experience');
+      if (expHeader) {
+        const section = expHeader.closest('section');
+        if (section) {
+          // First list item in experience
+          const firstCompany = section.querySelector('.pvs-list__item--line-separated');
+          if (firstCompany) {
+            // Look for company name text (usually 2nd span in nested structure)
+            const spans = Array.from(firstCompany.querySelectorAll('span[aria-hidden="true"]'));
+            // Logic: 1st span = Role, 2nd span = Company, OR 1st span = Company (if role listed below)
+            // Heuristic: If we have multiple spans, check them.
+            if (spans.length >= 2) {
+              // Usually span[0] is role, span[1] is company details (e.g. "Google · Full-time")
+              const companyText = spans[1].textContent.split('·')[0].trim();
+              data.company = companyText;
+            }
+          }
+        }
       }
     }
 
@@ -678,12 +742,11 @@ class JobExtractor {
       document.querySelector('div.top-card-layout__entity-info');
     if (locEl) data.location = locEl.textContent.trim();
 
-    // About/Notes
+    // About
     const aboutEl = document.querySelector('#about ~ .display-flex .inline-show-more-text') ||
-      document.querySelector('#about ~ div.display-flex span.visually-hidden'); // often hidden/truncated
-    // Fallback for about section
+      document.querySelector('#about ~ div.display-flex span.visually-hidden');
+
     if (!data.about) {
-      // Look for the "About" section header, then find the text sibling
       const headings = Array.from(document.querySelectorAll('span, h2'));
       const aboutHeader = headings.find(h => h.textContent.trim() === 'About');
       if (aboutHeader) {
@@ -692,19 +755,6 @@ class JobExtractor {
           const textDiv = container.querySelector('.inline-show-more-text, .pv-about-section__summary-text');
           if (textDiv) data.about = textDiv.textContent.trim();
         }
-      }
-    }
-
-    // Current Company (Experince Section) - more reliable than headline
-    // This is tricky due to dynamic loading, but simple heuristic:
-    // Look for first item in experience list
-    const expItem = document.querySelector('#experience ~ .pvs-list__outer-container .pvs-list__item--line-separated');
-    if (expItem) {
-      const spans = Array.from(expItem.querySelectorAll('span[aria-hidden="true"]'));
-      if (spans.length >= 2) {
-        // Usually first span is role, second is company, or vice versa depending on layout
-        // LinkedIn structure varies wildly.
-        // Let's rely on Headline for now as it's easier, or maybe leave company empty for user to fill
       }
     }
 
