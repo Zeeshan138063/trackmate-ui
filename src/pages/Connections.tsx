@@ -5,12 +5,13 @@ import { ContactCard } from "@/components/ContactCard";
 import { AddContactDialog } from "@/components/AddContactDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Users } from "lucide-react";
+import { Plus, Search, Users, MapPin } from "lucide-react";
 import { Contact } from "@/types/contact";
 
 export default function Connections() {
     const { contacts, loading, addContact, updateContact, deleteContact } = useContacts();
     const [searchQuery, setSearchQuery] = useState("");
+    const [locationQuery, setLocationQuery] = useState("");
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
     const [editingContact, setEditingContact] = useState<Contact | null>(null);
@@ -73,13 +74,22 @@ export default function Connections() {
     const filteredContacts = useMemo(() => {
         return contacts.filter((contact) => {
             const query = searchQuery.toLowerCase();
-            return (
+            const locQuery = locationQuery.toLowerCase();
+
+            const matchesSearch = (
                 contact.name.toLowerCase().includes(query) ||
                 (contact.company?.toLowerCase().includes(query) ?? false) ||
                 (contact.position?.toLowerCase().includes(query) ?? false)
             );
+
+            const matchesLocation = !locQuery || (
+                (contact.address?.toLowerCase().includes(locQuery) ?? false) ||
+                (contact.country?.toLowerCase().includes(locQuery) ?? false)
+            );
+
+            return matchesSearch && matchesLocation;
         });
-    }, [contacts, searchQuery]);
+    }, [contacts, searchQuery, locationQuery]);
 
     const handleCreateContact = async (contactData: Omit<Contact, "id" | "user_id" | "created_at">) => {
         await addContact(contactData);
@@ -115,14 +125,25 @@ export default function Connections() {
                 </Button>
             </div>
 
-            <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                    placeholder="Search connections by name, company, or role..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 max-w-md"
-                />
+            <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Search connections by name, company, or role..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-9"
+                    />
+                </div>
+                <div className="relative flex-1 md:max-w-xs">
+                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Filter by location..."
+                        value={locationQuery}
+                        onChange={(e) => setLocationQuery(e.target.value)}
+                        className="pl-9"
+                    />
+                </div>
             </div>
 
             {loading ? (
