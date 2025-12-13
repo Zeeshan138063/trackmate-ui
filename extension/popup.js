@@ -133,46 +133,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (isProfile) {
         // Contact Mode
+        // Helper to get value
+        const getVal = (id) => document.getElementById(id).value || '';
+
         const contactDataToSend = {
-          name: document.getElementById('contactName').value || '',
-          position: document.getElementById('contactPosition').value || '',
-          company: document.getElementById('contactCompany').value || '',
-          location: document.getElementById('contactLocation').value || '',
-          relationship: document.getElementById('contactRelationship').value || '',
-          notes: document.getElementById('contactNotes').value || '',
-          linkedin_url: document.getElementById('contactLinkedin').value || currentJobData.profileUrl || tab.url || '',
+          name: getVal('contactName'),
+          position: getVal('contactPosition'),
+          company: getVal('contactCompany'),
+          location: getVal('contactLocation'), // Will be mapped to address
+          relationship: getVal('contactRelationship'),
+          notes: getVal('contactNotes'),
+          linkedin_url: getVal('contactLinkedin') || currentJobData.profileUrl || tab.url || '',
           photo_url: currentJobData.photoUrl || ''
         };
 
-        // Attempt direct save first
+        // Attempt direct save
         const savedDirectly = await saveContactDirectly(contactDataToSend);
 
         if (savedDirectly) {
           setStatus('Contact saved directly to TrackMate!', 'success');
-          setTimeout(() => {
-            setStatus('You can view it in the app.', 'success');
-          }, 1000);
-          saveBtn.disabled = false;
-          return;
+          // Disable save button to prevent double submits
+          saveBtn.disabled = true; 
+          saveBtn.textContent = 'Saved';
+        } else {
+             // Error already logged in setStatus by saveContactDirectly, but we can be explicit
+             saveBtn.disabled = false;
         }
-
-        // Fallback to old method if direct save fails
-        chrome.runtime.sendMessage(
-          {
-            action: 'sendContactToTrackMate', // New action
-            data: contactDataToSend,
-            trackMateUrl: trackMateUrl
-          },
-          (response) => {
-            if (response && response.success) {
-              setStatus('Opening TrackMate with contact...', 'success');
-              setTimeout(() => setStatus('Contact sent!', 'success'), 1000);
-            } else {
-              setStatus('Failed to send contact', 'error');
-            }
-            saveBtn.disabled = false;
-          }
-        );
       } else {
         // Job Mode (Existing logic)
         const jobDataToSend = {
@@ -339,13 +325,14 @@ async function saveContactDirectly(contactData) {
         name: contactData.name,
         company: contactData.company,
         position: contactData.position,
-        location: contactData.location,
+        address: contactData.location, // Mapped from location to address
         relationship: contactData.relationship,
         notes: contactData.notes,
         linkedin_url: contactData.linkedin_url,
-        // photo_url: contactData.photo_url // ensure db column exists, if not omit
-        email: '', // Add generic empty fields to match schema if needed
-        phone: ''
+        // Default empty fields for schema compliance
+        email: '', 
+        phone: '',
+        country: ''
       })
     });
 
@@ -359,6 +346,12 @@ async function saveContactDirectly(contactData) {
 
   } catch (e) {
     console.error("Direct save failed:", e);
+    // More specific error messages for user
+    if (e.message.includes("401") || e.message.includes("403")) {
+         setStatus("Auth Error: Re-login to TrackMate tab.", "error");
+    } else {
+         setStatus(`Error saving: ${e.message}`, "error");
+    }
     return false;
   }
 }
