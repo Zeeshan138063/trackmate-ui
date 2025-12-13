@@ -650,17 +650,22 @@ class JobExtractor {
 
     // Name - Improved selectors
     const nameSelectors = [
+      '.pv-top-card--list li', // sometimes name is in list
+      'div.ph5 h1', // heavy focus on the main card container
       'h1.text-heading-xlarge',
       'h1.top-card-layout__title',
-      '.pv-text-details__left-panel h1',
-      '.artdeco-hoverable-trigger h1',
-      'h1'
+      '.pv-text-details__left-panel h1'
     ];
     for (const selector of nameSelectors) {
       const el = document.querySelector(selector);
       if (el) {
-        data.name = el.textContent.trim();
-        break;
+        // Ensure it's not a tiny hidden element or side module
+        const text = el.textContent.trim();
+        // Simple sanity check: Profile names are usually 2-3 words, not huge sentences
+        if (text && text.length < 50) {
+          data.name = text;
+          break;
+        }
       }
     }
 
@@ -718,10 +723,15 @@ class JobExtractor {
           // Remove duplicates sometimes found in text content like "Company Name\nCompany Name"
           const lines = text.split('\n').map(l => l.trim()).filter(l => l);
           if (lines.length > 0) {
-            data.company = lines[0]; // Take first line
-          } else {
-            data.company = text;
+            text = lines[0]; // Take first line
           }
+
+          // Filter out generic "Company" label or bad extractions
+          if (text.toLowerCase() === 'company' || text.toLowerCase().includes('click to learn more')) {
+            continue;
+          }
+
+          data.company = text;
           break;
         }
       }
@@ -766,9 +776,24 @@ class JobExtractor {
 
 
     // Location
-    const locEl = document.querySelector('span.text-body-small.inline.t-black--light.break-words') ||
-      document.querySelector('div.top-card-layout__entity-info');
-    if (locEl) data.location = locEl.textContent.trim();
+    // Location - stricter selectors
+    const locationSelectors = [
+      '.pv-text-details__left-panel span.text-body-small.inline',
+      'div.mt2 span.text-body-small', // common container for loc
+      'span.text-body-small.inline.t-black--light.break-words',
+      'div.top-card-layout__entity-info'
+    ];
+
+    for (const selector of locationSelectors) {
+      const el = document.querySelector(selector);
+      if (el) {
+        const text = el.textContent.trim();
+        if (text && !text.includes('Contact info') && !text.includes('connections')) {
+          data.location = text;
+          break;
+        }
+      }
+    }
 
     // About - Improved traversal
     if (!data.about) {
