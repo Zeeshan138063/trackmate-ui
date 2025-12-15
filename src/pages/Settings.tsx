@@ -273,163 +273,140 @@ export default function Settings() {
                 AI Configuration
               </CardTitle>
               <CardDescription>
-                Configure your AI settings to enable Resume Matching and Cover Letter generation.
-                We currently recommend <strong>gemini-2.5-flash</strong>.
+                Configure multiple AI providers and switch between them as needed.
+                The <strong>Active</strong> provider will be used for all AI features.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="providerSelect">Select AI Provider</Label>
-                  <Select value={provider} onValueChange={(val) => setProvider(val as AIProviderId)}>
-                    <SelectTrigger id="providerSelect">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PROVIDERS.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
 
-                {provider === "gemini" && (
-                  <div className="space-y-4 border-l-2 border-primary/20 pl-4 py-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="geminiKey">Gemini API Key</Label>
-                      <Input
-                        id="geminiKey"
-                        type="password"
-                        placeholder="AIzaSy..."
-                        value={geminiConfig.key}
-                        onChange={(e) => setGeminiConfig({ ...geminiConfig, key: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="geminiModel">Model Name</Label>
-                      <Input
-                        id="geminiModel"
-                        value={geminiConfig.model}
-                        onChange={(e) => setGeminiConfig({ ...geminiConfig, model: e.target.value })}
-                      />
-                      <p className="text-xs text-muted-foreground">Default: gemini-2.5-flash</p>
-                    </div>
-                  </div>
-                )}
+              <div className="grid gap-4">
+                {PROVIDERS.map((p) => {
+                  const isActive = provider === p.id;
+                  const isConfigured = (() => {
+                    if (p.id === 'gemini') return !!geminiConfig.key;
+                    if (p.id === 'openai') return !!openaiConfig.key;
+                    if (p.id === 'deepseek') return !!deepseekConfig.key;
+                    if (p.id === 'huggingface') return !!huggingfaceConfig.key;
+                    if (p.id === 'openrouter') return !!openrouterConfig.key;
+                    return false;
+                  })();
 
-                {provider === "openai" && (
-                  <div className="space-y-4 border-l-2 border-primary/20 pl-4 py-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="openaiKey">OpenAI API Key</Label>
-                      <Input
-                        id="openaiKey"
-                        type="password"
-                        placeholder="sk-..."
-                        value={openaiConfig.key}
-                        onChange={(e) => setOpenaiConfig({ ...openaiConfig, key: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="openaiModel">Model Name</Label>
-                      <Input
-                        id="openaiModel"
-                        value={openaiConfig.model}
-                        onChange={(e) => setOpenaiConfig({ ...openaiConfig, model: e.target.value })}
-                      />
-                      <p className="text-xs text-muted-foreground">Default: gpt-4o</p>
-                    </div>
-                  </div>
-                )}
+                  return (
+                    <div key={p.id} className={`flex flex-col border rounded-lg p-4 transition-all ${isActive ? 'border-primary bg-primary/5' : 'hover:border-primary/50'}`}>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`h-4 w-4 rounded-full border flex items-center justify-center cursor-pointer ${isActive ? 'border-primary bg-primary' : 'border-muted-foreground'}`} onClick={() => {
+                            setProvider(p.id);
+                            // Auto save provider selection to local storage immediately for better UX
+                            localStorage.setItem("AI_PROVIDER", p.id);
+                          }}>
+                            {isActive && <div className="h-2 w-2 rounded-full bg-white" />}
+                          </div>
+                          <div>
+                            <h4 className="font-semibold">{p.name}</h4>
+                            <p className="text-xs text-muted-foreground">
+                              {isActive ? "Active Provider" : (isConfigured ? "Configured" : "Not Configured")}
+                            </p>
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={() => {
+                          // Toggle expansion logic could go here, but for now we'll just show inputs always or structured differently
+                          // Actually, let's just show inputs inline for this design
+                        }}>
+                          {isActive ? "Connected" : "Configure"}
+                        </Button>
+                      </div>
 
-                {provider === "deepseek" && (
-                  <div className="space-y-4 border-l-2 border-primary/20 pl-4 py-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="deepseekKey">DeepSeek API Key</Label>
-                      <Input
-                        id="deepseekKey"
-                        type="password"
-                        placeholder="sk-..."
-                        value={deepseekConfig.key}
-                        onChange={(e) => setDeepseekConfig({ ...deepseekConfig, key: e.target.value })}
-                      />
+                      {/* Config Inputs - Always visible or configured */}
+                      <div className="pl-7 space-y-4">
+                        {p.id === "gemini" && (
+                          <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-xs">API Key</Label>
+                                <Input type="password" value={geminiConfig.key} onChange={(e) => setGeminiConfig({ ...geminiConfig, key: e.target.value })} placeholder="AIza..." className="h-8" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs">Model</Label>
+                                <Input value={geminiConfig.model} onChange={(e) => setGeminiConfig({ ...geminiConfig, model: e.target.value })} className="h-8" />
+                              </div>
+                            </div>
+                          </>
+                        )}
+                        {p.id === "openai" && (
+                          <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-xs">API Key</Label>
+                                <Input type="password" value={openaiConfig.key} onChange={(e) => setOpenaiConfig({ ...openaiConfig, key: e.target.value })} placeholder="sk-..." className="h-8" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs">Model</Label>
+                                <Input value={openaiConfig.model} onChange={(e) => setOpenaiConfig({ ...openaiConfig, model: e.target.value })} className="h-8" />
+                              </div>
+                            </div>
+                          </>
+                        )}
+                        {p.id === "deepseek" && (
+                          <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-xs">API Key</Label>
+                                <Input type="password" value={deepseekConfig.key} onChange={(e) => setDeepseekConfig({ ...deepseekConfig, key: e.target.value })} placeholder="sk-..." className="h-8" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs">Model</Label>
+                                <Input value={deepseekConfig.model} onChange={(e) => setDeepseekConfig({ ...deepseekConfig, model: e.target.value })} className="h-8" />
+                              </div>
+                            </div>
+                          </>
+                        )}
+                        {p.id === "huggingface" && (
+                          <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-xs">API Key</Label>
+                                <Input type="password" value={huggingfaceConfig.key} onChange={(e) => setHuggingfaceConfig({ ...huggingfaceConfig, key: e.target.value })} placeholder="hf_..." className="h-8" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs">Model</Label>
+                                <Input value={huggingfaceConfig.model} onChange={(e) => setHuggingfaceConfig({ ...huggingfaceConfig, model: e.target.value })} className="h-8" />
+                              </div>
+                            </div>
+                          </>
+                        )}
+                        {p.id === "openrouter" && (
+                          <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-xs">API Key</Label>
+                                <Input type="password" value={openrouterConfig.key} onChange={(e) => setOpenrouterConfig({ ...openrouterConfig, key: e.target.value })} placeholder="sk-or-..." className="h-8" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs">Model</Label>
+                                <Input value={openrouterConfig.model} onChange={(e) => setOpenrouterConfig({ ...openrouterConfig, model: e.target.value })} className="h-8" />
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="deepseekModel">Model Name</Label>
-                      <Input
-                        id="deepseekModel"
-                        value={deepseekConfig.model}
-                        onChange={(e) => setDeepseekConfig({ ...deepseekConfig, model: e.target.value })}
-                      />
-                      <p className="text-xs text-muted-foreground">Default: deepseek-chat</p>
-                    </div>
-                  </div>
-                )}
-
-                {provider === "huggingface" && (
-                  <div className="space-y-4 border-l-2 border-primary/20 pl-4 py-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="hfKey">Hugging Face API Key</Label>
-                      <Input
-                        id="hfKey"
-                        type="password"
-                        placeholder="hf_..."
-                        value={huggingfaceConfig.key}
-                        onChange={(e) => setHuggingfaceConfig({ ...huggingfaceConfig, key: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="hfModel">Model URL / ID</Label>
-                      <Input
-                        id="hfModel"
-                        value={huggingfaceConfig.model}
-                        onChange={(e) => setHuggingfaceConfig({ ...huggingfaceConfig, model: e.target.value })}
-                      />
-                      <p className="text-xs text-muted-foreground">e.g. meta-llama/Meta-Llama-3-8B-Instruct</p>
-                    </div>
-                  </div>
-                )}
-
-                {provider === "openrouter" && (
-                  <div className="space-y-4 border-l-2 border-primary/20 pl-4 py-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="openrouterKey">OpenRouter API Key</Label>
-                      <Input
-                        id="openrouterKey"
-                        type="password"
-                        placeholder="sk-or-..."
-                        value={openrouterConfig.key}
-                        onChange={(e) => setOpenrouterConfig({ ...openrouterConfig, key: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="openrouterModel">Model Name</Label>
-                      <Input
-                        id="openrouterModel"
-                        value={openrouterConfig.model}
-                        onChange={(e) => setOpenrouterConfig({ ...openrouterConfig, model: e.target.value })}
-                      />
-                      <p className="text-xs text-muted-foreground">e.g. openai/gpt-4o, anthropic/claude-3.5-sonnet, google/gemini-pro-1.5</p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex gap-2">
-                  <Button onClick={handleSaveSettings}>Save Settings</Button>
-                  <Button variant="outline" onClick={handleTestConnection} disabled={testingConnection}>
-                    {testingConnection ? "Testing..." : "Test Connection"}
-                  </Button>
-                </div>
-
-                {testStatus && (
-                  <div className={`p-3 rounded text-sm ${testStatus.success ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                    {testStatus.message}
-                  </div>
-                )}
-
-                <p className="text-sm text-muted-foreground pt-2">
-                  Get free keys from their respective providers (Google AI Studio, OpenAI, DeepSeek, Hugging Face, OpenRouter).
-                </p>
+                  );
+                })}
               </div>
+
+              <div className="flex gap-2 pt-4 border-t">
+                <Button onClick={handleSaveSettings}>Save All Configurations</Button>
+                <Button variant="outline" onClick={handleTestConnection} disabled={testingConnection}>
+                  {testingConnection ? "Testing Active Provider..." : "Test Active Connection"}
+                </Button>
+              </div>
+
+              {testStatus && (
+                <div className={`p-3 rounded text-sm ${testStatus.success ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                  {testStatus.message}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

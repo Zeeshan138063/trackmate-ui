@@ -44,6 +44,7 @@ export const ResumeAIHelper = {
       -   **CRITICAL FIELDS**: For every project, you MUST populate the "name", "technologies" AND "description" fields.
           -   "technologies": If not explicitly listed, infer reasonable technologies based on the project description and common stack usage.
           -   "description": Must be detailed, bulleted (concatenated as string), and explain *how* the technologies were used to solve a problem.
+      -   **PLAIN TEXT ONLY**: Do NOT use markdown syntax (like **bold**, *italic*) within the JSON string values. The output must be pure plain text.
       -   Do NOT invent false facts. Only reframe existing experience.
       
       OUTPUT FORMAT:

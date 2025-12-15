@@ -12,7 +12,10 @@ export function ResumePreview({ data, className }: ResumePreviewProps) {
 
     useEffect(() => {
         if (data) {
-            document.title = `${data.contact.firstName}_${data.contact.lastName}_Resume`;
+            const title = data.targetTitle
+                ? `${data.contact.firstName} ${data.contact.lastName} - ${data.targetTitle}`
+                : `${data.contact.firstName} ${data.contact.lastName} Resume`;
+            document.title = title;
         }
         return () => {
             document.title = "Trackmate UI"; // Reset on unmount
@@ -23,17 +26,18 @@ export function ResumePreview({ data, className }: ResumePreviewProps) {
         <div className={cn("bg-white text-black p-[0.5in] shadow-lg max-w-[8.5in] mx-auto min-h-[11in] text-[10.5pt] font-serif leading-normal print:shadow-none print:p-0 print:max-w-none", className)} id="resume-preview">
 
             {/* Header */}
-            <header className="text-center mb-4 border-b pb-2">
-                <h1 className="text-2xl font-bold uppercase tracking-wide mb-1">
+            <header className="text-center mb-4 border-b pb-4">
+                <h1 className="text-3xl font-bold uppercase tracking-wide mb-1 text-gray-900">
                     {data.contact.firstName} {data.contact.lastName}
                 </h1>
-                <div className="flex flex-wrap justify-center gap-x-3 text-sm">
+
+                <div className="flex flex-wrap justify-center gap-x-3 text-sm text-gray-700">
                     {data.contact.location && <span>{data.contact.location}</span>}
                     {data.contact.phone && <span>| {data.contact.phone}</span>}
                     {data.contact.email && <span>| {data.contact.email}</span>}
-                    {data.contact.linkedin && <span>| <a href={data.contact.linkedin} target="_blank" rel="noreferrer" className="hover:underline">LinkedIn</a></span>}
-                    {data.contact.github && <span>| <a href={data.contact.github} target="_blank" rel="noreferrer" className="hover:underline">GitHub</a></span>}
-                    {data.contact.portfolio && <span>| <a href={data.contact.portfolio} target="_blank" rel="noreferrer" className="hover:underline">Portfolio</a></span>}
+                    {data.contact.linkedin && <span>| <a href={data.contact.linkedin} target="_blank" rel="noreferrer" className="hover:underline text-primary">LinkedIn</a></span>}
+                    {data.contact.github && <span>| <a href={data.contact.github} target="_blank" rel="noreferrer" className="hover:underline text-primary">GitHub</a></span>}
+                    {data.contact.portfolio && <span>| <a href={data.contact.portfolio} target="_blank" rel="noreferrer" className="hover:underline text-primary">Portfolio</a></span>}
                 </div>
             </header>
 
