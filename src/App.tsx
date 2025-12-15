@@ -17,6 +17,7 @@ import JobSearch from "./pages/JobSearch";
 import Support from "./pages/Support";
 import Settings from "./pages/Settings";
 import Connections from "./pages/Connections";
+import GrowthDashboard from "./pages/Growth/Dashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -96,6 +97,13 @@ const App = () => (
             <ProtectedRoute>
               <Layout>
                 <Connections />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/growth" element={
+            <ProtectedRoute>
+              <Layout>
+                <GrowthDashboard />
               </Layout>
             </ProtectedRoute>
           } />
