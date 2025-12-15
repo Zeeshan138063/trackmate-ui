@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { User, Bell, Shield, CreditCard, Download, Trash2, Sparkles } from "lucide-react";
+import { User, Bell, Shield, CreditCard, Download, Trash2, Sparkles, Link } from "lucide-react";
 import { AIHelper } from "@/utils/ai-helper";
 import { PROVIDERS, AIProviderId } from "@/utils/ai-providers/registry";
+import { IntegrationsSettings } from "@/components/Settings/IntegrationsSettings";
 
 export default function Settings() {
   const [notifications, setNotifications] = useState({
@@ -112,10 +113,11 @@ export default function Settings() {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-6 lg:grid-cols-7">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="ai">AI Config</TabsTrigger>
+          <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="privacy">Privacy</TabsTrigger>
           <TabsTrigger value="billing">Billing</TabsTrigger>
           <TabsTrigger value="data">Data</TabsTrigger>
@@ -430,6 +432,10 @@ export default function Settings() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="integrations" className="space-y-6">
+          <IntegrationsSettings />
         </TabsContent>
 
         <TabsContent value="privacy" className="space-y-6">
