@@ -90,5 +90,70 @@ export const ResumeAIHelper = {
 
         const { text } = await generateText({ model, prompt });
         return text;
+    },
+
+    parseResumeFromText: async (resumeText: string): Promise<MasterProfile> => {
+        const providerId = (localStorage.getItem('AI_PROVIDER') as AIProviderId) || 'gemini';
+        const model = getProvider(providerId);
+
+        if (!model) {
+            throw new Error(`Please configure your ${providerId} API Key in Settings first.`);
+        }
+
+        const prompt = `
+      You are an expert Resume Parser.
+      
+      TASK:
+      Extract structured data from the provided raw resume text and map it to the 'MasterProfile' JSON schema.
+      
+      INPUT TEXT:
+      ${resumeText.substring(0, 15000)}
+      
+      INSTRUCTIONS:
+      -   **Contact**: Extract name, email, phone, location, and links (LinkedIn, GitHub, etc.).
+      -   **Summary**: specific professional summary or objective, if present.
+      -   **Experience**: Extract all work experience. Infer "current" if no end date. split description into bullet points.
+      -   **Education**: Extract school, degree, field/major, dates.
+      -   **Skills**: Group skills into categories if possible, or put them all under "General".
+      -   **Projects**: Extract any separate projects section. If none, leave empty array.
+          -   **IMPORTANT**: For projects, try to identify the 'name', 'technologies', and 'description'.
+      -   **Certifications/Awards/Volunteering/Publications**: Extract if present.
+      
+      OUTPUT FORMAT:
+      Return a VALID JSON object matching the 'MasterProfile' interface structure EXACTLY.
+      Do not wrap in markdown code blocks. Just the raw JSON string.
+      
+      MasterProfile Interface Reference:
+      {
+        contact: { firstName, lastName, email, phone, location, linkedin, github, portfolio },
+        targetTitle: string,
+        summary: string,
+        experience: [{ company, position, location, startDate, endDate, current: boolean, description }],
+        education: [{ school, degree, field, location, startDate, endDate }],
+        skills: [{ category, items }], // items is comma separated string
+        projects: [{ name, technologies, description, link }],
+        certifications: [{ name, issuer, date }],
+        awards: [{ title, issuer, date }],
+        volunteering: [{ organization, role, startDate, endDate, current, description }],
+        publications: [{ title, publisher, date, link }],
+        interests: string
+      }
+    `;
+
+        try {
+            const { text } = await generateText({
+                model,
+                prompt,
+            });
+
+            // Clean up potential markdown
+            const jsonString = text.replace(/```json/g, "").replace(/```/g, "").trim();
+            const parsedProfile = JSON.parse(jsonString) as MasterProfile;
+            return parsedProfile;
+
+        } catch (error) {
+            console.error("Resume Parsing Error:", error);
+            throw error;
+        }
     }
 };

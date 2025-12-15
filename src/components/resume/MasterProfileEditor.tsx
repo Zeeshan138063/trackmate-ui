@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import _ from 'lodash';
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { GripVertical } from "lucide-react";
+import { ResumeImporter } from "./ResumeImporter";
 
 interface MasterProfileEditorProps {
     profile: MasterProfile;
@@ -81,6 +82,17 @@ export function MasterProfileEditor({ profile, resumeId, onSave, isSaving }: Mas
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
+                    <ResumeImporter onImport={(importedData) => {
+                        // Merge or replace? For "Import" usually implies replacing/populating.
+                        // We'll replace the form data but keep the ID if it exists.
+                        const merged = { ...importedData };
+                        if (resumeId) {
+                            // Keep the original ID so we update the existing row instead of creating new
+                            // actually formData doesn't hold ID, the parent does.
+                            // But we just update state.
+                        }
+                        updateState(merged);
+                    }} />
                     {isSaving ? (
                         <span className="text-xs text-muted-foreground animate-pulse flex items-center gap-1">
                             <Save className="h-3 w-3" /> Saving...
