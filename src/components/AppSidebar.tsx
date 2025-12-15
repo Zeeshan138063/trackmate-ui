@@ -11,7 +11,8 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Users
+  Users,
+  TrendingUp
 } from "lucide-react";
 
 import {
@@ -37,6 +38,7 @@ const navigationItems = [
   { title: "Work Styles", url: "/work-styles", icon: Briefcase },
   { title: "Job Search", url: "/job-search", icon: Search },
   { title: "Connections", url: "/connections", icon: Users },
+  { title: "Growth Engine", url: "/growth", icon: TrendingUp },
 ];
 
 const bottomItems = [
