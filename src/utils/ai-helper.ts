@@ -29,7 +29,7 @@ export const AIHelper = {
       ${jobDescription.substring(0, 5000)}
 
       Resume Content (Summary/Skills/Exp):
-      ${resumeContent.substring(0, 2000)}
+      ${resumeContent.substring(0, 15000)}
 
       Output a JSON object ONLY with this structure (no markdown):
       {
@@ -69,7 +69,7 @@ export const AIHelper = {
       ${jobDescription.substring(0, 5000)}
 
       My Resume Details:
-      ${resumeContent.substring(0, 2000)}
+      ${resumeContent.substring(0, 15000)}
 
       Instructions:
       - Keep it concise (under 300 words).

@@ -5,11 +5,16 @@ import { ContactCard } from "@/components/ContactCard";
 import { AddContactDialog } from "@/components/AddContactDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Users, MapPin } from "lucide-react";
+import { Plus, Search, Users, MapPin, BellRing, CalendarClock, Clock, AlertCircle } from "lucide-react";
 import { Contact } from "@/types/contact";
+import { useFollowUps } from "@/hooks/useFollowUps";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
 
 export default function Connections() {
     const { contacts, loading, addContact, updateContact, deleteContact } = useContacts();
+    const { followUps, fetchFollowUps } = useFollowUps(); // Fetch global pending follow-ups
     const [searchQuery, setSearchQuery] = useState("");
     const [locationQuery, setLocationQuery] = useState("");
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -69,7 +74,34 @@ export default function Connections() {
                 window.removeEventListener('message', handleMessage);
             };
         }
+
     }, [searchParams, setSearchParams]);
+
+    useEffect(() => {
+        fetchFollowUps();
+    }, [fetchFollowUps]);
+
+    // Derived state for follow-ups
+    const { overdue, dueToday, isOverdue } = useMemo(() => {
+        const now = new Date();
+        const overdue = followUps.filter(f => new Date(f.due_date) < now);
+        const dueToday = followUps.filter(f => new Date(f.due_date) >= now);
+        return { overdue, dueToday, isOverdue: overdue.length > 0 };
+    }, [followUps]);
+
+    // Browser notification effect
+    useEffect(() => {
+        if (followUps.length > 0 && "Notification" in window) {
+            if (Notification.permission === "granted") {
+                new Notification("Pending Follow-ups", {
+                    body: `You have ${followUps.length} follow-ups due today.`,
+                    icon: "/favicon.ico"
+                });
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission();
+            }
+        }
+    }, [followUps.length]);
 
     const filteredContacts = useMemo(() => {
         return contacts.filter((contact) => {
@@ -124,6 +156,63 @@ export default function Connections() {
                     Add Contact
                 </Button>
             </div>
+
+            {followUps.length > 0 && (
+                <div className="space-y-4">
+                    {isOverdue && (
+                        <Alert variant="destructive" className="bg-red-50 border-red-200 animate-pulse">
+                            <AlertCircle className="h-4 w-4 text-red-600" />
+                            <AlertTitle className="text-red-800 font-bold flex items-center gap-2">
+                                OVERDUE ITEMS
+                                <Badge variant="destructive" className="ml-2">
+                                    {overdue.length} Missed
+                                </Badge>
+                            </AlertTitle>
+                            <AlertDescription className="text-red-700 mt-2">
+                                <div className="grid gap-2 mt-2">
+                                    {overdue.slice(0, 3).map(fu => (
+                                        <div key={fu.id} className="flex items-center justify-between text-sm bg-white/60 p-2 rounded border border-red-100 font-semibold">
+                                            <span>
+                                                {contacts.find(c => c.id === fu.contact_id)?.name || 'Unknown Contact'}
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                                <Clock className="h-3 w-3" />
+                                                {format(new Date(fu.due_date), 'MMM d, h:mm a')}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </AlertDescription>
+                        </Alert>
+                    )}
+
+                    {dueToday.length > 0 && (
+                        <Alert className="bg-amber-50 border-amber-200">
+                            <CalendarClock className="h-4 w-4 text-amber-600" />
+                            <AlertTitle className="text-amber-800 font-medium flex items-center gap-2">
+                                Due Later Today
+                                <Badge variant="secondary" className="bg-amber-100 text-amber-700 hover:bg-amber-200">
+                                    {dueToday.length} Due
+                                </Badge>
+                            </AlertTitle>
+                            <AlertDescription className="text-amber-700 mt-2">
+                                <div className="grid gap-2 mt-2">
+                                    {dueToday.slice(0, 3).map(fu => (
+                                        <div key={fu.id} className="flex items-center justify-between text-sm bg-white/50 p-2 rounded">
+                                            <span className="font-medium">
+                                                {contacts.find(c => c.id === fu.contact_id)?.name || 'Unknown Contact'}
+                                            </span>
+                                            <span className="text-amber-600/80">
+                                                {format(new Date(fu.due_date), 'h:mm a')} - {fu.type}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                </div>
+            )}
 
             <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1">

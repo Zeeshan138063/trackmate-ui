@@ -1,223 +1,262 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useResume } from "@/hooks/useResume";
+import { JobSearchSettings } from "@/components/JobSearchSettings";
+import { generateSearchUrl, SearchConfig } from "@/utils/search-intelligence";
+import { ExternalLink, Search, Info, Briefcase, PlusCircle, ArrowRight, Loader2, RefreshCw, Zap, CheckCircle2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, MapPin, DollarSign, Clock, Bookmark, ExternalLink } from "lucide-react";
-
-const jobResults = [
-  {
-    id: 1,
-    title: "Senior Software Engineer",
-    company: "TechCorp Inc.",
-    location: "San Francisco, CA",
-    salary: "$120,000 - $160,000",
-    type: "Full-time",
-    remote: true,
-    postedDate: "2 days ago",
-    description: "We're looking for a senior software engineer to join our growing team...",
-    skills: ["React", "TypeScript", "Node.js", "Python"]
-  },
-  {
-    id: 2,
-    title: "Product Manager",
-    company: "StartupXYZ",
-    location: "New York, NY",
-    salary: "$130,000 - $180,000",
-    type: "Full-time",
-    remote: false,
-    postedDate: "1 day ago",
-    description: "Drive product strategy and execution for our consumer platform...",
-    skills: ["Product Strategy", "Analytics", "Agile", "User Research"]
-  },
-  {
-    id: 3,
-    title: "UX Designer",
-    company: "Design Studio",
-    location: "Remote",
-    salary: "$90,000 - $120,000",
-    type: "Contract",
-    remote: true,
-    postedDate: "5 days ago",
-    description: "Create intuitive and beautiful user experiences for our clients...",
-    skills: ["Figma", "User Research", "Prototyping", "Design Systems"]
-  },
-  {
-    id: 4,
-    title: "Data Scientist",
-    company: "AI Company",
-    location: "Seattle, WA",
-    salary: "$140,000 - $190,000",
-    type: "Full-time",
-    remote: true,
-    postedDate: "3 days ago",
-    description: "Apply machine learning to solve complex business problems...",
-    skills: ["Python", "Machine Learning", "SQL", "TensorFlow"]
-  }
-];
+import { useToast } from "@/hooks/use-toast";
+import { initialMasterProfile } from "@/types/resume";
+import { JobService, ScannedJob } from "@/services/JobService";
 
 export default function JobSearch() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [location, setLocation] = useState("");
-  const [bookmarkedJobs, setBookmarkedJobs] = useState<number[]>([]);
+  const { masterProfile, loading: profileLoading } = useResume();
+  const [activeConfig, setActiveConfig] = useState<SearchConfig>({
+    query: "",
+    location: "Remote",
+    remote: true,
+    datePosted: 'week',
+    excludedTerms: []
+  });
+  const { toast } = useToast();
+  const [importUrl, setImportUrl] = useState("");
 
-  const handleBookmark = (jobId: number) => {
-    setBookmarkedJobs(prev => 
-      prev.includes(jobId) 
-        ? prev.filter(id => id !== jobId)
-        : [...prev, jobId]
-    );
+  // Auto-population state
+  const [scannedJobs, setScannedJobs] = useState<ScannedJob[]>([]);
+  const [isScanning, setIsScanning] = useState(false);
+  const [savedJobIds, setSavedJobIds] = useState<string[]>([]);
+
+  // Sync profile to config when loaded
+  useEffect(() => {
+    if (masterProfile && !activeConfig.query) {
+      setActiveConfig(prev => ({
+        ...prev,
+        query: masterProfile.targetTitle || "Software Engineer",
+        location: masterProfile.contact.location || "Remote"
+      }));
+
+      // Auto-start scan on first load
+      handleRunScan();
+    }
+  }, [masterProfile]);
+
+  const handleRunScan = async () => {
+    if (!masterProfile) return;
+    setIsScanning(true);
+    try {
+      const jobs = await JobService.autoPopulateJobs(masterProfile);
+      setScannedJobs(jobs);
+      if (jobs.length > 0) {
+        toast({
+          title: "Scan Complete",
+          description: `Found ${jobs.length} relevant jobs matching your profile.`
+        });
+      }
+    } catch (e) {
+      console.error("Scan failed", e);
+    } finally {
+      setIsScanning(false);
+    }
   };
 
+  const handleLaunchSearch = (platform: 'google' | 'linkedin' | 'indeed') => {
+    if (!activeConfig.query) {
+      toast({ title: "Please define a target job title first." });
+      return;
+    }
+    const url = generateSearchUrl(platform, activeConfig);
+    window.open(url, '_blank');
+    toast({
+      title: "Search Launched",
+      description: `Opened optimized ${platform} search in new tab.`
+    });
+  };
+
+  const handleImport = () => {
+    if (!importUrl) return;
+    // Mock import functionality - normally this would parse the URL
+    toast({
+      title: "Job Imported",
+      description: "We've added this job to your tracker (Mock).",
+    });
+    setImportUrl("");
+  };
+
+  const handleSaveScannedJob = (job: ScannedJob) => {
+    setSavedJobIds(prev => [...prev, job.id]);
+    toast({
+      title: "Job Saved",
+      description: `Added ${job.title} at ${job.company} to your tracker.`,
+    });
+  };
+
+  if (profileLoading) {
+    return <div className="p-8 flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+  }
+
+  const currentProfile = masterProfile || initialMasterProfile;
+
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Job Search</h1>
-        <p className="text-muted-foreground mt-2">
-          Find your next opportunity with personalized job recommendations
-        </p>
+    <div className="container max-w-6xl mx-auto py-8 space-y-8 animate-fade-in">
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Job Search Intelligence</h1>
+          <p className="text-muted-foreground mt-2">
+            Leveraging your Master Profile to find the perfect roles across the web.
+          </p>
+        </div>
+        <Button onClick={handleRunScan} disabled={isScanning} variant="outline" className="gap-2">
+          {isScanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+          {isScanning ? "Scanning..." : "Re-Scan Feed"}
+        </Button>
       </div>
 
-      {/* Search Filters */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="md:col-span-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Job title, keywords, or company"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <div>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Location"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <Button>Search Jobs</Button>
-          </div>
-          
-          <div className="flex flex-wrap gap-4 mt-4">
-            <Select>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Job Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="full-time">Full-time</SelectItem>
-                <SelectItem value="part-time">Part-time</SelectItem>
-                <SelectItem value="contract">Contract</SelectItem>
-                <SelectItem value="freelance">Freelance</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Experience" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="entry">Entry Level</SelectItem>
-                <SelectItem value="mid">Mid Level</SelectItem>
-                <SelectItem value="senior">Senior Level</SelectItem>
-                <SelectItem value="executive">Executive</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Remote" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="remote">Remote</SelectItem>
-                <SelectItem value="hybrid">Hybrid</SelectItem>
-                <SelectItem value="onsite">On-site</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column: Settings */}
+        <div className="lg:col-span-1 space-y-6">
+          <JobSearchSettings
+            profile={currentProfile}
+            onSearch={(config) => setActiveConfig(config)}
+          />
 
-      {/* Search Results */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Job Results</h2>
-          <span className="text-muted-foreground">{jobResults.length} jobs found</span>
-        </div>
-        
-        {jobResults.map((job) => (
-          <Card key={job.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-xl font-semibold text-foreground hover:text-primary cursor-pointer">
-                        {job.title}
-                      </h3>
-                      <p className="text-lg text-muted-foreground">{job.company}</p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleBookmark(job.id)}
-                        className={bookmarkedJobs.includes(job.id) ? "text-primary" : ""}
-                      >
-                        <Bookmark className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                    <span className="flex items-center">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      {job.location}
-                    </span>
-                    <span className="flex items-center">
-                      <DollarSign className="h-4 w-4 mr-1" />
-                      {job.salary}
-                    </span>
-                    <span className="flex items-center">
-                      <Clock className="h-4 w-4 mr-1" />
-                      {job.postedDate}
-                    </span>
-                    {job.remote && (
-                      <Badge variant="secondary">Remote</Badge>
-                    )}
-                    <Badge variant="outline">{job.type}</Badge>
-                  </div>
-                  
-                  <p className="text-muted-foreground">{job.description}</p>
-                  
-                  <div className="flex flex-wrap gap-2">
-                    {job.skills.map((skill, index) => (
-                      <Badge key={index} variant="secondary">{skill}</Badge>
-                    ))}
-                  </div>
-                  
-                  <div className="flex items-center space-x-3 pt-2">
-                    <Button>Apply Now</Button>
-                    <Button variant="outline">Save Job</Button>
-                    <Button variant="ghost">View Details</Button>
-                  </div>
-                </div>
-              </div>
+          <Card className="bg-slate-50 border-slate-200">
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">Quick Import</CardTitle>
+              <CardDescription className="text-xs">Found a job? Paste the link to track it.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Input
+                placeholder="https://linkedin.com/jobs/view/..."
+                value={importUrl}
+                onChange={e => setImportUrl(e.target.value)}
+                className="bg-white"
+              />
+              <Button size="sm" variant="secondary" className="w-full" onClick={handleImport}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add to Tracker
+              </Button>
             </CardContent>
           </Card>
-        ))}
+        </div>
+
+        {/* Right Column: Search Dashboard & Feed */}
+        <div className="lg:col-span-2 space-y-8">
+
+          {/* Smart Links Section */}
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <ExternalLink className="h-5 w-5 text-indigo-600" />
+              Smart Search Links
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Google Jobs */}
+              <Card className="hover:border-indigo-300 transition-colors cursor-pointer group shadow-sm bg-gradient-to-br from-white to-slate-50" onClick={() => handleLaunchSearch('google')}>
+                <CardContent className="p-4 flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-white border shadow-sm flex items-center justify-center font-serif font-bold text-lg text-slate-700">G</div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-sm group-hover:text-indigo-600 transition-colors">Google Jobs</h3>
+                    <p className="text-xs text-muted-foreground">Aggregator</p>
+                  </div>
+                </CardContent>
+              </Card>
+              {/* LinkedIn */}
+              <Card className="hover:border-blue-300 transition-colors cursor-pointer group shadow-sm bg-gradient-to-br from-white to-slate-50" onClick={() => handleLaunchSearch('linkedin')}>
+                <CardContent className="p-4 flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-[#0077b5] text-white flex items-center justify-center font-bold text-sm">in</div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-sm group-hover:text-blue-600 transition-colors">LinkedIn</h3>
+                    <p className="text-xs text-muted-foreground">Networking</p>
+                  </div>
+                </CardContent>
+              </Card>
+              {/* Indeed */}
+              <Card className="hover:border-blue-300 transition-colors cursor-pointer group shadow-sm bg-gradient-to-br from-white to-slate-50" onClick={() => handleLaunchSearch('indeed')}>
+                <CardContent className="p-4 flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-[#2164f3] text-white flex items-center justify-center font-bold text-sm">I</div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-sm group-hover:text-blue-600 transition-colors">Indeed</h3>
+                    <p className="text-xs text-muted-foreground">Volume</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Live Feed Section */}
+          <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-700">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
+                Live Job Feed
+                <Badge variant="outline" className="ml-2 bg-amber-50 text-amber-700 border-amber-200">
+                  {scannedJobs.length} New Matches
+                </Badge>
+              </h2>
+            </div>
+
+            {isScanning ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <Card key={i} className="animate-pulse">
+                    <CardContent className="p-6 h-24 bg-slate-50/50" />
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {scannedJobs.map((job) => (
+                  <Card key={job.id} className="hover:shadow-md transition-all border-slate-200 group relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <CardContent className="p-5">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex-1 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-lg text-slate-900">{job.title}</h3>
+                            <Badge variant="secondary" className="text-xs font-normal">
+                              {job.matchScore}% Match
+                            </Badge>
+                          </div>
+                          <div className="flex items-center text-sm text-muted-foreground gap-3">
+                            <span className="font-medium text-slate-700">{job.company}</span>
+                            <span>•</span>
+                            <span>{job.location}</span>
+                            <span>•</span>
+                            <span className="text-green-600 font-medium">{job.salary}</span>
+                          </div>
+                          <div className="flex gap-2 mt-2">
+                            {job.skills.slice(0, 3).map(skill => (
+                              <Badge key={skill} variant="outline" className="text-[10px] px-2 py-0 h-5 bg-slate-50">
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {savedJobIds.includes(job.id) ? (
+                            <Button variant="ghost" disabled className="text-green-600 bg-green-50">
+                              <CheckCircle2 className="h-4 w-4 mr-2" />
+                              Saved
+                            </Button>
+                          ) : (
+                            <Button size="sm" onClick={() => handleSaveScannedJob(job)} className="bg-slate-900 hover:bg-slate-800">
+                              <PlusCircle className="h-4 w-4 mr-2" />
+                              Save Job
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+
+        </div>
       </div>
     </div>
   );

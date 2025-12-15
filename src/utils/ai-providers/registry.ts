@@ -3,13 +3,14 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { createHuggingFace } from '@ai-sdk/huggingface';
 import { LanguageModel } from 'ai';
 
-export type AIProviderId = 'gemini' | 'openai' | 'deepseek' | 'huggingface';
+export type AIProviderId = 'gemini' | 'openai' | 'deepseek' | 'huggingface' | 'openrouter';
 
 export const PROVIDERS: { id: AIProviderId; name: string }[] = [
     { id: 'gemini', name: 'Google Gemini' },
     { id: 'openai', name: 'OpenAI' },
     { id: 'deepseek', name: 'DeepSeek' },
     { id: 'huggingface', name: 'Hugging Face' },
+    { id: 'openrouter', name: 'OpenRouter' },
 ];
 
 export const getProvider = (providerId: AIProviderId): LanguageModel | null => {
@@ -57,6 +58,22 @@ export const getProvider = (providerId: AIProviderId): LanguageModel | null => {
                 apiKey: apiKey,
             });
             return huggingface(modelName);
+        }
+        case 'openrouter': {
+            const apiKey = localStorage.getItem('OPENROUTER_API_KEY');
+            const modelName = localStorage.getItem('OPENROUTER_MODEL_NAME') || 'openai/gpt-4o';
+            if (!apiKey) return null;
+
+            const openrouter = createOpenAI({
+                baseURL: 'https://openrouter.ai/api/v1',
+                apiKey: apiKey,
+                dangerouslyAllowBrowser: true,
+                headers: {
+                    'HTTP-Referer': window.location.origin, // Optional. Site URL for rankings on openrouter.ai.
+                    'X-Title': 'Job Search OS', // Optional. Site title for rankings on openrouter.ai.
+                },
+            });
+            return openrouter(modelName);
         }
         default:
             return null;

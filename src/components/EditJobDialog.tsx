@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import {
+  Button
+} from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +22,7 @@ import {
 import { Job } from "@/types/job";
 
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 
 import { AIHelper, AIMatchResult } from "@/utils/ai-helper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,7 +34,14 @@ import { useContacts } from "@/hooks/useContacts";
 import { ContactCard } from "@/components/ContactCard";
 import { AddContactDialog } from "@/components/AddContactDialog";
 import { Contact, JobContact } from "@/types/contact";
-import { Users, Plus, Link as LinkIcon, X } from "lucide-react";
+import { Users, Plus, Link as LinkIcon, X, Printer, Loader2, Edit } from "lucide-react";
+import { useResume } from "@/hooks/useResume";
+import { ResumeAIHelper as ResumeAI } from "@/utils/resume-ai-helper";
+import { ResumePreview } from "@/components/resume/ResumePreview";
+import { MasterProfileEditor } from "./resume/MasterProfileEditor";
+import { MasterProfile } from "@/types/resume";
+import { s3Helper } from "@/utils/s3-helper";
+
 import {
   Command,
   CommandEmpty,
@@ -39,6 +50,8 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { extractTextFromPDF } from "@/utils/pdf-helper";
 import {
   Popover,
   PopoverContent,
@@ -53,13 +66,26 @@ interface EditJobDialogProps {
   onAutoSave?: (job: Job) => void;
 }
 
+
 export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave }: EditJobDialogProps) {
   const [activeTab, setActiveTab] = useState("details");
+
+  // Resume Source State
+  const [resumeSource, setResumeSource] = useState<'master' | 'tailored' | 'upload'>('master');
+  const [uploadedFileName, setUploadedFileName] = useState<string>("");
+  const [uploadedFileText, setUploadedFileText] = useState<string>("");
+
   const [prevJobId, setPrevJobId] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [matchResult, setMatchResult] = useState<AIMatchResult | null>(null);
   const [isGeneratingLetter, setIsGeneratingLetter] = useState(false);
   const [coverLetter, setCoverLetter] = useState("");
+
+  // Resume Tailoring State
+  const { masterProfile } = useResume();
+  const [tailoredResume, setTailoredResume] = useState<MasterProfile | null>(null);
+  const [isTailoring, setIsTailoring] = useState(false);
+  const [isEditingResume, setIsEditingResume] = useState(false);
 
   // Contacts state
   const {
@@ -90,10 +116,12 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
     followUp: "",
     excitement: 3,
     checklist: {} as JobChecklistType,
+    notes: "",
   });
 
   useEffect(() => {
-    if (job) {
+    if (job && job.id !== prevJobId) {
+      // Only reset form data when opening a new job
       setFormData({
         position: job.position,
         jobUrl: job.jobUrl || "",
@@ -109,20 +137,98 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
         followUp: job.followUp || "",
         excitement: job.excitement,
         checklist: job.checklist || {},
+        notes: job.notes || "",
       });
 
-      // Only reset UI state if we're opening a DIFFERENT job
-      if (job.id !== prevJobId) {
-        setMatchResult(null);
-        setCoverLetter("");
-        setActiveTab("details");
-        setPrevJobId(job.id);
+      setMatchResult(null);
+      setCoverLetter("");
 
-        // Fetch contacts for this job
-        fetchJobContacts(job.id).then(setJobContacts);
-      }
+      setMatchResult(null);
+      setCoverLetter("");
+
+      // Load attached resume (S3 or Local)
+      const loadAttachedResume = async () => {
+        if (job.resumeS3Key) {
+          try {
+            const resumeData = await s3Helper.getResume(job.resumeS3Key);
+            setTailoredResume(resumeData);
+            return;
+          } catch (e) {
+            console.error("Failed to load resume from S3", e);
+            // Fallthrough to check attachedResume as backup
+          }
+        }
+
+        if (job.attachedResume) {
+          try {
+            setTailoredResume(JSON.parse(job.attachedResume));
+          } catch (e) {
+            console.error("Failed to parse attached resume", e);
+            setTailoredResume(null);
+          }
+        } else {
+          setTailoredResume(null);
+        }
+      };
+
+      loadAttachedResume();
+
+      setActiveTab("details");
+      setPrevJobId(job.id);
+
+      // Fetch contacts for this job
+      fetchJobContacts(job.id).then(setJobContacts);
     }
-  }, [job, prevJobId, fetchJobContacts]);
+  }, [job?.id, prevJobId, fetchJobContacts]);
+
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  // Debounced auto-save for notes
+  useEffect(() => {
+    // Skip initial render or if notes haven't changed from original DB value
+    const currentNotes = formData.notes || "";
+    const originalNotes = job?.notes || "";
+
+    if (!job || currentNotes === originalNotes) {
+      if (currentNotes === originalNotes) setSaveStatus('saved');
+      return;
+    }
+
+    setSaveStatus('saving');
+
+    const timeoutId = setTimeout(() => {
+      if (onAutoSave) {
+        const updatedJob: Job = {
+          ...job,
+          position: formData.position,
+          company: formData.company,
+          jobUrl: formData.jobUrl || undefined,
+          location: formData.location || undefined,
+          description: formData.description || undefined,
+          minSalary: formData.minSalary ? parseInt(formData.minSalary) : undefined,
+          maxSalary: formData.maxSalary ? parseInt(formData.maxSalary) : undefined,
+          status: formData.status,
+          datePosted: formData.datePosted || undefined,
+          deadline: formData.deadline || undefined,
+          dateApplied: formData.dateApplied || undefined,
+          followUp: formData.followUp || undefined,
+          excitement: formData.excitement,
+          checklist: formData.checklist,
+          notes: formData.notes,
+          attachedResume: job.attachedResume // Persist existing attached resume
+        };
+        onAutoSave(updatedJob);
+        setSaveStatus('saved');
+      }
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.notes, onAutoSave, job]);
+
+  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newNotes = e.target.value;
+    setFormData(prev => ({ ...prev, notes: newNotes }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,10 +251,19 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
       followUp: formData.followUp || undefined,
       excitement: formData.excitement,
       checklist: formData.checklist,
+      notes: formData.notes,
+      attachedResume: job.attachedResume // Persist existing attached resume
     };
 
     onUpdateJob(updatedJob);
     onOpenChange(false);
+  };
+
+  // Update status UI
+  const getSaveStatusDisplay = () => {
+    if (saveStatus === 'saving') return <span className="text-amber-500">Saving...</span>;
+    if (saveStatus === 'saved') return <span className="text-green-500 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Saved</span>;
+    return null;
   };
 
   const getDomainFromUrl = (url: string) => {
@@ -160,34 +275,167 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
     }
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      toast.error("Please upload a PDF file");
+      return;
+    }
+
+    try {
+      const text = await extractTextFromPDF(file);
+      setUploadedFileText(text);
+      setUploadedFileName(file.name);
+      setResumeSource('upload');
+      toast.success("Resume text extracted from PDF!");
+    } catch (error) {
+      toast.error("Failed to read PDF");
+    }
+  };
+
+  const getResumeContentForAI = (): string | null => {
+    if (resumeSource === 'master') {
+      if (!masterProfile) return null;
+      return JSON.stringify(masterProfile);
+    }
+    if (resumeSource === 'tailored') {
+      if (!tailoredResume) return null;
+      return JSON.stringify(tailoredResume);
+    }
+    if (resumeSource === 'upload') {
+      if (!uploadedFileText) return null;
+      return uploadedFileText;
+    }
+    return null;
+  };
+
   const handleAnalyzeMatch = async () => {
+    const resumeContent = getResumeContentForAI();
+
+    if (!resumeContent) {
+      if (resumeSource === 'upload') toast.error("Please upload a resume PDF first");
+      else if (resumeSource === 'tailored') toast.error("Please create a tailored resume first");
+      else toast.error("Please set up your Master Resume first");
+      return;
+    }
+
     setIsAnalyzing(true);
     try {
-      // In a real app, you'd pass the actual default resume content here
-      const result = await AIHelper.analyzeMatch(formData.description, "Mock Resume Content");
+      const result = await AIHelper.analyzeMatch(formData.description, resumeContent);
       setMatchResult(result);
     } catch (error) {
       console.error("Failed to analyze match", error);
+      toast.error("Failed to analyze match");
     } finally {
       setIsAnalyzing(false);
     }
   };
 
   const handleGenerateCoverLetter = async () => {
+    const resumeContent = getResumeContentForAI();
+
+    if (!resumeContent) {
+      // Only master profile is strictly checked for bio generation usually, but here we use the generic source
+      if (!masterProfile) { // Specific legacy check or just use generic?
+        toast.error("Please set up your Master Resume first");
+        return;
+      }
+      // Fallback to master if others fail? No, strict selection is better.
+      // Actually let's assume if they want cover letter they probably want it based on master or tailored.
+      // Let's use the same logic.
+    }
+
+    // Double check just for safety if getResumeContent returns null but master exists (e.g. upload selected but empty)
+    // We'll enforce the selection.
+    if (!resumeContent) {
+      toast.error("Resume content missing for selected source");
+      return;
+    }
+
     setIsGeneratingLetter(true);
     try {
       const result = await AIHelper.generateCoverLetter(
         formData.description,
-        "Mock Resume Content",
+        resumeContent,
         formData.position,
         formData.company
       );
       setCoverLetter(result.coverLetter);
+      setActiveTab("cover-letter");
+      toast.success("Cover letter generated!");
     } catch (error) {
       console.error("Failed to generate cover letter", error);
+      toast.error("Failed to generate cover letter");
     } finally {
       setIsGeneratingLetter(false);
     }
+  };
+
+  const handleTailorResume = async () => {
+    if (!masterProfile || !job) {
+      toast.error("Missing Master Profile or Job Description");
+      return;
+    }
+
+    setIsTailoring(true);
+    try {
+      const tailored = await ResumeAI.tailorResume(job.description || "", masterProfile);
+      setTailoredResume(tailored);
+      toast.success("Resume tailored successfully!");
+    } catch (error) {
+      console.error("Tailoring failed", error);
+      toast.error("Failed to tailor resume. Please check your AI settings.");
+    } finally {
+      setIsTailoring(false);
+    }
+  };
+
+  const handlePrintResume = async () => {
+    if (!tailoredResume && !masterProfile) return;
+
+    // Auto-save the used resume to the job record
+    if (job && tailoredResume) {
+      const resumeJson = JSON.stringify(tailoredResume);
+      let updatedJob: Job = { ...job };
+
+      try {
+        // Try S3 upload first
+        const s3Key = await s3Helper.uploadResume(job.id, resumeJson);
+        updatedJob.resumeS3Key = s3Key;
+        // If S3 succeeds, we can opt to clear attachedResume or keep it as backup. 
+        // For now, let's keep attachedResume empty to save DB space if S3 is used.
+        updatedJob.attachedResume = undefined;
+        toast.success("Resume saved to S3 and attached to job");
+      } catch (error: any) {
+        // Fallback to local storage
+        console.error("S3 Upload failed:", error);
+
+        let errorMessage = "Unknown error";
+        if (typeof error === 'object' && error !== null) {
+          if (error.name === 'NetworkingError' || error.message?.includes('Network Error')) {
+            errorMessage = "Network Error (CORS? Check bucket settings)";
+          } else if (error.name === 'InvalidAccessKeyId' || error.name === 'SignatureDoesNotMatch') {
+            errorMessage = "Invalid Credentials";
+          } else {
+            errorMessage = error.message || error.name;
+          }
+        }
+
+        toast.warning(`S3 Upload Failed: ${errorMessage}. Saved locally instead.`);
+        updatedJob.attachedResume = resumeJson;
+        // CRITICAL: Clear the S3 key so we don't load stale data from S3 next time
+        // since we now have the latest version in local storage.
+        updatedJob.resumeS3Key = undefined;
+      }
+
+      onAutoSave?.(updatedJob);
+    }
+
+    setTimeout(() => {
+      window.print();
+    }, 100);
   };
 
   const handleChecklistToggle = (id: string, checked: boolean) => {
@@ -200,9 +448,6 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
     }));
 
     if (onAutoSave && job) {
-      // Construct updated job for auto-save
-      // We use the PREVIOUS formData but with the NEW checklist value
-      // This is because setFormData is async/batched
       const updatedChecklist = { ...formData.checklist, [id]: checked };
 
       const updatedJob: Job = {
@@ -272,25 +517,33 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col p-0 gap-0">
+      <DialogContent
+        className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0"
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+      >
         <DialogHeader className="p-6 pb-2">
           <DialogTitle>Edit Job Application</DialogTitle>
           {job.dateSaved && (
             <div className="text-xs text-muted-foreground mt-1">
               Saved {formatDistanceToNow(new Date(job.dateSaved), { addSuffix: true })}
-              {job.jobUrl && ` on ${getDomainFromUrl(job.jobUrl)}`}
+              {job.jobUrl && ` on ${getDomainFromUrl(job.jobUrl)} `}
             </div>
           )}
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
           <div className="px-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6 sm:grid-cols-7">
+              {/* Added sm:grid-cols-7 because we have 7 items now */}
               <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="notes">Notes</TabsTrigger>
               <TabsTrigger value="checklist">Check List</TabsTrigger>
               <TabsTrigger value="contacts">Contacts</TabsTrigger>
-              <TabsTrigger value="match">AI Match Score</TabsTrigger>
-              <TabsTrigger value="cover-letter">Cover Letter</TabsTrigger>
+              <TabsTrigger value="match">Match</TabsTrigger>
+              <TabsTrigger value="cover-letter">Letter</TabsTrigger>
+              <TabsTrigger value="resume">Resume</TabsTrigger>
             </TabsList>
           </div>
 
@@ -467,7 +720,37 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
               </form>
             </TabsContent>
 
-
+            <TabsContent value="notes" className="mt-0 h-full flex flex-col">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold ml-1">
+                  Job Notes
+                </p>
+                <div className="text-xs text-muted-foreground animate-pulse">
+                  {getSaveStatusDisplay()}
+                </div>
+              </div>
+              <div className="flex-1 bg-background rounded-md border shadow-sm relative group overflow-hidden focus-within:ring-1 focus-within:ring-ring focus-within:border-primary">
+                <Textarea
+                  value={formData.notes || ""}
+                  onChange={handleNotesChange}
+                  placeholder="Capture your thoughts, interview questions, or key details here..."
+                  className="w-full h-full min-h-[400px] resize-none border-0 focus-visible:ring-0 p-6 text-base leading-relaxed"
+                />
+                <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      navigator.clipboard.writeText(formData.notes || "");
+                      toast.success("Notes copied to clipboard");
+                    }}
+                  >
+                    Copy
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
 
             <TabsContent value="checklist" className="mt-0">
               <JobChecklist
@@ -569,10 +852,60 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
                     <div>
                       <h3 className="text-lg font-semibold">Analyze Job Match</h3>
                       <p className="text-sm text-muted-foreground max-w-sm mx-auto mt-2">
-                        Compare this job description with your default resume to see how well you match and identify missing keywords.
+                        Compare this job description with your resume to see how well you match.
                       </p>
                     </div>
-                    <Button onClick={handleAnalyzeMatch} disabled={isAnalyzing}>
+
+                    {/* Resume Source Selector */}
+                    <div className="w-full max-w-md bg-muted/30 p-4 rounded-lg border text-left space-y-3">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Select Resume Source</Label>
+                      <RadioGroup value={resumeSource} onValueChange={(v: any) => setResumeSource(v)} className="flex flex-col gap-2">
+
+                        {/* Master Profile Option */}
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="master" id="source-master" />
+                          <Label htmlFor="source-master" className="cursor-pointer font-normal">
+                            Master Profile <span className="text-muted-foreground text-xs">(Default)</span>
+                          </Label>
+                        </div>
+
+                        {/* Tailored Option - Disabled if not present */}
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="tailored" id="source-tailored" disabled={!tailoredResume} />
+                          <Label htmlFor="source-tailored" className={`cursor - pointer font - normal ${!tailoredResume ? 'text-muted-foreground' : ''} `}>
+                            Tailored Resume {tailoredResume ? <span className="text-green-600 text-xs font-bold">(Ready)</span> : <span className="text-xs text-muted-foreground">(Not created yet)</span>}
+                          </Label>
+                        </div>
+
+                        {/* Upload Option */}
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="upload" id="source-upload" />
+                            <Label htmlFor="source-upload" className="cursor-pointer font-normal">
+                              Upload PDF
+                            </Label>
+                          </div>
+
+                          {resumeSource === 'upload' && (
+                            <div className="pl-6 animate-in slide-in-from-top-2 fade-in duration-200">
+                              <Input
+                                type="file"
+                                accept=".pdf"
+                                onChange={handleFileUpload}
+                                className="h-9 text-xs cursor-pointer bg-white"
+                              />
+                              {uploadedFileName && (
+                                <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                                  <CheckCircle2 className="h-3 w-3" /> {uploadedFileName}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    <Button onClick={handleAnalyzeMatch} disabled={isAnalyzing} className="w-full max-w-xs">
                       {isAnalyzing ? "Analyzing..." : "Analyze Match"}
                     </Button>
                   </>
@@ -664,6 +997,123 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
                   </div>
                 )}
               </div>
+            </TabsContent>
+
+            <TabsContent value="resume" className="mt-0 space-y-6">
+              <div className="flex justify-between items-center mb-4">
+                {(job.resumeS3Key || job.attachedResume) && (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Resume Attached {job.resumeS3Key ? "(S3)" : "(Local)"}
+                  </div>
+                )}
+              </div>
+
+              {!masterProfile ? (
+                <div className="text-center py-12">
+                  <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold">Master Profile Not Found</h3>
+                  <p className="text-muted-foreground max-w-sm mx-auto mt-2 mb-6">
+                    You need to set up your Master Profile first before you can generate tailored resumes.
+                  </p>
+                  <Button variant="outline" onClick={() => window.open('/resume-builder', '_blank')}>
+                    Go to Resume Builder
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="flex flex-col space-y-4 print:hidden">
+                    {(tailoredResume || masterProfile) && createPortal(
+                      <div id="resume-print-portal">
+                        <ResumePreview data={tailoredResume || masterProfile} />
+                      </div>,
+                      document.body
+                    )}
+                    {!tailoredResume ? (
+                      <div className="text-center py-6 space-y-4">
+                        <div className="p-4 bg-primary/10 rounded-full mx-auto w-fit">
+                          <FileText className="h-8 w-8 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold">Tailor Your Resume</h3>
+                          <p className="text-sm text-muted-foreground max-w-sm mx-auto mt-2">
+                            Generate an ATS-optimized resume specifically for <strong>{formData.company}</strong>.
+                            The AI will select relevant projects and rewrite your experience to match the job description.
+                          </p>
+                        </div>
+                        <Button onClick={handleTailorResume} disabled={isTailoring}>
+                          {isTailoring ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Tailoring Resume...
+                            </>
+                          ) : "Generate Tailored Resume"}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between items-center bg-muted/30 p-4 rounded-lg border">
+                        <div>
+                          <h3 className="font-semibold">Tailored Resume Ready</h3>
+                          <p className="text-sm text-muted-foreground"> optimized for {formData.company}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          {!isEditingResume ? (
+                            <Button variant="outline" onClick={() => setIsEditingResume(true)}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit
+                            </Button>
+                          ) : (
+                            <Button variant="outline" onClick={() => setIsEditingResume(false)}>
+                              Cancel Edit
+                            </Button>
+                          )}
+                          <Button variant="outline" onClick={() => setTailoredResume(null)}>
+                            Regenerate
+                          </Button>
+                          <Button onClick={handlePrintResume} disabled={isEditingResume}>
+                            <Printer className="mr-2 h-4 w-4" />
+                            Download PDF
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Resume Preview Area */}
+                  {(tailoredResume || (isTailoring && !tailoredResume)) && (
+                    <div className="border rounded-lg bg-gray-50 p-6 overflow-auto max-h-[600px] print:max-h-none print:p-0 print:border-none print:overflow-visible">
+                      {isTailoring && !tailoredResume && (
+                        <div className="flex flex-col items-center justify-center h-[500px] space-y-4">
+                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                          <p className="text-muted-foreground">Analyzing Job Description...</p>
+                          <p className="text-xs text-muted-foreground">Selecting best projects...</p>
+                        </div>
+                      )}
+                      {tailoredResume && !isEditingResume && (
+                        <ResumePreview data={tailoredResume} />
+                      )}
+                      {tailoredResume && isEditingResume && (
+                        <div className="bg-white p-4 rounded-lg shadow-sm">
+                          <MasterProfileEditor
+                            profile={tailoredResume}
+                            resumeId={null}
+                            isSaving={false}
+                            onSave={(updatedProfile) => {
+                              setTailoredResume(updatedProfile);
+                              // We don't close edit mode automatically, letting user make multiple changes.
+                              // But we could show a toast.
+                              toast.success("Changes applied to preview");
+                            }}
+                          />
+                          <div className="mt-4 flex justify-end">
+                            <Button onClick={() => setIsEditingResume(false)}>Done Editing</Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
             </TabsContent>
           </div>
         </Tabs>

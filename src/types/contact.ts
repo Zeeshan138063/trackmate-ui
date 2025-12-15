@@ -11,6 +11,7 @@ export interface Contact {
     country?: string;
     linkedin_url?: string;
     notes?: string;
+    invitation_note?: string;
     created_at?: string;
 }
 

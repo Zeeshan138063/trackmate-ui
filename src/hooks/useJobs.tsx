@@ -29,7 +29,7 @@ export function useJobs() {
       }
 
       // Transform the data to match our Job interface
-      const transformedJobs: Job[] = data?.map(job => ({
+      const transformedJobs: Job[] = (data as any)?.map((job: any) => ({
         id: job.id,
         position: job.position,
         company: job.company,
@@ -46,6 +46,7 @@ export function useJobs() {
         followUp: job.follow_up || undefined,
         excitement: job.excitement,
         checklist: job.checklist || {},
+        notes: job.notes || undefined,
       })) || [];
 
       setJobs(transformedJobs);
@@ -83,6 +84,7 @@ export function useJobs() {
           follow_up: newJob.followUp,
           excitement: newJob.excitement,
           checklist: newJob.checklist || {},
+          notes: newJob.notes,
           user_id: user.id,
         }])
         .select()
@@ -94,9 +96,9 @@ export function useJobs() {
 
       // Transform and add to local state
       const transformedJob: Job = {
-        id: data.id,
-        position: data.position,
-        company: data.company,
+        id: (data as any).id,
+        position: (data as any).position,
+        company: (data as any).company,
         jobUrl: data.job_url || undefined,
         minSalary: data.min_salary || undefined,
         maxSalary: data.max_salary || undefined,
@@ -110,6 +112,7 @@ export function useJobs() {
         followUp: data.follow_up || undefined,
         excitement: data.excitement,
         checklist: data.checklist || {},
+        notes: data.notes || undefined,
       };
 
       setJobs(prev => [transformedJob, ...prev]);
@@ -149,6 +152,7 @@ export function useJobs() {
           follow_up: updatedJob.followUp,
           excitement: updatedJob.excitement,
           checklist: updatedJob.checklist,
+          notes: updatedJob.notes,
         })
         .eq('id', updatedJob.id)
         .eq('user_id', user.id);

@@ -27,6 +27,7 @@ export default function Settings() {
   const [openaiConfig, setOpenaiConfig] = useState({ key: "", model: "gpt-4o" });
   const [deepseekConfig, setDeepseekConfig] = useState({ key: "", model: "deepseek-chat" });
   const [huggingfaceConfig, setHuggingfaceConfig] = useState({ key: "", model: "meta-llama/Meta-Llama-3-8B-Instruct" });
+  const [openrouterConfig, setOpenrouterConfig] = useState({ key: "", model: "openai/gpt-4o" });
 
   const [testingConnection, setTestingConnection] = useState(false);
   const [testStatus, setTestStatus] = useState<{ success: boolean; message: string } | null>(null);
@@ -53,6 +54,10 @@ export default function Settings() {
       key: localStorage.getItem("HUGGINGFACE_API_KEY") || "",
       model: localStorage.getItem("HUGGINGFACE_MODEL_NAME") || "meta-llama/Meta-Llama-3-8B-Instruct"
     });
+    setOpenrouterConfig({
+      key: localStorage.getItem("OPENROUTER_API_KEY") || "",
+      model: localStorage.getItem("OPENROUTER_MODEL_NAME") || "openai/gpt-4o"
+    });
   }, []);
 
   const handleSaveSettings = () => {
@@ -70,6 +75,9 @@ export default function Settings() {
 
     localStorage.setItem("HUGGINGFACE_API_KEY", huggingfaceConfig.key);
     localStorage.setItem("HUGGINGFACE_MODEL_NAME", huggingfaceConfig.model);
+
+    localStorage.setItem("OPENROUTER_API_KEY", openrouterConfig.key);
+    localStorage.setItem("OPENROUTER_MODEL_NAME", openrouterConfig.model);
 
     setTestStatus({ success: true, message: "Settings saved! Click 'Test Connection' to verify." });
   };
@@ -379,6 +387,30 @@ export default function Settings() {
                   </div>
                 )}
 
+                {provider === "openrouter" && (
+                  <div className="space-y-4 border-l-2 border-primary/20 pl-4 py-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="openrouterKey">OpenRouter API Key</Label>
+                      <Input
+                        id="openrouterKey"
+                        type="password"
+                        placeholder="sk-or-..."
+                        value={openrouterConfig.key}
+                        onChange={(e) => setOpenrouterConfig({ ...openrouterConfig, key: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="openrouterModel">Model Name</Label>
+                      <Input
+                        id="openrouterModel"
+                        value={openrouterConfig.model}
+                        onChange={(e) => setOpenrouterConfig({ ...openrouterConfig, model: e.target.value })}
+                      />
+                      <p className="text-xs text-muted-foreground">e.g. openai/gpt-4o, anthropic/claude-3.5-sonnet, google/gemini-pro-1.5</p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex gap-2">
                   <Button onClick={handleSaveSettings}>Save Settings</Button>
                   <Button variant="outline" onClick={handleTestConnection} disabled={testingConnection}>
@@ -393,7 +425,7 @@ export default function Settings() {
                 )}
 
                 <p className="text-sm text-muted-foreground pt-2">
-                  Get free keys from their respective providers (Google AI Studio, OpenAI, DeepSeek, Hugging Face).
+                  Get free keys from their respective providers (Google AI Studio, OpenAI, DeepSeek, Hugging Face, OpenRouter).
                 </p>
               </div>
             </CardContent>
