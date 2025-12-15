@@ -38,8 +38,12 @@ export const ResumeAIHelper = {
       -   **Summary**: Rewrite it to pitch the candidate for THIS specific role.
       -   **Experience**: Keep the same company/role structure, but you may reorder or rewrite the bullet points (description). Focus on what matters for this JD.
       -   **Skills**: Filter the list to prioritize skills mentioned in the JD.
-      -   **Projects**: Select the top 3-5 projects that demonstrate required skills.
-      -   **CRITICAL**: For every project, you MUST populate the "name" and "technologies" fields. If technologies are not stated, infer them.
+      -   **Projects**: Select the top 3-5 projects from the Master Profile that demonstrate required skills.
+          -   **STRICT REQUIREMENT**: You MUST use actual projects from the Master Profile. Do NOT invent, hallucinate, or create new projects from scratch.
+          -   You may rephrase the description to highlight relevant technologies, but the project identity must remain the same.
+      -   **CRITICAL FIELDS**: For every project, you MUST populate the "name", "technologies" AND "description" fields.
+          -   "technologies": If not explicitly listed, infer reasonable technologies based on the project description and common stack usage.
+          -   "description": Must be detailed, bulleted (concatenated as string), and explain *how* the technologies were used to solve a problem.
       -   Do NOT invent false facts. Only reframe existing experience.
       
       OUTPUT FORMAT:
