@@ -1,8 +1,10 @@
+```json
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "trackmate-ui",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "author": "TrackMate",
   "engines": {
     "node": "20.x"
   },
