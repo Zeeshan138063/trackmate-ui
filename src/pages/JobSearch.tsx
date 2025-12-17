@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { initialMasterProfile } from "@/types/resume";
 import { JobService, ScannedJob } from "@/services/JobService";
 
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 export default function JobSearch() {
   const { masterProfile, loading: profileLoading } = useResume();
   const [activeConfig, setActiveConfig] = useState<SearchConfig>({
@@ -26,6 +28,7 @@ export default function JobSearch() {
 
   // Auto-population state
   const [scannedJobs, setScannedJobs] = useState<ScannedJob[]>([]);
+  const [selectedJob, setSelectedJob] = useState<ScannedJob | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [savedJobIds, setSavedJobIds] = useState<string[]>([]);
 
@@ -43,15 +46,13 @@ export default function JobSearch() {
     }
   }, [masterProfile]);
 
-  const handleRunScan = async () => {
+  const handleRunScan = async (overrideConfig?: SearchConfig) => {
     if (!masterProfile) return;
     setIsScanning(true);
     try {
-      // Use active input query if available, otherwise fallback to profile title
-      const keyword = activeConfig.query || masterProfile.targetTitle || "Software Engineer";
-
-      // 1. Get Mock/AI recommended jobs (passing keyword)
-      const mockJobs = await JobService.autoPopulateJobs(masterProfile, keyword);
+      // Use override config if provided (for immediate updates), otherwise active state
+      const cfg = overrideConfig || activeConfig;
+      const keyword = cfg.query || masterProfile.targetTitle || "Software Engineer";
 
       // 2. Get Real Discovered jobs (if any)
       const realJobsData = await JobService.getDiscoveredJobs(keyword);
@@ -61,25 +62,29 @@ export default function JobSearch() {
         title: j.title,
         company: j.company,
         location: j.location || "Remote",
-        salary: "Competitive", // Placeholder as scraping usually doesn't get strict salary
+        salary: "Not Disclosed",
         type: "Full-time",
-        skills: [keyword],
-        matchScore: 90, // Assume high relevance if keyword matched
+        skills: [keyword, "AI Match"],
+        matchScore: j.similarity ? Math.round(j.similarity * 100) : 85, // Use real similarity or fallback
         foundDate: j.posted_at,
         source: 'LinkedIn',
         description: j.description || "No description available",
-        isRemote: j.location ? j.location.toLowerCase().includes('remote') : false
+        isRemote: j.location ? j.location.toLowerCase().includes('remote') : false,
+        job_url: j.job_url
       }));
 
-      // Merge: Real jobs first, then mock
-      const allJobs = [...realJobs, ...mockJobs];
+      // Only show REAL jobs
+      setScannedJobs(realJobs);
 
-      setScannedJobs(allJobs);
-
-      if (allJobs.length > 0) {
+      if (realJobs.length > 0) {
         toast({
           title: "Scan Complete",
-          description: `Found ${realJobs.length} new real jobs and ${mockJobs.length} recommended matches.`
+          description: `Found ${realJobs.length} new real jobs.`
+        });
+      } else {
+        toast({
+          title: "No New Jobs",
+          description: "Try a different keyword or check back later."
         });
       }
     } catch (e) {
@@ -135,7 +140,7 @@ export default function JobSearch() {
             Leveraging your Master Profile to find the perfect roles across the web.
           </p>
         </div>
-        <Button onClick={handleRunScan} disabled={isScanning} variant="outline" className="gap-2">
+        <Button onClick={() => handleRunScan()} disabled={isScanning} variant="outline" className="gap-2">
           {isScanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
           {isScanning ? "Scanning..." : "Re-Scan Feed"}
         </Button>
@@ -146,7 +151,10 @@ export default function JobSearch() {
         <div className="lg:col-span-1 space-y-6">
           <JobSearchSettings
             profile={currentProfile}
-            onSearch={(config) => setActiveConfig(config)}
+            onSearch={(config) => {
+              setActiveConfig(config);
+              handleRunScan(config); // Trigger scan immediately with new config
+            }}
           />
 
           <Card className="bg-slate-50 border-slate-200">
@@ -263,6 +271,9 @@ export default function JobSearch() {
                         </div>
 
                         <div className="flex items-center gap-2">
+                          <Button size="sm" variant="outline" onClick={() => setSelectedJob(job)}>
+                            View Details
+                          </Button>
                           {savedJobIds.includes(job.id) ? (
                             <Button variant="ghost" disabled className="text-green-600 bg-green-50">
                               <CheckCircle2 className="h-4 w-4 mr-2" />
@@ -285,6 +296,50 @@ export default function JobSearch() {
 
         </div>
       </div>
+
+      {/* Job Details Modal */}
+      <Dialog open={!!selectedJob} onOpenChange={() => setSelectedJob(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl flex items-center justify-between">
+              <span>{selectedJob?.title}</span>
+              {selectedJob?.matchScore && (
+                <Badge variant="secondary" className="ml-2">
+                  {selectedJob.matchScore}% Match
+                </Badge>
+              )}
+            </DialogTitle>
+            <DialogDescription className="text-base font-medium text-slate-700">
+              {selectedJob?.company} • {selectedJob?.location}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="flex gap-2 flex-wrap">
+              {selectedJob?.skills.map(s => (
+                <Badge key={s} variant="outline" className="bg-slate-50">{s}</Badge>
+              ))}
+            </div>
+
+            <div className="text-sm text-slate-600 leading-relaxed whitespace-pre-line border-t pt-4">
+              {selectedJob?.description}
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t mt-4">
+              <Button variant="outline" onClick={() => window.open(selectedJob?.job_url || '#', '_blank')}>
+                <ExternalLink className="h-4 w-4 mr-2" />
+                View on LinkedIn
+              </Button>
+              <Button onClick={() => {
+                if (selectedJob) handleSaveScannedJob(selectedJob);
+                setSelectedJob(null);
+              }}>
+                Save to Tracker
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -7,6 +7,7 @@ export interface ScannedJob extends MockJobTemplate {
     matchScore: number;
     foundDate: string;
     source: 'LinkedIn' | 'Indeed' | 'Company Site';
+    job_url?: string;
 }
 
 export const JobService = {
