@@ -33,6 +33,7 @@ const defaultColumns: ColumnOption[] = [
   { id: "dateApplied", label: "Date Applied", checked: true },
   { id: "followUp", label: "Follow up", checked: true },
   { id: "excitement", label: "Excitement", checked: true },
+  { id: "source", label: "Source", checked: true },
 ];
 
 export default function Trackers() {

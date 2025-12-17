@@ -47,12 +47,39 @@ export default function JobSearch() {
     if (!masterProfile) return;
     setIsScanning(true);
     try {
-      const jobs = await JobService.autoPopulateJobs(masterProfile);
-      setScannedJobs(jobs);
-      if (jobs.length > 0) {
+      // Use active input query if available, otherwise fallback to profile title
+      const keyword = activeConfig.query || masterProfile.targetTitle || "Software Engineer";
+
+      // 1. Get Mock/AI recommended jobs (passing keyword)
+      const mockJobs = await JobService.autoPopulateJobs(masterProfile, keyword);
+
+      // 2. Get Real Discovered jobs (if any)
+      const realJobsData = await JobService.getDiscoveredJobs(keyword);
+
+      const realJobs: ScannedJob[] = realJobsData.map((j: any) => ({
+        id: j.id,
+        title: j.title,
+        company: j.company,
+        location: j.location || "Remote",
+        salary: "Competitive", // Placeholder as scraping usually doesn't get strict salary
+        type: "Full-time",
+        skills: [keyword],
+        matchScore: 90, // Assume high relevance if keyword matched
+        foundDate: j.posted_at,
+        source: 'LinkedIn',
+        description: j.description || "No description available",
+        isRemote: j.location ? j.location.toLowerCase().includes('remote') : false
+      }));
+
+      // Merge: Real jobs first, then mock
+      const allJobs = [...realJobs, ...mockJobs];
+
+      setScannedJobs(allJobs);
+
+      if (allJobs.length > 0) {
         toast({
           title: "Scan Complete",
-          description: `Found ${jobs.length} relevant jobs matching your profile.`
+          description: `Found ${realJobs.length} new real jobs and ${mockJobs.length} recommended matches.`
         });
       }
     } catch (e) {
