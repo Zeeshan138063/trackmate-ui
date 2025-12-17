@@ -3,17 +3,25 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Plus, Loader2, PlayCircle, StopCircle } from "lucide-react";
 import { QueryService, JobSearchQuery } from "@/services/QueryService";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
+import { SearchConfig } from "@/utils/search-intelligence";
+import { mapConfigToFilters, getEffectivedKeyword } from "@/utils/filter-mapper";
 
-export function JobQueryManager() {
+interface JobQueryManagerProps {
+    activeConfig?: SearchConfig;
+}
+
+export function JobQueryManager({ activeConfig }: JobQueryManagerProps) {
     const [queries, setQueries] = useState<JobSearchQuery[]>([]);
     const [loading, setLoading] = useState(true);
     const [newKeyword, setNewKeyword] = useState("");
     const [adding, setAdding] = useState(false);
+    const [useSmartFilters, setUseSmartFilters] = useState(false);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -41,11 +49,21 @@ export function JobQueryManager() {
         if (!newKeyword.trim()) return;
         setAdding(true);
         try {
-            // Default filters can be passed here if we want to extend the UI later
-            await QueryService.addQuery(newKeyword.trim(), { f_TPR: "r86400" }); // Default to past 24h
+            let filters = { f_TPR: "r86400" }; // Default
+            let finalKeyword = newKeyword.trim();
+
+            if (useSmartFilters && activeConfig) {
+                filters = mapConfigToFilters(activeConfig);
+                // Also append exclusions if any
+                if (activeConfig.excludedTerms.length > 0) {
+                    finalKeyword = getEffectivedKeyword({ ...activeConfig, query: finalKeyword });
+                }
+            }
+
+            await QueryService.addQuery(finalKeyword, filters);
             setNewKeyword("");
             await loadQueries();
-            toast({ title: "Search Added", description: `We'll automatically scan for "${newKeyword}"` });
+            toast({ title: "Search Added", description: `We'll automatically scan for "${finalKeyword}"` });
         } catch (e: any) {
             toast({ title: "Error", description: e.message, variant: "destructive" });
         } finally {
@@ -94,6 +112,19 @@ export function JobQueryManager() {
                         {adding ? <Loader2 className="animate-spin h-4 w-4" /> : <Plus className="h-4 w-4" />}
                     </Button>
                 </div>
+
+                {activeConfig && (
+                    <div className="flex items-center space-x-2">
+                        <Switch
+                            id="smart-filters"
+                            checked={useSmartFilters}
+                            onCheckedChange={setUseSmartFilters}
+                        />
+                        <Label htmlFor="smart-filters" className="text-xs text-muted-foreground">
+                            Apply active filters (Remote, Experience, etc.)
+                        </Label>
+                    </div>
+                )}
 
                 <div className="space-y-2 mt-4 max-h-[300px] overflow-y-auto pr-2">
                     {loading && <div className="text-center p-4 text-muted-foreground"><Loader2 className="animate-spin h-6 w-6 mx-auto mb-2" />Loading agents...</div>}

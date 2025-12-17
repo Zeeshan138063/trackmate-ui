@@ -228,6 +228,21 @@ Deno.serve(async (req) => {
                 if (error) console.error("DB Insert Error", error);
                 else results.push(...discoveredJobs.map(j => j.title));
             }
+
+            // 6. Update last_run_at for this query (by keyword and filters?)
+            // Since we deduped by memory, 'q' might not have the ID if we constructed it manually or if we didn't select ID.
+            // But we selected 'keyword, filters' in the previous query. 
+            // We should select ID too or update by keyword + user_id?
+            // Wait, queries can be shared by multiple users now if we had the same keyword/filters... 
+            // But we deduped them. We should update ALL queries that matched this keyword/filter combo.
+
+            // Re-update all matching queries for this keyword to show they ran
+            await supabase
+                .from('job_search_queries')
+                .update({ last_run_at: new Date().toISOString() })
+                .eq('keyword', q.keyword)
+                .is('is_active', true);
+
         }
 
         return new Response(

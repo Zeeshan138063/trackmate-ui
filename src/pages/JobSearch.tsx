@@ -177,7 +177,7 @@ export default function JobSearch() {
             </CardContent>
           </Card>
 
-          <JobQueryManager />
+          <JobQueryManager activeConfig={activeConfig} />
         </div>
 
         {/* Right Column: Search Dashboard & Feed */}
