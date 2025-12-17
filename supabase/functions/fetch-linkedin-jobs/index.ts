@@ -204,14 +204,43 @@ Deno.serve(async (req) => {
 
             const discoveredJobs = [];
 
-            // 4c. Generate Embeddings only for NEW jobs
+            // 4c. Generate Embeddings AND fetch details only for NEW jobs
             for (const job of newJobsToProcess) {
+                // Fetch full description if possible
+                try {
+                    console.log(`Fetching details for: ${job.title}`);
+                    const detailRes = await fetch(job.job_url, {
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                        }
+                    });
+
+                    if (detailRes.ok) {
+                        const detailHtml = await detailRes.text();
+                        const detailDoc = new DOMParser().parseFromString(detailHtml, "text/html");
+                        // Try common selectors for description
+                        const descContainer = detailDoc?.querySelector('.description__text') ||
+                            detailDoc?.querySelector('.show-more-less-html__markup') ||
+                            detailDoc?.querySelector('.job-description');
+
+                        if (descContainer) {
+                            let text = descContainer.textContent?.trim() || "";
+                            // Basic cleanup
+                            text = text.replace(/\s+/g, ' ').substring(0, 5000); // Limit length
+                            if (text) job.description = text;
+                        }
+                    }
+                } catch (e) {
+                    console.error(`Failed to fetch details for ${job.job_url}`, e);
+                }
+
                 // Generate embedding via HF API
                 const textToEmbed = `${job.title} ${job.description || ''} ${job.company} ${job.location}`;
                 const embedding = await generateEmbedding(textToEmbed);
 
                 // Add a small delay to respect rate limits if processing many
-                if (newJobsToProcess.length > 5) await new Promise(r => setTimeout(r, 200));
+                await new Promise(r => setTimeout(r, 1000)); // Increased delay since we are fetching pages
 
                 discoveredJobs.push({
                     ...job,

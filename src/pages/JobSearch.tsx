@@ -24,6 +24,9 @@ export default function JobSearch() {
     datePosted: 'week',
     excludedTerms: []
   });
+  // Track most recent UI changes, even if not "submitted" yet
+  const [latestConfig, setLatestConfig] = useState<SearchConfig>(activeConfig);
+
   const { toast } = useToast();
   const [importUrl, setImportUrl] = useState("");
 
@@ -37,6 +40,11 @@ export default function JobSearch() {
   useEffect(() => {
     if (masterProfile && !activeConfig.query) {
       setActiveConfig(prev => ({
+        ...prev,
+        query: masterProfile.targetTitle || "Software Engineer",
+        location: masterProfile.contact.location || "Remote"
+      }));
+      setLatestConfig(prev => ({
         ...prev,
         query: masterProfile.targetTitle || "Software Engineer",
         location: masterProfile.contact.location || "Remote"
@@ -154,8 +162,9 @@ export default function JobSearch() {
             profile={currentProfile}
             onSearch={(config) => {
               setActiveConfig(config);
-              handleRunScan(config); // Trigger scan immediately with new config
+              handleRunScan(config);
             }}
+            onConfigChange={setLatestConfig}
           />
 
           <Card className="bg-slate-50 border-slate-200">
@@ -177,7 +186,7 @@ export default function JobSearch() {
             </CardContent>
           </Card>
 
-          <JobQueryManager activeConfig={activeConfig} />
+          <JobQueryManager activeConfig={latestConfig} />
         </div>
 
         {/* Right Column: Search Dashboard & Feed */}

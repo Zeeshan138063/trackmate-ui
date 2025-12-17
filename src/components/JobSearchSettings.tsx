@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 interface JobSearchSettingsProps {
     profile: MasterProfile;
     onSearch: (config: SearchConfig) => void;
+    onConfigChange?: (config: SearchConfig) => void;
 }
 
 const EXPERIENCE_LEVELS = [
@@ -31,7 +32,7 @@ const WORKPLACE_TYPES = [
     { id: "3", label: "Hybrid" },
 ];
 
-export function JobSearchSettings({ profile, onSearch }: JobSearchSettingsProps) {
+export function JobSearchSettings({ profile, onSearch, onConfigChange }: JobSearchSettingsProps) {
     const [query, setQuery] = useState(profile.targetTitle || "");
     const [location, setLocation] = useState(profile.contact.location || "Remote");
     const [remote, setRemote] = useState(true);
@@ -59,6 +60,22 @@ export function JobSearchSettings({ profile, onSearch }: JobSearchSettingsProps)
             setWorkplace([]);
         }
     }, [remote]);
+
+    // Emit config changes for live previews (without triggering a scan)
+    useEffect(() => {
+        if (onConfigChange) {
+            onConfigChange({
+                query,
+                location,
+                remote,
+                datePosted,
+                customTimeSeconds: customSeconds,
+                excludedTerms: excluded,
+                experienceLevel: experience,
+                workplaceType: workplace
+            });
+        }
+    }, [query, location, remote, datePosted, customSeconds, excluded, experience, workplace]);
 
     const handleAddExclude = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && excludeInput) {
