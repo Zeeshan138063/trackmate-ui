@@ -130,6 +130,7 @@ export function JobTable({
             {isColumnVisible('dateApplied') && <TableHead>Date Applied</TableHead>}
             {isColumnVisible('followUp') && <TableHead>Follow up</TableHead>}
             {isColumnVisible('excitement') && <TableHead>Excitement</TableHead>}
+            {isColumnVisible('source') && <TableHead>Source</TableHead>}
             {(onEditJob || onDeleteJob) && <TableHead className="w-24">Actions</TableHead>}
           </TableRow>
         </TableHeader>
@@ -175,6 +176,13 @@ export function JobTable({
               {isColumnVisible('dateApplied') && <TableCell>{job.dateApplied || "N/A"}</TableCell>}
               {isColumnVisible('followUp') && <TableCell>{job.followUp || "Add date"}</TableCell>}
               {isColumnVisible('excitement') && <TableCell>{renderStars(job)}</TableCell>}
+              {isColumnVisible('source') && (
+                <TableCell>
+                  <Badge variant="outline" className="bg-slate-50 text-xs font-normal">
+                    {job.source || 'Manual'}
+                  </Badge>
+                </TableCell>
+              )}
               {(onEditJob || onDeleteJob) && (
                 <TableCell>
                   <div className="flex gap-1">
