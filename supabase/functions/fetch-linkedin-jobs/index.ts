@@ -70,10 +70,23 @@ Deno.serve(async (req) => {
         } else {
             const { data, error } = await supabase
                 .from('job_search_queries')
-                .select('*')
+                .select('keyword, filters')
                 .eq('is_active', true);
 
-            if (data && data.length > 0) queries = data;
+            if (data && data.length > 0) {
+                // Deduplicate queries to avoid scraping the same thing multiple times
+                const uniqueMap = new Map();
+                data.forEach(q => {
+                    // Create a unique key based on keyword and stringified filters
+                    // Normalize filters? Ideally yes, but basic stringify is good enough for now
+                    const key = `${q.keyword.toLowerCase()}-${JSON.stringify(q.filters)}`;
+                    if (!uniqueMap.has(key)) {
+                        uniqueMap.set(key, q);
+                    }
+                });
+                queries = Array.from(uniqueMap.values());
+                console.log(`Found ${data.length} total active queries, reduced to ${queries.length} unique searches.`);
+            }
             else queries = [{ keyword: 'remote software engineer', filters: {} }]; // Default fallback
         }
 

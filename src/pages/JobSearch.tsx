@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { initialMasterProfile } from "@/types/resume";
 import { JobService, ScannedJob } from "@/services/JobService";
+import { JobQueryManager } from "@/components/JobQueryManager";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -175,6 +176,8 @@ export default function JobSearch() {
               </Button>
             </CardContent>
           </Card>
+
+          <JobQueryManager />
         </div>
 
         {/* Right Column: Search Dashboard & Feed */}
