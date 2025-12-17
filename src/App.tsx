@@ -18,7 +18,10 @@ import Support from "./pages/Support";
 import Settings from "./pages/Settings";
 import Connections from "./pages/Connections";
 import GrowthDashboard from "./pages/Growth/Dashboard";
+
 import NotFound from "./pages/NotFound";
+import PublicJobDiscovery from "./pages/PublicJobDiscovery";
+import JobDetails from "./pages/JobDetails";
 
 const queryClient = new QueryClient();
 
@@ -107,11 +110,15 @@ const App = () => (
               </Layout>
             </ProtectedRoute>
           } />
+          {/* Public Job Discovery Routes */}
+          <Route path="/jobs" element={<PublicJobDiscovery />} />
+          <Route path="/jobs/:keyword" element={<PublicJobDiscovery />} />
+          <Route path="/job-view/:jobId" element={<JobDetails />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
-  </QueryClientProvider>
+  </QueryClientProvider >
 );
 
 export default App;

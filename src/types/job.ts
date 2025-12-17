@@ -8,6 +8,7 @@ export interface Job {
   location?: string;
   description?: string;
   status: "Bookmarked" | "Applying" | "Applied" | "Interviewing" | "Negotiating" | "Accepted" | "Rejected";
+  source?: "manual" | "auto" | "linkedin_auto";
   datePosted?: string;
   dateSaved: string;
   deadline?: string;

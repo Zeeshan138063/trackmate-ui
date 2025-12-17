@@ -1,8 +1,11 @@
 export interface SearchConfig {
     query: string;
     location: string;
-    remote: boolean;
-    datePosted: 'any' | 'today' | '3days' | 'week' | 'month';
+    remote: boolean; // kept for backward compatibility/quick toggle
+    datePosted: 'any' | 'today' | '3days' | 'week' | 'month' | 'custom';
+    customTimeSeconds?: number;
+    experienceLevel?: string[]; // 1=Internship, 2=Entry, etc.
+    workplaceType?: string[]; // 1=On-site, 2=Remote, 3=Hybrid
     excludedTerms: string[];
 }
 
@@ -10,11 +13,20 @@ export const generateSearchUrl = (
     platform: 'google' | 'linkedin' | 'indeed',
     config: SearchConfig
 ): string => {
-    const { query, location, remote, datePosted, excludedTerms } = config;
+    const { query, location, remote, datePosted, excludedTerms, experienceLevel, workplaceType, customTimeSeconds } = config;
 
     // Base query construction with exclusion
     let q = query;
-    if (remote) q += ' "remote"';
+    if (remote && (!workplaceType || workplaceType.length === 0)) {
+        // Legacy behavior: if remote toggle is on but no specific workplace types selected, assume Remote
+        // If workplaceType is populated, we rely on that instead
+    }
+
+    // Google/Indeed might accept "remote" in keyword, but LinkedIn handles it via filters
+    if (platform !== 'linkedin' && remote) {
+        q += ' "remote"';
+    }
+
     if (excludedTerms.length > 0) {
         q += ' ' + excludedTerms.map(t => `-${t}`).join(' ');
     }
@@ -25,8 +37,6 @@ export const generateSearchUrl = (
     switch (platform) {
         case 'google':
             // Google Jobs specific params
-            // ibp=htl;jobs (triggers jobs UI)
-            // q=...
             let googleUrl = `https://www.google.com/search?q=${encodedQ}&ibp=htl;jobs`;
             if (datePosted === 'today') googleUrl += "&tbs=qdr:d";
             if (datePosted === '3days') googleUrl += "&tbs=qdr:d3";
@@ -36,23 +46,34 @@ export const generateSearchUrl = (
 
         case 'linkedin':
             // LinkedIn Jobs params
-            // f_TPR=r86400 (24h), r604800 (week)
-            // f_WT=2 (Remote)
-            let liUrl = `https://www.linkedin.com/jobs/search/?keywords=${encodedQ}&location=${encodedLoc}`;
+            let liUrl = `https://www.linkedin.com/jobs/search/?keywords=${encodedQ}&location=${encodedLoc}&sortBy=DD`;
 
-            if (remote) liUrl += "&f_WT=2"; // Remote filter
+            // Workplace Type (f_WT)
+            // 1=On-site, 2=Remote, 3=Hybrid
+            let wt: string[] = workplaceType || [];
+            if (remote && wt.length === 0) wt.push('2'); // Legacy support
 
-            if (datePosted === 'today') liUrl += "&f_TPR=r86400";
+            if (wt.length > 0) {
+                liUrl += `&f_WT=${wt.join('%2C')}`; // comma encoded
+            }
+
+            // Experience Level (f_E)
+            if (experienceLevel && experienceLevel.length > 0) {
+                liUrl += `&f_E=${experienceLevel.join('%2C')}`;
+            }
+
+            // Time Posted (f_TPR)
+            if (datePosted === 'today') liUrl += "&f_TPR=r86400"; // 24h
             else if (datePosted === 'week') liUrl += "&f_TPR=r604800";
             else if (datePosted === 'month') liUrl += "&f_TPR=r2592000";
+            else if (datePosted === 'custom' && customTimeSeconds) {
+                liUrl += `&f_TPR=r${customTimeSeconds}`;
+            }
 
             return liUrl;
 
         case 'indeed':
-            // Indeed params
-            // fromage=1 (1 day), 3, 7
-            // sc=0kf:attr(DSQF7); (Remote filter varies, usually keyword is better)
-            let indeedUrl = `https://www.indeed.com/jobs?q=${encodedQ}&l=${encodedLoc}`;
+            let indeedUrl = `https://www.indeed.com/jobs?q=${encodedQ}&l=${encodedLoc}&sort=date`;
 
             if (datePosted === 'today') indeedUrl += "&fromage=1";
             else if (datePosted === '3days') indeedUrl += "&fromage=3";
