@@ -1,5 +1,6 @@
 import { MasterProfile } from "@/types/resume";
 import { JOB_TEMPLATES, COMPANIES, MockJobTemplate } from "@/data/mock-jobs";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface ScannedJob extends MockJobTemplate {
     id: string;
@@ -12,13 +13,14 @@ export const JobService = {
     /**
      * Simulates an intelligent background scan for jobs matching the profile
      */
-    autoPopulateJobs: async (profile: MasterProfile): Promise<ScannedJob[]> => {
+    autoPopulateJobs: async (profile: MasterProfile, keyword?: string): Promise<ScannedJob[]> => {
         // Simulate network delay
         await new Promise(resolve => setTimeout(resolve, 1500));
 
         const matches: ScannedJob[] = [];
-        const targetTitle = profile.targetTitle?.toLowerCase() || "";
-        const userSkills = profile.skills.map(s => s.items.toLowerCase().split(',')).flat();
+        // Use provided keyword, or fallback to profile title
+        const targetTitle = (keyword || profile.targetTitle || "").toLowerCase();
+        // const userSkills = profile.skills.map(s => s.items.toLowerCase().split(',')).flat();
 
         // 1. Filter templates that loosely match the title or skills
         const relevantTemplates = JOB_TEMPLATES.filter(t => {
@@ -48,5 +50,50 @@ export const JobService = {
         }
 
         return matches.sort((a, b) => b.matchScore - a.matchScore);
+    },
+
+    /**
+     * Real Job Discovery from Supabase (LinkedIn Scraper)
+     */
+    getDiscoveredJobs: async (keyword?: string): Promise<any[]> => {
+        try {
+            if (keyword) {
+                // RAG: Use Semantic Search Edge Function
+                const { data, error } = await supabase.functions.invoke('search-jobs', {
+                    body: { query: keyword }
+                });
+
+                if (error) throw error;
+                // Semantic search returns slightly different object structure (flat), which matches our needs
+                return data || [];
+            }
+
+            // If no keyword, just fetch latest (SQL fallback)
+            const { data, error } = await supabase
+                .from('discovered_jobs' as any)
+                .select('*')
+                .order('posted_at', { ascending: false });
+
+            if (error) throw error;
+            return data || [];
+        } catch (e) {
+            console.error("Failed to fetch discovered jobs", e);
+            return [];
+        }
+    },
+
+    getJobDetails: async (id: string): Promise<any | null> => {
+        try {
+            const { data, error } = await supabase
+                .from('discovered_jobs' as any)
+                .select('*')
+                .eq('id', id)
+                .single();
+            if (error) throw error;
+            return data;
+        } catch (e) {
+            console.error("Failed to fetch job details", e);
+            return null;
+        }
     }
 };
