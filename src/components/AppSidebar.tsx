@@ -54,10 +54,11 @@ export function AppSidebar() {
 
   const navigate = useNavigate();
 
-  // Helper for active state - simple match for now, could be enhanced
+  // Helper for active state - exact match or subpath match
   const isRouteActive = (url: string) => {
-    if (url === "/" && currentPath !== "/") return false;
-    return currentPath.startsWith(url);
+    if (currentPath === url) return true;
+    if (url === "/") return false;
+    return currentPath.startsWith(`${url}/`);
   };
 
   const getButtonClass = (active: boolean) =>
