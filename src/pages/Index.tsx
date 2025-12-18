@@ -1,5 +1,5 @@
 
-import { Header } from "@/components/Header";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CareerGoalSection } from "@/components/CareerGoalSection";
@@ -57,7 +57,6 @@ export default function Index() {
   if (loading) {
     return (
       <div className="min-h-screen">
-        <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
@@ -72,7 +71,6 @@ export default function Index() {
 
   return (
     <div className="min-h-screen">
-      <Header />
       <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Career Goal Section */}
         <CareerGoalSection />
@@ -121,7 +119,7 @@ export default function Index() {
                 </CardTitle>
                 <CardDescription>
                   Create professional resumes tailored to your target positions
-                </CardDescription>  
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <Button className="w-full" variant="outline">Build Resume</Button>

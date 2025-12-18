@@ -20,7 +20,6 @@ import { EditJobDialog } from "@/components/EditJobDialog";
 import { ColumnsDropdown, ColumnOption } from "@/components/ColumnsDropdown";
 import { useJobs } from "@/hooks/useJobs";
 import { useAuth } from "@/hooks/useAuth";
-import { Header } from "@/components/Header";
 import { toast } from "sonner";
 import { JobStats, Job } from "@/types/job";
 import { DailyStats } from "@/components/DailyStats";
@@ -390,7 +389,6 @@ export default function Trackers() {
   if (loading) {
     return (
       <div className="min-h-screen">
-        <Header />
         <div className="p-6">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
@@ -405,7 +403,6 @@ export default function Trackers() {
 
   return (
     <div className="min-h-screen">
-      <Header />
       <div className="p-6 space-y-6">
         {/* Premium Magic Input Section */}
         {/* Premium Magic Input Section (Hidden for now) */}
