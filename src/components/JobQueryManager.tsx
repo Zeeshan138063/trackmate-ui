@@ -44,7 +44,7 @@ export function JobQueryManager({ activeConfig }: JobQueryManagerProps) {
         if (!newKeyword.trim()) return;
         setAdding(true);
         try {
-            let filters = { f_TPR: "r86400" }; // Default
+            let filters: Record<string, any> = { f_TPR: "r86400" }; // Default
             let finalKeyword = newKeyword.trim();
 
             if (useSmartFilters && activeConfig) {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -36,6 +36,11 @@ export default function JobSearch() {
   const [isScanning, setIsScanning] = useState(false);
   const [savedJobIds, setSavedJobIds] = useState<string[]>([]);
 
+  // Layout Refs for dynamic height alignment
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const topSectionRef = useRef<HTMLDivElement>(null);
+  const [feedHeight, setFeedHeight] = useState(800); // Default fallback
+
   // Sync profile to config when loaded
   useEffect(() => {
     if (masterProfile && !activeConfig.query) {
@@ -54,6 +59,40 @@ export default function JobSearch() {
       handleRunScan();
     }
   }, [masterProfile]);
+
+  // Dynamic Height Sync Effect
+  useEffect(() => {
+    if (!sidebarRef.current || !topSectionRef.current) return;
+
+    const updateHeight = () => {
+      // Only apply dynamic calculation on desktop (lg breakpoint)
+      if (window.matchMedia('(min-width: 1024px)').matches) {
+        const sidebarH = sidebarRef.current?.offsetHeight || 800;
+        const topSectionH = topSectionRef.current?.offsetHeight || 200;
+        // sidebar - topSection - gap (space-y-8 = 32px)
+        const calculatedHeight = sidebarH - topSectionH - 32;
+        // Ensure a reasonable minimum regardless of empty sidebar
+        setFeedHeight(Math.max(calculatedHeight, 500));
+      } else {
+        // Fallback for mobile/tablet where they stack
+        setFeedHeight(600);
+      }
+    };
+
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(sidebarRef.current);
+    observer.observe(topSectionRef.current);
+    // Also listen to window resize
+    window.addEventListener('resize', updateHeight);
+
+    // Initial calcl
+    updateHeight();
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateHeight);
+    };
+  }, []);
 
   const handleRunScan = async (overrideConfig?: SearchConfig) => {
     if (!masterProfile) return;
@@ -148,8 +187,8 @@ export default function JobSearch() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Settings */}
-        <div className="lg:col-span-1 space-y-6">
+        {/* Left Column: Settings & Agents */}
+        <div ref={sidebarRef} className="lg:col-span-1 space-y-6 self-start">
           <JobSearchSettings
             profile={currentProfile}
             onSearch={(config) => {
@@ -170,7 +209,7 @@ export default function JobSearch() {
         <div className="lg:col-span-2 space-y-8">
 
           {/* Smart Links Section (Restored) */}
-          <div className="space-y-4">
+          <div ref={topSectionRef} className="space-y-4">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <ExternalLink className="h-5 w-5 text-indigo-600" />
               Smart Search Links
@@ -224,7 +263,10 @@ export default function JobSearch() {
             </div>
 
             {/* Scrollable Container */}
-            <div className="h-[600px] overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+            <div
+              className="overflow-y-auto pr-2 space-y-3 custom-scrollbar"
+              style={{ height: feedHeight }}
+            >
               {isScanning ? (
                 [1, 2, 3].map(i => (
                   <Card key={i} className="animate-pulse">
