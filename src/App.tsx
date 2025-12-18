@@ -25,99 +25,103 @@ import JobDetails from "./pages/JobDetails";
 
 const queryClient = new QueryClient();
 
+import { ThemeProvider } from "@/components/theme-provider";
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/" element={
-            <ProtectedRoute>
-              <Layout>
-                <Index />
-              </Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/trackers" element={
-            <ProtectedRoute>
-              <Layout>
-                <Trackers />
-              </Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/resume" element={
-            <ProtectedRoute>
-              <Layout>
-                <ResumeBuilder />
-              </Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/interview" element={
-            <ProtectedRoute>
-              <Layout>
-                <InterviewPractice />
-              </Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/interview-feedback" element={
-            <ProtectedRoute>
-              <Layout>
-                <InterviewFeedback />
-              </Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/work-styles" element={
-            <ProtectedRoute>
-              <Layout>
-                <WorkStyles />
-              </Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/job-search" element={
-            <ProtectedRoute>
-              <Layout>
-                <JobSearch />
-              </Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/support" element={
-            <ProtectedRoute>
-              <Layout>
-                <Support />
-              </Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <Layout>
-                <Settings />
-              </Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/connections" element={
-            <ProtectedRoute>
-              <Layout>
-                <Connections />
-              </Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/growth" element={
-            <ProtectedRoute>
-              <Layout>
-                <GrowthDashboard />
-              </Layout>
-            </ProtectedRoute>
-          } />
-          {/* Public Job Discovery Routes */}
-          <Route path="/jobs" element={<PublicJobDiscovery />} />
-          <Route path="/jobs/:keyword" element={<PublicJobDiscovery />} />
-          <Route path="/job-view/:jobId" element={<JobDetails />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme" attribute="class">
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Index />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/trackers" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Trackers />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/resume" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ResumeBuilder />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/interview" element={
+              <ProtectedRoute>
+                <Layout>
+                  <InterviewPractice />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/interview-feedback" element={
+              <ProtectedRoute>
+                <Layout>
+                  <InterviewFeedback />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/work-styles" element={
+              <ProtectedRoute>
+                <Layout>
+                  <WorkStyles />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/job-search" element={
+              <ProtectedRoute>
+                <Layout>
+                  <JobSearch />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/support" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Support />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Settings />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/connections" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Connections />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/growth" element={
+              <ProtectedRoute>
+                <Layout>
+                  <GrowthDashboard />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            {/* Public Job Discovery Routes */}
+            <Route path="/jobs" element={<PublicJobDiscovery />} />
+            <Route path="/jobs/:keyword" element={<PublicJobDiscovery />} />
+            <Route path="/job-view/:jobId" element={<JobDetails />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider >
 );
 

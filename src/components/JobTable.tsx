@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Table,
@@ -107,31 +106,31 @@ export function JobTable({
   };
 
   return (
-    <div className="border rounded-lg bg-card">
+    <div className="rounded-lg bg-card border h-[600px] overflow-auto relative">
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-12">
+        <TableHeader className="sticky top-0 z-50 bg-card shadow-sm">
+          <TableRow className="hover:bg-transparent">
+            <TableHead className="w-12 bg-card">
               <Checkbox
                 checked={isAllSelected}
                 onCheckedChange={onSelectAll}
                 className={isIndeterminate ? "data-[state=indeterminate]:bg-primary" : ""}
               />
             </TableHead>
-            <TableHead>Job Position</TableHead>
-            <TableHead>Company</TableHead>
-            {isColumnVisible('minSalary') && <TableHead>Min. Salary</TableHead>}
-            {isColumnVisible('maxSalary') && <TableHead>Max. Salary</TableHead>}
-            {isColumnVisible('location') && <TableHead>Location</TableHead>}
-            {isColumnVisible('status') && <TableHead>Status</TableHead>}
-            {isColumnVisible('datePosted') && <TableHead>Date Posted</TableHead>}
-            {isColumnVisible('dateSaved') && <TableHead>Date Saved</TableHead>}
-            {isColumnVisible('deadline') && <TableHead>Deadline</TableHead>}
-            {isColumnVisible('dateApplied') && <TableHead>Date Applied</TableHead>}
-            {isColumnVisible('followUp') && <TableHead>Follow up</TableHead>}
-            {isColumnVisible('excitement') && <TableHead>Excitement</TableHead>}
-            {isColumnVisible('source') && <TableHead>Source</TableHead>}
-            {(onEditJob || onDeleteJob) && <TableHead className="w-24">Actions</TableHead>}
+            <TableHead className="bg-card">Job Position</TableHead>
+            <TableHead className="bg-card">Company</TableHead>
+            {isColumnVisible('minSalary') && <TableHead className="bg-card">Min. Salary</TableHead>}
+            {isColumnVisible('maxSalary') && <TableHead className="bg-card">Max. Salary</TableHead>}
+            {isColumnVisible('location') && <TableHead className="bg-card">Location</TableHead>}
+            {isColumnVisible('status') && <TableHead className="bg-card">Status</TableHead>}
+            {isColumnVisible('datePosted') && <TableHead className="bg-card">Date Posted</TableHead>}
+            {isColumnVisible('dateSaved') && <TableHead className="bg-card">Date Saved</TableHead>}
+            {isColumnVisible('deadline') && <TableHead className="bg-card">Deadline</TableHead>}
+            {isColumnVisible('dateApplied') && <TableHead className="bg-card">Date Applied</TableHead>}
+            {isColumnVisible('followUp') && <TableHead className="bg-card">Follow up</TableHead>}
+            {isColumnVisible('excitement') && <TableHead className="bg-card">Excitement</TableHead>}
+            {isColumnVisible('source') && <TableHead className="bg-card">Source</TableHead>}
+            {(onEditJob || onDeleteJob) && <TableHead className="w-24 bg-card sticky right-0 z-10 shadow-[-10px_0_10px_-5px_rgba(0,0,0,0.05)]">Actions</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -184,7 +183,7 @@ export function JobTable({
                 </TableCell>
               )}
               {(onEditJob || onDeleteJob) && (
-                <TableCell>
+                <TableCell className="bg-card sticky right-0 z-10 shadow-[-10px_0_10px_-5px_rgba(0,0,0,0.05)]">
                   <div className="flex gap-1">
                     {onEditJob && (
                       <Button

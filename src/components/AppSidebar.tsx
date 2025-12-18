@@ -26,8 +26,10 @@ import {
   SidebarMenuItem,
   useSidebar,
   SidebarTrigger,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { ModeToggle } from "@/components/mode-toggle";
 
 const navigationItems = [
   { title: "Home", url: "/", icon: Home },
@@ -75,9 +77,9 @@ export function AppSidebar() {
             {!collapsed && (
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-sm">T</span>
+                  <span className="text-primary-foreground font-bold text-sm">J</span>
                 </div>
-                <span className="font-semibold text-lg">Teal</span>
+                <span className="font-semibold text-lg">JobVelocity</span>
               </div>
             )}
             <SidebarTrigger />
@@ -131,7 +133,14 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
       </SidebarContent>
-    </Sidebar>
+      <SidebarFooter className="p-4 border-t">
+        <div className="flex items-center justify-between">
+          {!collapsed && <span className="text-sm text-muted-foreground">Theme</span>}
+          <ModeToggle />
+        </div>
+      </SidebarFooter>
+    </Sidebar >
   );
 }

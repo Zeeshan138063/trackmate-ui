@@ -16,15 +16,15 @@ export default function ResumeBuilder() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6 pb-20">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Resume System</h1>
-        <p className="text-muted-foreground mt-2">
+    <div className="p-6 max-w-5xl mx-auto space-y-8 pb-20 animate-in fade-in-50 duration-500">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Resume System</h1>
+        <p className="text-muted-foreground text-lg">
           Manage your Master Profile. This data will be used to tailor resumes for specific jobs.
         </p>
       </div>
 
-      <div className="bg-background border rounded-lg shadow-sm p-1">
+      <div className="bg-card border rounded-xl shadow-sm overflow-hidden">
         <MasterProfileEditor
           profile={masterProfile}
           resumeId={resumeId}

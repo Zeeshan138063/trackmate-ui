@@ -70,7 +70,7 @@ export function MasterProfileEditor({ profile, resumeId, onSave, isSaving }: Mas
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 p-4 sm:p-6">
             <div className="flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur z-10 py-4 border-b px-1">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-primary/10 rounded-lg">
@@ -109,10 +109,10 @@ export function MasterProfileEditor({ profile, resumeId, onSave, isSaving }: Mas
                 <Accordion type="multiple" defaultValue={["contact", "summary"]} className="w-full space-y-4">
 
                     {/* 1. Contact Information */}
-                    <AccordionItem value="contact" className="border rounded-lg bg-card px-4">
+                    <AccordionItem value="contact" className="border rounded-lg bg-card px-4 shadow-sm">
                         <AccordionTrigger className="hover:no-underline py-4">
                             <div className="flex items-center gap-3">
-                                <User className="h-4 w-4 text-primary/70" />
+                                <User className="h-4 w-4 text-primary" />
                                 <span className="font-semibold">Contact Information</span>
                             </div>
                         </AccordionTrigger>
@@ -120,26 +120,26 @@ export function MasterProfileEditor({ profile, resumeId, onSave, isSaving }: Mas
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <Label>First Name</Label>
-                                    <Input value={formData.contact.firstName} onChange={(e) => handleNestedChange('contact', 'firstName', e.target.value)} className="bg-muted/30" />
+                                    <Input value={formData.contact.firstName} onChange={(e) => handleNestedChange('contact', 'firstName', e.target.value)} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Last Name</Label>
-                                    <Input value={formData.contact.lastName} onChange={(e) => handleNestedChange('contact', 'lastName', e.target.value)} className="bg-muted/30" />
+                                    <Input value={formData.contact.lastName} onChange={(e) => handleNestedChange('contact', 'lastName', e.target.value)} />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <Label>Email</Label>
-                                    <Input value={formData.contact.email} onChange={(e) => handleNestedChange('contact', 'email', e.target.value)} className="bg-muted/30" />
+                                    <Input value={formData.contact.email} onChange={(e) => handleNestedChange('contact', 'email', e.target.value)} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Phone</Label>
-                                    <Input value={formData.contact.phone} onChange={(e) => handleNestedChange('contact', 'phone', e.target.value)} className="bg-muted/30" />
+                                    <Input value={formData.contact.phone} onChange={(e) => handleNestedChange('contact', 'phone', e.target.value)} />
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <Label>Location</Label>
-                                <Input value={formData.contact.location} onChange={(e) => handleNestedChange('contact', 'location', e.target.value)} placeholder="City, State" className="bg-muted/30" />
+                                <Input value={formData.contact.location} onChange={(e) => handleNestedChange('contact', 'location', e.target.value)} placeholder="City, State" />
                             </div>
                             <div className="grid grid-cols-3 gap-4 border-t pt-4">
                                 <div className="space-y-2">
