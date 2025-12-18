@@ -18,6 +18,7 @@ import Support from "./pages/Support";
 import Settings from "./pages/Settings";
 import Connections from "./pages/Connections";
 import GrowthDashboard from "./pages/Growth/Dashboard";
+import DreamCompanies from "./pages/DreamCompanies";
 
 import NotFound from "./pages/NotFound";
 import PublicJobDiscovery from "./pages/PublicJobDiscovery";
@@ -110,6 +111,13 @@ const App = () => (
               <ProtectedRoute>
                 <Layout>
                   <GrowthDashboard />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/dream-companies" element={
+              <ProtectedRoute>
+                <Layout>
+                  <DreamCompanies />
                 </Layout>
               </ProtectedRoute>
             } />

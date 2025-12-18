@@ -14,6 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
+      dream_companies: {
+        Row: {
+          careers_page_url: string | null
+          company_name: string
+          company_size: string | null
+          created_at: string
+          id: string
+          industry: string | null
+          linkedin_company_url: string | null
+          locations: string[] | null
+          notes: string | null
+          priority: string | null
+          status: string | null
+          tags: string[] | null
+          target_roles: string[] | null
+          updated_at: string
+          user_id: string
+          website_url: string | null
+        }
+        Insert: {
+          careers_page_url?: string | null
+          company_name: string
+          company_size?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          linkedin_company_url?: string | null
+          locations?: string[] | null
+          notes?: string | null
+          priority?: string | null
+          status?: string | null
+          tags?: string[] | null
+          target_roles?: string[] | null
+          updated_at?: string
+          user_id: string
+          website_url?: string | null
+        }
+        Update: {
+          careers_page_url?: string | null
+          company_name?: string
+          company_size?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          linkedin_company_url?: string | null
+          locations?: string[] | null
+          notes?: string | null
+          priority?: string | null
+          status?: string | null
+          tags?: string[] | null
+          target_roles?: string[] | null
+          updated_at?: string
+          user_id?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      dream_company_reminders: {
+        Row: {
+          completed: boolean | null
+          created_at: string
+          dream_company_id: string
+          due_date: string
+          frequency: string | null
+          id: string
+          note: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string
+          dream_company_id: string
+          due_date: string
+          frequency?: string | null
+          id?: string
+          note?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string
+          dream_company_id?: string
+          due_date?: string
+          frequency?: string | null
+          id?: string
+          note?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dream_company_reminders_dream_company_id_fkey"
+            columns: ["dream_company_id"]
+            isOneToOne: false
+            referencedRelation: "dream_companies"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       career_goals: {
         Row: {
           created_at: string
@@ -51,6 +152,7 @@ export type Database = {
         Row: {
           company: string | null
           created_at: string
+          dream_company_id: string | null
           email: string | null
           id: string
           linkedin_url: string | null
@@ -65,6 +167,7 @@ export type Database = {
         Insert: {
           company?: string | null
           created_at?: string
+          dream_company_id?: string | null
           email?: string | null
           id?: string
           linkedin_url?: string | null
@@ -79,6 +182,7 @@ export type Database = {
         Update: {
           company?: string | null
           created_at?: string
+          dream_company_id?: string | null
           email?: string | null
           id?: string
           linkedin_url?: string | null
@@ -90,7 +194,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contacts_dream_company_id_fkey"
+            columns: ["dream_company_id"]
+            isOneToOne: false
+            referencedRelation: "dream_companies"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       interview_feedback: {
         Row: {
