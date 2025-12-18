@@ -1,37 +1,126 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { Button } from "@/components/ui/button";
 import { useResume } from "@/hooks/useResume";
 import { MasterProfileEditor } from "@/components/resume/MasterProfileEditor";
-import { Loader2 } from "lucide-react";
+import { ResumePreview } from "@/components/resume/ResumePreview";
+import { ResumeImporter } from "@/components/resume/ResumeImporter";
+import { Loader2, Printer, Sparkles, Save, CheckCircle2 } from "lucide-react";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { MasterProfile } from "@/types/resume";
 
 export default function ResumeBuilder() {
   const { masterProfile, loading, saving, saveMasterProfile, resumeId } = useResume();
+  const [liveData, setLiveData] = useState<MasterProfile | null>(null);
+  const [editorVersion, setEditorVersion] = useState(0);
+
+  // Sync live data when master profile loads initially
+  useEffect(() => {
+    if (masterProfile && !liveData) {
+      setLiveData(masterProfile);
+    }
+  }, [masterProfile, liveData]);
 
   if (loading || !masterProfile) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <span className="ml-2 text-muted-foreground">Loading Master Profile...</span>
       </div>
     );
   }
 
-  return (
-    <div className="p-6 max-w-5xl mx-auto space-y-8 pb-20 animate-in fade-in-50 duration-500">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Resume System</h1>
-        <p className="text-muted-foreground text-lg">
-          Manage your Master Profile. This data will be used to tailor resumes for specific jobs.
-        </p>
-      </div>
+  // Use liveData for preview if available, otherwise fall back to saved profile
+  const previewData = liveData || masterProfile;
 
-      <div className="bg-card border rounded-xl shadow-sm overflow-hidden">
-        <MasterProfileEditor
-          profile={masterProfile}
-          resumeId={resumeId}
-          onSave={saveMasterProfile}
-          isSaving={saving}
-        />
-      </div>
+  const handlePrint = () => {
+    window.print();
+  };
+
+  return (
+    <div className="h-[calc(100vh-4rem)] overflow-hidden animate-in fade-in-50 duration-500">
+      <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg border">
+        {/* Helper Panel: Editor */}
+        <ResizablePanel defaultSize={50} minSize={30}>
+          <div className="h-full bg-background p-4 md:p-8 flex flex-col overflow-hidden">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold tracking-tight">Master Profile</h2>
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                {saving ? (
+                  <span className="text-[10px] text-muted-foreground animate-pulse flex items-center gap-1">
+                    <Save className="h-3 w-3" /> Saving...
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-green-600 flex items-center gap-1 font-medium">
+                    <CheckCircle2 className="h-3 w-3" /> Saved
+                  </span>
+                )}
+                <ResumeImporter onImport={(importedData) => {
+                  setLiveData(importedData);
+                  // Update version to force re-render of Editor with new data
+                  setEditorVersion(v => v + 1);
+                }} />
+              </div>
+            </div>
+
+            <ScrollArea className="flex-1 -mx-4 px-4">
+              <div className="pb-6">
+                <MasterProfileEditor
+                  key={liveData ? `imported-${editorVersion}` : 'initial'}
+                  profile={liveData || masterProfile}
+                  resumeId={resumeId}
+                  onSave={saveMasterProfile}
+                  onLiveUpdate={setLiveData}
+                  isSaving={saving}
+                />
+              </div>
+            </ScrollArea>
+          </div>
+        </ResizablePanel>
+
+        <ResizableHandle withHandle />
+
+        {/* Preview Panel */}
+        <ResizablePanel defaultSize={50} minSize={30}>
+          <div className="h-full bg-muted/30 p-4 md:p-8 overflow-hidden">
+            <div className="h-full flex flex-col">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Live Preview</h3>
+                  <div className="text-xs text-muted-foreground">
+                    Updates as you type
+                  </div>
+                </div>
+                <Button size="sm" variant="outline" className="gap-2 bg-background shadow-sm hover:bg-accent hover:text-accent-foreground" onClick={handlePrint}>
+                  <Printer className="h-4 w-4" />
+                  Download PDF
+                </Button>
+              </div>
+              <div className="flex-1 overflow-y-auto rounded-lg border bg-zinc-100/50 shadow-inner p-4 md:p-8 flex justify-center relative">
+                <div className="w-full max-w-[8.5in]">
+                  <ResumePreview data={previewData} className="min-h-[11in]" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
+
+      {/* Print Portal - Renders outside the main layout for clean printing */}
+      {createPortal(
+        <div id="resume-print-portal" className="hidden print:block">
+          <ResumePreview data={previewData} />
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
