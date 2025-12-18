@@ -193,7 +193,8 @@ Deno.serve(async (req) => {
         if (keyword) {
             queries.push({ keyword, filters: {} });
         } else {
-            const { data } = await supabase.from('job_search_queries').select('keyword, filters').eq('is_active', true);
+            // Select ID so we can update the specific query later
+            const { data } = await supabase.from('job_search_queries').select('id, keyword, filters').eq('is_active', true);
             queries = data || [];
         }
 
@@ -252,6 +253,14 @@ Deno.serve(async (req) => {
                 // Be nice to the servers
                 await new Promise(r => setTimeout(r, 500));
             }
+
+            // Update Last Run if we have an ID
+            if (q.id) {
+                await supabase
+                    .from('job_search_queries')
+                    .update({ last_run_at: new Date().toISOString() })
+                    .eq('id', q.id);
+            }
         }
 
         // 3. Storage Phase
@@ -266,9 +275,6 @@ Deno.serve(async (req) => {
 
             if (error) console.error("DB Error:", error);
         }
-
-        // Update Last Run
-        // ... (omitted for brevity, can add later)
 
         return new Response(
             JSON.stringify({ success: true, count: discoveredJobs.length, jobs: discoveredJobs.map(j => j.title) }),

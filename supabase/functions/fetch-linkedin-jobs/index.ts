@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
         } else {
             const { data, error } = await supabase
                 .from('job_search_queries')
-                .select('keyword, filters')
+                .select('id, keyword, filters')
                 .eq('is_active', true);
 
             if (data && data.length > 0) {
@@ -78,10 +78,12 @@ Deno.serve(async (req) => {
                 const uniqueMap = new Map();
                 data.forEach(q => {
                     // Create a unique key based on keyword and stringified filters
-                    // Normalize filters? Ideally yes, but basic stringify is good enough for now
                     const key = `${q.keyword.toLowerCase()}-${JSON.stringify(q.filters)}`;
                     if (!uniqueMap.has(key)) {
-                        uniqueMap.set(key, q);
+                        // Keep track of all IDs that match this unique search
+                        uniqueMap.set(key, { ...q, ids: [q.id] });
+                    } else {
+                        uniqueMap.get(key).ids.push(q.id);
                     }
                 });
                 queries = Array.from(uniqueMap.values());
@@ -258,19 +260,15 @@ Deno.serve(async (req) => {
                 else results.push(...discoveredJobs.map(j => j.title));
             }
 
-            // 6. Update last_run_at for this query (by keyword and filters?)
-            // Since we deduped by memory, 'q' might not have the ID if we constructed it manually or if we didn't select ID.
-            // But we selected 'keyword, filters' in the previous query. 
-            // We should select ID too or update by keyword + user_id?
-            // Wait, queries can be shared by multiple users now if we had the same keyword/filters... 
-            // But we deduped them. We should update ALL queries that matched this keyword/filter combo.
+            // 6. Update last_run_at for this query 
+            // Update all query IDs that matched this specific search signature
+            if (q.ids && q.ids.length > 0) {
+                await supabase
+                    .from('job_search_queries')
+                    .update({ last_run_at: new Date().toISOString() })
+                    .in('id', q.ids);
+            }
 
-            // Re-update all matching queries for this keyword to show they ran
-            await supabase
-                .from('job_search_queries')
-                .update({ last_run_at: new Date().toISOString() })
-                .eq('keyword', q.keyword)
-                .is('is_active', true);
 
         }
 
