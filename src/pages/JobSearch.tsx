@@ -76,7 +76,7 @@ export default function JobSearch() {
         skills: [keyword, "AI Match"],
         matchScore: j.similarity ? Math.round(j.similarity * 100) : 85, // Use real similarity or fallback
         foundDate: j.posted_at,
-        source: 'LinkedIn',
+        source: j.source || 'LinkedIn',
         description: j.description || "No description available",
         isRemote: j.location ? j.location.toLowerCase().includes('remote') : false,
         job_url: j.job_url
@@ -244,45 +244,49 @@ export default function JobSearch() {
               </h2>
             </div>
 
-            {isScanning ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map(i => (
+            {/* Scrollable Container */}
+            <div className="h-[600px] overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+              {isScanning ? (
+                [1, 2, 3].map(i => (
                   <Card key={i} className="animate-pulse">
                     <CardContent className="p-6 h-24 bg-slate-50/50" />
                   </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {scannedJobs.map((job) => (
-                  <Card key={job.id} className="hover:shadow-md transition-all border-slate-200 group relative overflow-hidden">
+                ))
+              ) : (
+                scannedJobs.map((job) => (
+                  <Card key={job.id} className="hover:shadow-md transition-all border-slate-200 group relative overflow-hidden bg-white/50 backdrop-blur-sm">
                     <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <CardContent className="p-5">
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex-1 space-y-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-lg text-slate-900">{job.title}</h3>
-                            <Badge variant="secondary" className="text-xs font-normal">
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-semibold text-lg text-slate-900 line-clamp-1">{job.title}</h3>
+                            <Badge variant="secondary" className="text-xs font-normal bg-indigo-50 text-indigo-700 border-indigo-100">
                               {job.matchScore}% Match
                             </Badge>
+                            {job.source && (
+                              <Badge variant="outline" className="text-[10px] text-slate-500 border-slate-200">
+                                {job.source}
+                              </Badge>
+                            )}
                           </div>
-                          <div className="flex items-center text-sm text-muted-foreground gap-3">
+                          <div className="flex items-center text-sm text-muted-foreground gap-3 flex-wrap">
                             <span className="font-medium text-slate-700">{job.company}</span>
-                            <span>•</span>
+                            <span className="text-slate-300">•</span>
                             <span>{job.location}</span>
-                            <span>•</span>
+                            <span className="text-slate-300">•</span>
                             <span className="text-green-600 font-medium">{job.salary}</span>
                           </div>
                           <div className="flex gap-2 mt-2">
                             {job.skills.slice(0, 3).map(skill => (
-                              <Badge key={skill} variant="outline" className="text-[10px] px-2 py-0 h-5 bg-slate-50">
+                              <Badge key={skill} variant="outline" className="text-[10px] px-2 py-0 h-5 bg-slate-50/50">
                                 {skill}
                               </Badge>
                             ))}
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 shrink-0">
                           <Button size="sm" variant="outline" onClick={() => setSelectedJob(job)}>
                             View Details
                           </Button>
@@ -294,16 +298,16 @@ export default function JobSearch() {
                           ) : (
                             <Button size="sm" onClick={() => handleSaveScannedJob(job)} className="bg-slate-900 hover:bg-slate-800">
                               <PlusCircle className="h-4 w-4 mr-2" />
-                              Save Job
+                              Save
                             </Button>
                           )}
                         </div>
                       </div>
                     </CardContent>
                   </Card>
-                ))}
-              </div>
-            )}
+                ))
+              )}
+            </div>
           </div>
 
         </div>
@@ -340,7 +344,7 @@ export default function JobSearch() {
             <div className="flex justify-end gap-3 pt-4 border-t mt-4">
               <Button variant="outline" onClick={() => window.open(selectedJob?.job_url || '#', '_blank')}>
                 <ExternalLink className="h-4 w-4 mr-2" />
-                View on LinkedIn
+                {selectedJob?.source ? `Apply on ${selectedJob.source}` : "View Job"}
               </Button>
               <Button onClick={() => {
                 if (selectedJob) handleSaveScannedJob(selectedJob);
