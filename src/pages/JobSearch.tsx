@@ -36,6 +36,12 @@ export default function JobSearch() {
   const [isScanning, setIsScanning] = useState(false);
   const [savedJobIds, setSavedJobIds] = useState<string[]>([]);
 
+  // Pagination State
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const observerTarget = useRef<HTMLDivElement>(null);
+
   // Layout Refs for dynamic height alignment
   const sidebarRef = useRef<HTMLDivElement>(null);
   const topSectionRef = useRef<HTMLDivElement>(null);
@@ -105,16 +111,41 @@ export default function JobSearch() {
     };
   }, []);
 
+  // Infinite Scroll Observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !isScanning && !isLoadingMore) {
+          loadMoreJobs();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [observerTarget, hasMore, isScanning, isLoadingMore, scannedJobs]);
+
   const handleRunScan = async (overrideConfig?: SearchConfig) => {
     if (!masterProfile) return;
     setIsScanning(true);
+    setPage(0); // Reset page on new scan
+    setHasMore(true);
+
     try {
       // Use override config if provided (for immediate updates), otherwise active state
       const cfg = overrideConfig || activeConfig;
       const keyword = cfg.query || masterProfile.targetTitle || "Software Engineer";
 
       // 2. Get Real Discovered jobs (if any)
-      const realJobsData = await JobService.getDiscoveredJobs(keyword);
+      const realJobsData = await JobService.getDiscoveredJobs(keyword, 0, 20);
 
       const realJobs: ScannedJob[] = realJobsData.map((j: any) => ({
         id: j.id,
@@ -132,8 +163,9 @@ export default function JobSearch() {
         job_url: j.job_url
       }));
 
-      // Only show REAL jobs
+      // Only show REAL jobs (replace existing)
       setScannedJobs(realJobs);
+      setHasMore(realJobs.length >= 20);
 
       if (realJobs.length > 0) {
         toast({
@@ -150,6 +182,48 @@ export default function JobSearch() {
       console.error("Scan failed", e);
     } finally {
       setIsScanning(false);
+    }
+  };
+
+  const loadMoreJobs = async () => {
+    if (isLoadingMore || !hasMore) return;
+
+    setIsLoadingMore(true);
+    const nextPage = page + 1;
+
+    try {
+      const keyword = activeConfig.query || masterProfile?.targetTitle || "Software Engineer";
+      const newJobsData = await JobService.getDiscoveredJobs(keyword, nextPage, 20);
+
+      if (newJobsData.length === 0) {
+        setHasMore(false);
+        return;
+      }
+
+      const newJobs: ScannedJob[] = newJobsData.map((j: any) => ({
+        id: j.id,
+        title: j.title,
+        company: j.company,
+        location: j.location || "Remote",
+        salary: "Not Disclosed",
+        type: "Full-time",
+        skills: [keyword, "AI Match"],
+        matchScore: j.similarity ? Math.round(j.similarity * 100) : 85,
+        foundDate: j.posted_at,
+        source: j.source || 'LinkedIn',
+        description: j.description || "No description available",
+        isRemote: j.location ? j.location.toLowerCase().includes('remote') : false,
+        job_url: j.job_url
+      }));
+
+      setScannedJobs(prev => [...prev, ...newJobs]);
+      setPage(nextPage);
+      setHasMore(newJobs.length >= 20);
+
+    } catch (e) {
+      console.error("Load more failed", e);
+    } finally {
+      setIsLoadingMore(false);
     }
   };
 
@@ -273,20 +347,22 @@ export default function JobSearch() {
               </h2>
             </div>
 
-            {/* Scrollable Container */}
-            <div
-              ref={listRef}
-              className="overflow-y-auto pr-2 space-y-3 custom-scrollbar"
-              style={{ height: feedHeight }}
-            >
-              {isScanning ? (
-                [1, 2, 3].map(i => (
-                  <Card key={i} className="animate-pulse">
-                    <CardContent className="p-6 h-24 bg-slate-50/50" />
-                  </Card>
-                ))
-              ) : (
-                scannedJobs.map((job) => (
+          </div>
+          {/* Scrollable Container */}
+          <div
+            ref={listRef}
+            className="overflow-y-auto pr-2 space-y-3 custom-scrollbar"
+            style={{ height: feedHeight }}
+          >
+            {isScanning ? (
+              [1, 2, 3].map(i => (
+                <Card key={i} className="animate-pulse">
+                  <CardContent className="p-6 h-24 bg-slate-50/50" />
+                </Card>
+              ))
+            ) : (
+              <>
+                {scannedJobs.map((job) => (
                   <Card key={job.id} className="hover:shadow-md transition-all border-slate-200 group relative overflow-hidden bg-white/50 backdrop-blur-sm">
                     <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <CardContent className="p-5">
@@ -338,13 +414,22 @@ export default function JobSearch() {
                       </div>
                     </CardContent>
                   </Card>
-                ))
-              )}
-            </div>
-          </div>
+                ))}
 
+                {/* Loader / End of List Indicator */}
+                <div ref={observerTarget} className="py-4 text-center">
+                  {isLoadingMore && <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />}
+                  {!hasMore && scannedJobs.length > 0 && (
+                    <p className="text-xs text-muted-foreground">No more jobs to load.</p>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </div>
+
       </div>
+
 
       {/* Job Details Modal */}
       <Dialog open={!!selectedJob} onOpenChange={() => setSelectedJob(null)}>

@@ -56,12 +56,13 @@ export const JobService = {
     /**
      * Real Job Discovery from Supabase (LinkedIn Scraper)
      */
-    getDiscoveredJobs: async (keyword?: string): Promise<any[]> => {
+    getDiscoveredJobs: async (keyword?: string, page: number = 0, pageSize: number = 20): Promise<any[]> => {
         try {
             if (keyword) {
                 // RAG: Use Semantic Search Edge Function
+                const offset = page * pageSize;
                 const { data, error } = await supabase.functions.invoke('search-jobs', {
-                    body: { query: keyword }
+                    body: { query: keyword, offset, limit: pageSize }
                 });
 
                 if (error) throw error;
@@ -70,10 +71,14 @@ export const JobService = {
             }
 
             // If no keyword, just fetch latest (SQL fallback)
+            const from = page * pageSize;
+            const to = from + pageSize - 1;
+
             const { data, error } = await supabase
                 .from('discovered_jobs' as any)
                 .select('*')
-                .order('posted_at', { ascending: false });
+                .order('posted_at', { ascending: false })
+                .range(from, to);
 
             if (error) throw error;
             return data || [];

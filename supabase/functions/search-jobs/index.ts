@@ -55,14 +55,14 @@ Deno.serve(async (req) => {
     }
 
     try {
-        const { query } = await req.json();
+        const { query, offset = 0, limit = 20 } = await req.json();
 
         if (!query) {
             return new Response(JSON.stringify([]), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
         }
 
         // 1. Generate Embedding for Query via HF API
-        console.log(`Embedding query: ${query}`);
+        console.log(`Embedding query: ${query}, Offset: ${offset}, Limit: ${limit}`);
         const queryEmbedding = await generateEmbedding(query);
 
         if (!queryEmbedding) {
@@ -73,7 +73,8 @@ Deno.serve(async (req) => {
         const { data: jobs, error } = await supabase.rpc('match_jobs', {
             query_embedding: queryEmbedding,
             match_threshold: 0.60, // 60% similarity
-            match_count: 20
+            match_count: limit,
+            offset_val: offset
         });
 
         if (error) {
