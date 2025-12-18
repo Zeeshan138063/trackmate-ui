@@ -90,6 +90,46 @@ export const AIHelper = {
         }
     },
 
+    generateEmailFromLetter: async (coverLetter: string, jobTitle: string, companyName: string): Promise<string> => {
+        const providerId = (localStorage.getItem('AI_PROVIDER') as AIProviderId) || 'gemini';
+        const model = getProvider(providerId);
+
+        if (!model) {
+            throw new Error(`Please configure your ${providerId} API Key in Settings first.`);
+        }
+
+        const prompt = `
+      Convert the following cover letter into a professional email format for a job application.
+      
+      Job Title: ${jobTitle}
+      Company: ${companyName}
+      
+      Original Cover Letter:
+      ${coverLetter}
+
+      Instructions:
+      - Create a clear, professional Subject Line.
+      - Make the body concise and suitable for email reading (shorter paragraphs).
+      - Maintain the professional tone.
+      - Output the Subject Line first, followed by the Body.
+      - Format:
+        Subject: [Subject Line]
+        
+        [Email Body]
+    `;
+
+        try {
+            const { text } = await generateText({
+                model,
+                prompt,
+            });
+            return text;
+        } catch (error) {
+            console.error("AI Email Conversion Error:", error);
+            throw error;
+        }
+    },
+
     validateConnection: async (): Promise<boolean> => {
         // This is primarily used by the Settings page connection test
         const providerId = (localStorage.getItem('AI_PROVIDER') as AIProviderId) || 'gemini';

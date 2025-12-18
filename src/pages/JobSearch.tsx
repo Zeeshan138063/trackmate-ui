@@ -39,7 +39,8 @@ export default function JobSearch() {
   // Layout Refs for dynamic height alignment
   const sidebarRef = useRef<HTMLDivElement>(null);
   const topSectionRef = useRef<HTMLDivElement>(null);
-  const [feedHeight, setFeedHeight] = useState(800); // Default fallback
+  const listRef = useRef<HTMLDivElement>(null);
+  const [feedHeight, setFeedHeight] = useState(965); // Default to user preference
 
   // Sync profile to config when loaded
   useEffect(() => {
@@ -62,17 +63,24 @@ export default function JobSearch() {
 
   // Dynamic Height Sync Effect
   useEffect(() => {
-    if (!sidebarRef.current || !topSectionRef.current) return;
+    if (!sidebarRef.current || !listRef.current) return;
 
     const updateHeight = () => {
       // Only apply dynamic calculation on desktop (lg breakpoint)
       if (window.matchMedia('(min-width: 1024px)').matches) {
-        const sidebarH = sidebarRef.current?.offsetHeight || 800;
-        const topSectionH = topSectionRef.current?.offsetHeight || 200;
-        // sidebar - topSection - gap (space-y-8 = 32px)
-        const calculatedHeight = sidebarH - topSectionH - 32;
-        // Ensure a reasonable minimum regardless of empty sidebar
-        setFeedHeight(Math.max(calculatedHeight, 500));
+        // Calculate the available space from the top of the list to the bottom of the sidebar
+        const sidebarRect = sidebarRef.current?.getBoundingClientRect();
+        const listRect = listRef.current?.getBoundingClientRect();
+
+        if (sidebarRect && listRect) {
+          // sidebarBottom is the target visual bottom line
+          // newHeight = (Target Bottom) - (Current Top of List)
+          // Subtract 24px buffer to prevent visual overshoot
+          const newHeight = (sidebarRect.bottom - listRect.top) - 24;
+
+          // Ensure a reasonable minimum
+          setFeedHeight(Math.max(newHeight, 500));
+        }
       } else {
         // Fallback for mobile/tablet where they stack
         setFeedHeight(600);
@@ -80,13 +88,16 @@ export default function JobSearch() {
     };
 
     const observer = new ResizeObserver(updateHeight);
-    observer.observe(sidebarRef.current);
-    observer.observe(topSectionRef.current);
+    if (sidebarRef.current) observer.observe(sidebarRef.current);
+    if (topSectionRef.current) observer.observe(topSectionRef.current);
+
     // Also listen to window resize
     window.addEventListener('resize', updateHeight);
 
-    // Initial calcl
-    updateHeight();
+    // Initial calc - wait for layout to settle slightly
+    setTimeout(updateHeight, 100);
+    // Re-calc after animation (700ms) to ensure final position is correct
+    setTimeout(updateHeight, 800);
 
     return () => {
       observer.disconnect();
@@ -264,6 +275,7 @@ export default function JobSearch() {
 
             {/* Scrollable Container */}
             <div
+              ref={listRef}
               className="overflow-y-auto pr-2 space-y-3 custom-scrollbar"
               style={{ height: feedHeight }}
             >

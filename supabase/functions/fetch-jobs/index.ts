@@ -61,46 +61,62 @@ async function generateEmbedding(text: string) {
  */
 export async function searchWeb(query: string): Promise<string[]> {
     console.log(`Searching Web for: ${query}`);
-    try {
-        // Using html.duckduckgo.com for easier parsing
-        const formData = new URLSearchParams();
-        formData.append('q', query);
+    const MAX_RETRIES = 3;
+    let attempt = 0;
 
-        const response = await fetch("https://html.duckduckgo.com/html/", {
-            method: "POST",
-            body: formData,
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    while (attempt < MAX_RETRIES) {
+        try {
+            // Using html.duckduckgo.com for easier parsing
+            const formData = new URLSearchParams();
+            formData.append('q', query);
+
+            const response = await fetch("https://html.duckduckgo.com/html/", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                }
+            });
+
+            if (response.status === 429) {
+                attempt++;
+                const delay = 2000 * Math.pow(2, attempt) + Math.random() * 1000;
+                console.warn(`Search 429 (Attempt ${attempt}/${MAX_RETRIES}). Retrying in ${Math.round(delay)}ms...`);
+                await new Promise(r => setTimeout(r, delay));
+                continue;
             }
-        });
 
-        if (!response.ok) {
-            console.error(`Search failed: ${response.status}`);
-            return [];
+            if (!response.ok) {
+                console.error(`Search failed: ${response.status}`);
+                return [];
+            }
+
+            const html = await response.text();
+            const doc = new DOMParser().parseFromString(html, "text/html");
+
+            if (!doc) return [];
+
+            // Select results
+            const links = Array.from(doc.querySelectorAll('.result__a'))
+                .map(el => el.getAttribute('href'))
+                .filter(href => href && href.startsWith('http'));
+
+            // Filter out non-job links (ads, duckduckgo internal)
+            const cleanLinks = links.filter(l =>
+                !l.includes('duckduckgo.com') &&
+                (l.includes('greenhouse.io') || l.includes('lever.co') || l.includes('workable.com') || l.includes('ashbyhq.com'))
+            );
+
+            return [...new Set(cleanLinks)]; // Dedupe
+        } catch (error) {
+            console.error("Search Error:", error);
+            attempt++;
+            if (attempt >= MAX_RETRIES) return [];
+            await new Promise(r => setTimeout(r, 2000));
         }
-
-        const html = await response.text();
-        const doc = new DOMParser().parseFromString(html, "text/html");
-
-        if (!doc) return [];
-
-        // Select results
-        const links = Array.from(doc.querySelectorAll('.result__a'))
-            .map(el => el.getAttribute('href'))
-            .filter(href => href && href.startsWith('http'));
-
-        // Filter out non-job links (ads, duckduckgo internal)
-        const cleanLinks = links.filter(l =>
-            !l.includes('duckduckgo.com') &&
-            (l.includes('greenhouse.io') || l.includes('lever.co') || l.includes('workable.com') || l.includes('ashbyhq.com'))
-        );
-
-        return [...new Set(cleanLinks)]; // Dedupe
-    } catch (error) {
-        console.error("Search Error:", error);
-        return [];
     }
+    return [];
 }
 
 /**
@@ -189,12 +205,16 @@ Deno.serve(async (req) => {
             console.log(`\n--- Processing Query: ${q.keyword} ---`);
 
             // 1. Search Phase
-            const searchPromises = ATS_DOMAINS.map(domain => {
+            const results: string[][] = [];
+            for (const domain of ATS_DOMAINS) {
                 const query = `${domain} "${q.keyword}"`;
-                return searchWeb(query);
-            });
+                const links = await searchWeb(query);
+                results.push(links || []);
 
-            const results = await Promise.all(searchPromises);
+                // Friendly delay between domains
+                await new Promise(r => setTimeout(r, 2000 + Math.random() * 2000));
+            }
+
             const allLinks = results.flat();
             console.log(`Found ${allLinks.length} raw links`);
 

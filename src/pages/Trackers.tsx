@@ -23,6 +23,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/Header";
 import { toast } from "sonner";
 import { JobStats, Job } from "@/types/job";
+import { DailyStats } from "@/components/DailyStats";
 
 const defaultColumns: ColumnOption[] = [
   { id: "minSalary", label: "Min. Salary", checked: false },
@@ -109,6 +110,35 @@ export default function Trackers() {
     );
   };
 
+  const calculateDailyStats = () => {
+    const today = new Date();
+    const todayStr = today.toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
+
+    return jobs.reduce(
+      (acc, job) => {
+        // Today Bookmarked: Compare local date of dateSaved with today
+        const savedDate = new Date(job.dateSaved);
+        if (savedDate.toLocaleDateString('en-CA') === todayStr) {
+          acc.bookmarked++;
+        }
+
+        // Today Applied: Direct string comparison YYYY-MM-DD
+        if (job.dateApplied === todayStr) {
+          acc.applied++;
+        }
+
+        // Today Interview: Status is Interviewing AND FollowUp date is today
+        if (job.status === "Interviewing" && job.followUp === todayStr) {
+          acc.interviewing++;
+        }
+
+        return acc;
+      },
+      { bookmarked: 0, applied: 0, interviewing: 0 }
+    );
+  };
+
+  const dailyStats = calculateDailyStats();
   const stats = calculateStats();
 
   const handleSelectJob = (jobId: string) => {
@@ -423,14 +453,20 @@ export default function Trackers() {
             </div>
         </div> */}
 
+        {/* Daily Activity Stats */}
+        <DailyStats stats={dailyStats} />
+
         {/* Status Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <StatusCard title="BOOKMARKED" count={stats.bookmarked} />
-          <StatusCard title="APPLYING" count={stats.applying} />
-          <StatusCard title="APPLIED" count={stats.applied} />
-          <StatusCard title="INTERVIEWING" count={stats.interviewing} variant="primary" />
-          <StatusCard title="NEGOTIATING" count={stats.negotiating} />
-          <StatusCard title="ACCEPTED" count={stats.accepted} />
+        <div>
+          <h2 className="text-lg font-semibold mb-4">OVERALL STATUS</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <StatusCard title="BOOKMARKED" count={stats.bookmarked} />
+            <StatusCard title="APPLYING" count={stats.applying} />
+            <StatusCard title="APPLIED" count={stats.applied} />
+            <StatusCard title="INTERVIEWING" count={stats.interviewing} variant="primary" />
+            <StatusCard title="NEGOTIATING" count={stats.negotiating} />
+            <StatusCard title="ACCEPTED" count={stats.accepted} />
+          </div>
         </div>
 
         {/* Table Controls */}

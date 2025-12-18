@@ -34,7 +34,7 @@ import { useContacts } from "@/hooks/useContacts";
 import { ContactCard } from "@/components/ContactCard";
 import { AddContactDialog } from "@/components/AddContactDialog";
 import { Contact, JobContact } from "@/types/contact";
-import { Users, Plus, Link as LinkIcon, X, Printer, Loader2, Edit } from "lucide-react";
+import { Users, Plus, Link as LinkIcon, X, Printer, Loader2, Edit, Mail } from "lucide-react";
 import { useResume } from "@/hooks/useResume";
 import { ResumeAIHelper as ResumeAI } from "@/utils/resume-ai-helper";
 import { ResumePreview } from "@/components/resume/ResumePreview";
@@ -79,6 +79,7 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [matchResult, setMatchResult] = useState<AIMatchResult | null>(null);
   const [isGeneratingLetter, setIsGeneratingLetter] = useState(false);
+  const [isConvertingEmail, setIsConvertingEmail] = useState(false);
   const [coverLetter, setCoverLetter] = useState("");
 
   // Resume Tailoring State
@@ -370,6 +371,26 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
       toast.error("Failed to generate cover letter");
     } finally {
       setIsGeneratingLetter(false);
+    }
+  };
+
+  const handleConvertToEmail = async () => {
+    if (!coverLetter) return;
+
+    setIsConvertingEmail(true);
+    try {
+      const emailFormat = await AIHelper.generateEmailFromLetter(
+        coverLetter,
+        formData.position,
+        formData.company
+      );
+      setCoverLetter(emailFormat);
+      toast.success("Converted to email format!");
+    } catch (error) {
+      console.error("Failed to convert to email", error);
+      toast.error("Failed to convert to email format");
+    } finally {
+      setIsConvertingEmail(false);
     }
   };
 
@@ -984,6 +1005,19 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
                         a.click();
                       }}>
                         Download .txt
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={handleConvertToEmail} disabled={isConvertingEmail}>
+                        {isConvertingEmail ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Converting...
+                          </>
+                        ) : (
+                          <>
+                            <Mail className="mr-2 h-4 w-4" />
+                            Convert to Email
+                          </>
+                        )}
                       </Button>
                     </div>
                     <Textarea
