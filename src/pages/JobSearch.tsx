@@ -186,11 +186,50 @@ export default function JobSearch() {
             </CardContent>
           </Card>
 
-          <JobQueryManager activeConfig={latestConfig} />
+          {/* External Search Tools (Moved to sidebar) */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pl-1">External Discovery</h3>
+            <div className="grid grid-cols-1 gap-2">
+              <Button variant="outline" className="w-full justify-start h-auto py-3 border-indigo-100 hover:border-indigo-300 hover:bg-indigo-50 group" onClick={() => handleLaunchSearch('google')}>
+                <div className="h-6 w-6 rounded-full bg-white border border-indigo-100 flex items-center justify-center mr-3 shadow-sm group-hover:scale-110 transition-transform">
+                  <span className="font-serif font-bold text-xs text-slate-700">G</span>
+                </div>
+                <div className="text-left">
+                  <div className="text-sm font-medium text-slate-700 group-hover:text-indigo-700">Google Jobs</div>
+                  <div className="text-[10px] text-muted-foreground">Aggregator</div>
+                </div>
+              </Button>
+
+              <Button variant="outline" className="w-full justify-start h-auto py-3 border-blue-100 hover:border-blue-300 hover:bg-blue-50 group" onClick={() => handleLaunchSearch('linkedin')}>
+                <div className="h-6 w-6 rounded-full bg-[#0077b5] flex items-center justify-center mr-3 shadow-sm group-hover:scale-110 transition-transform">
+                  <span className="font-bold text-xs text-white">in</span>
+                </div>
+                <div className="text-left">
+                  <div className="text-sm font-medium text-slate-700 group-hover:text-blue-700">LinkedIn</div>
+                  <div className="text-[10px] text-muted-foreground">Networking</div>
+                </div>
+              </Button>
+
+              <Button variant="outline" className="w-full justify-start h-auto py-3 border-slate-100 hover:border-slate-300 hover:bg-slate-50 group" onClick={() => handleLaunchSearch('indeed')}>
+                <div className="h-6 w-6 rounded-full bg-[#2164f3] flex items-center justify-center mr-3 shadow-sm group-hover:scale-110 transition-transform">
+                  <span className="font-bold text-xs text-white">I</span>
+                </div>
+                <div className="text-left">
+                  <div className="text-sm font-medium text-slate-700 group-hover:text-slate-900">Indeed</div>
+                  <div className="text-[10px] text-muted-foreground">High Volume</div>
+                </div>
+              </Button>
+            </div>
+          </div>
+
+
         </div>
 
         {/* Right Column: Search Dashboard & Feed */}
         <div className="lg:col-span-2 space-y-8">
+
+          {/* Automated Agents - Prominent Position */}
+          <JobQueryManager activeConfig={latestConfig} />
 
           {/* Smart Links Section */}
           <div className="space-y-4">
@@ -356,6 +395,6 @@ export default function JobSearch() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </div >
   );
 }

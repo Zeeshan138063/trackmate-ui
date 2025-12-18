@@ -2,14 +2,16 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { SearchConfig, suggestKeywords } from "@/utils/search-intelligence";
 import { MasterProfile } from "@/types/resume";
-import { X, Wand2, Filter, Clock } from "lucide-react";
+import { X, Wand2, Filter, Clock, Check, ChevronsUpDown, SlidersHorizontal } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 interface JobSearchSettingsProps {
     profile: MasterProfile;
@@ -45,6 +47,9 @@ export function JobSearchSettings({ profile, onSearch, onConfigChange }: JobSear
     // Advanced Filters
     const [experience, setExperience] = useState<string[]>([]);
     const [workplace, setWorkplace] = useState<string[]>(remote ? ["2"] : []);
+
+    // UI States
+    const [showAdvanced, setShowAdvanced] = useState(false);
 
     useEffect(() => {
         if (query) {
@@ -114,148 +119,185 @@ export function JobSearchSettings({ profile, onSearch, onConfigChange }: JobSear
 
     return (
         <Card className="border-indigo-100 bg-indigo-50/50">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Wand2 className="h-5 w-5 text-indigo-600" />
-                    Smart Search Config
+            <CardHeader className="pb-3">
+                <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Wand2 className="h-5 w-5 text-indigo-600" />
+                        Smart Search Config
+                    </div>
                 </CardTitle>
                 <CardDescription>
-                    Configure advanced filters to hit the LinkedIn Job Discovery API perfectly.
+                    Configure advanced intelligence to target the perfect role.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <Label>Target Job Title (Query)</Label>
-                        <Input
-                            value={query}
-                            onChange={e => setQuery(e.target.value)}
-                            placeholder="e.g. Senior Product Designer"
-                            className="bg-white"
-                        />
-                        {suggestions.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-2 text-xs">
-                                <span className="text-muted-foreground mr-1">Try also:</span>
-                                {suggestions.map(s => (
-                                    <Badge
-                                        key={s}
-                                        variant="outline"
-                                        className="cursor-pointer hover:bg-indigo-100"
-                                        onClick={() => setQuery(cur => cur ? `${cur} OR "${s}"` : s)}
-                                    >
-                                        + {s}
-                                    </Badge>
-                                ))}
-                            </div>
-                        )}
+            <CardContent className="space-y-4">
+                {/* Top Row: Search Inputs */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-slate-600">Target Role</Label>
+                        <div className="relative">
+                            <Input
+                                value={query}
+                                onChange={e => setQuery(e.target.value)}
+                                placeholder="e.g. Senior Product Designer"
+                                className="bg-white border-slate-200 focus-visible:ring-indigo-500"
+                            />
+                        </div>
                     </div>
-
-                    <div className="space-y-2">
-                        <Label>Location</Label>
+                    <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-slate-600">Location</Label>
                         <Input
                             value={location}
                             onChange={e => setLocation(e.target.value)}
-                            className="bg-white"
+                            placeholder="Remote, City, or Country"
+                            className="bg-white border-slate-200 focus-visible:ring-indigo-500"
                         />
                     </div>
                 </div>
 
-                <Separator className="bg-indigo-100" />
+                {/* Suggestions Pills */}
+                {suggestions.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                        <span className="text-[10px] uppercase font-bold text-indigo-400 self-center mr-1">Try:</span>
+                        {suggestions.map(s => (
+                            <Badge
+                                key={s}
+                                variant="outline"
+                                className="cursor-pointer bg-white hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors text-[10px] px-2 py-0.5"
+                                onClick={() => setQuery(cur => cur ? `${cur} OR "${s}"` : s)}
+                            >
+                                + {s}
+                            </Badge>
+                        ))}
+                    </div>
+                )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Filter Group 1 */}
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label className="flex items-center gap-2"><Filter className="w-4 h-4" /> Experience Level</Label>
-                            <div className="flex flex-wrap gap-2">
-                                {EXPERIENCE_LEVELS.map(level => (
-                                    <Badge
-                                        key={level.id}
-                                        variant={experience.includes(level.id) ? "default" : "outline"}
-                                        className={`cursor-pointer ${experience.includes(level.id) ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-white hover:bg-slate-100'}`}
-                                        onClick={() => toggleFilter(experience, setExperience, level.id)}
-                                    >
-                                        {level.label}
-                                    </Badge>
-                                ))}
-                            </div>
-                        </div>
+                <Separator className="bg-indigo-100/50" />
 
-                        <div className="space-y-2">
-                            <Label className="flex items-center gap-2"><Filter className="w-4 h-4" /> Workplace Type</Label>
-                            <div className="flex flex-wrap gap-2">
-                                {WORKPLACE_TYPES.map(type => (
-                                    <Badge
-                                        key={type.id}
-                                        variant={workplace.includes(type.id) ? "default" : "outline"}
-                                        className={`cursor-pointer ${workplace.includes(type.id) ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-white hover:bg-slate-100'}`}
-                                        onClick={() => toggleFilter(workplace, setWorkplace, type.id)}
-                                    >
-                                        {type.label}
-                                    </Badge>
-                                ))}
-                            </div>
-                        </div>
+                {/* Filters Row */}
+                <div className="grid grid-cols-1 gap-3">
+
+                    {/* Experience Filter */}
+                    <div className="flex-1">
+                        <Label className="text-[10px] font-semibold text-slate-500 mb-1.5 block uppercase tracking-wider">Experience</Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" role="combobox" className="w-full justify-between bg-white border-slate-200 text-sm font-normal h-10 hover:bg-slate-50">
+                                    {experience.length === 0 ? "Any Level" : `${experience.length} selected`}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[200px] p-0" align="start">
+                                <Command>
+                                    <CommandList>
+                                        <CommandGroup>
+                                            {EXPERIENCE_LEVELS.map((level) => (
+                                                <CommandItem
+                                                    key={level.id}
+                                                    value={level.label}
+                                                    onSelect={() => toggleFilter(experience, setExperience, level.id)}
+                                                    className="cursor-pointer"
+                                                >
+                                                    <div className={cn("mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary", experience.includes(level.id) ? "bg-primary text-primary-foreground" : "opacity-50 [&_svg]:invisible")}>
+                                                        <Check className={cn("h-4 w-4")} />
+                                                    </div>
+                                                    <span>{level.label}</span>
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
                     </div>
 
-                    {/* Filter Group 2 */}
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label className="flex items-center gap-2"><Clock className="w-4 h-4" /> Date Posted</Label>
-                            <Select value={datePosted} onValueChange={(v: any) => setDatePosted(v)}>
-                                <SelectTrigger className="bg-white">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="any">Any Time</SelectItem>
-                                    <SelectItem value="today">Past 24 Hours</SelectItem>
-                                    <SelectItem value="3days">Past 3 Days</SelectItem>
-                                    <SelectItem value="week">Past Week</SelectItem>
-                                    <SelectItem value="month">Past Month</SelectItem>
-                                    <SelectItem value="custom">Custom (Seconds)</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            {datePosted === 'custom' && (
-                                <div className="mt-2 text-xs">
-                                    <Label>Seconds (e.g. 3600 = 1 hr)</Label>
-                                    <Input
-                                        type="number"
-                                        value={customSeconds}
-                                        onChange={e => setCustomSeconds(Number(e.target.value))}
-                                        className="h-8 mt-1 bg-white"
-                                    />
-                                </div>
-                            )}
-                        </div>
+                    {/* Workplace Filter */}
+                    <div className="flex-1">
+                        <Label className="text-[10px] font-semibold text-slate-500 mb-1.5 block uppercase tracking-wider">Workplace</Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" role="combobox" className="w-full justify-between bg-white border-slate-200 text-sm font-normal h-10 hover:bg-slate-50">
+                                    {workplace.length === 0 ? "Any Type" : `${workplace.length} selected`}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[200px] p-0" align="start">
+                                <Command>
+                                    <CommandList>
+                                        <CommandGroup>
+                                            {WORKPLACE_TYPES.map((type) => (
+                                                <CommandItem
+                                                    key={type.id}
+                                                    value={type.label}
+                                                    onSelect={() => toggleFilter(workplace, setWorkplace, type.id)}
+                                                    className="cursor-pointer"
+                                                >
+                                                    <div className={cn("mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary", workplace.includes(type.id) ? "bg-primary text-primary-foreground" : "opacity-50 [&_svg]:invisible")}>
+                                                        <Check className={cn("h-4 w-4")} />
+                                                    </div>
+                                                    <span>{type.label}</span>
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                    </div>
 
-                        <div className="space-y-2">
-                            <Label>Excluding Terms</Label>
-                            <div className="relative">
-                                <Input
-                                    value={excludeInput}
-                                    onChange={e => setExcludeInput(e.target.value)}
-                                    onKeyDown={handleAddExclude}
-                                    placeholder="e.g. Senior, Internship, C++"
-                                    className="bg-white"
-                                />
-                            </div>
-                            <div className="flex flex-wrap gap-1 mt-2">
-                                {excluded.map(term => (
-                                    <Badge key={term} variant="secondary" className="gap-1 bg-slate-200">
-                                        {term}
-                                        <X
-                                            className="h-3 w-3 cursor-pointer"
-                                            onClick={() => removeExclude(term)}
-                                        />
-                                    </Badge>
-                                ))}
-                            </div>
-                        </div>
+                    {/* Date Posted Filter */}
+                    <div className="flex-1">
+                        <Label className="text-[10px] font-semibold text-slate-500 mb-1.5 block uppercase tracking-wider">Date Posted</Label>
+                        <Select value={datePosted} onValueChange={(v: any) => setDatePosted(v)}>
+                            <SelectTrigger className="bg-white border-slate-200 h-10 w-full">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="any">Any Time</SelectItem>
+                                <SelectItem value="today">Past 24 Hours</SelectItem>
+                                <SelectItem value="3days">Past 3 Days</SelectItem>
+                                <SelectItem value="week">Past Week</SelectItem>
+                                <SelectItem value="month">Past Month</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
 
-                <Button onClick={handleSearch} className="w-full bg-indigo-600 hover:bg-indigo-700 text-lg py-6 shadow-md shadow-indigo-200">
-                    Update Search Intelligence & URL
+                {/* Advanced Toggle */}
+                <div onClick={() => setShowAdvanced(!showAdvanced)} className="flex items-center gap-2 text-xs text-indigo-600 cursor-pointer hover:underline w-fit select-none">
+                    <SlidersHorizontal className="h-3 w-3" />
+                    {showAdvanced ? "Hide Advanced Filters" : "Show Advanced Filters"}
+                </div>
+
+                {/* Advanced Section (Excluded Terms) */}
+                {showAdvanced && (
+                    <div className="pt-2 animate-in slide-in-from-top-1">
+                        <Label className="text-xs font-semibold text-slate-600 mb-1.5 block">Excluding Terms (Negative Keywords)</Label>
+                        <div className="flex gap-2">
+                            <Input
+                                value={excludeInput}
+                                onChange={e => setExcludeInput(e.target.value)}
+                                onKeyDown={handleAddExclude}
+                                placeholder="e.g. C++, Legacy, Clearance"
+                                className="bg-white border-slate-200 h-9 text-sm"
+                            />
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 mt-2 min-h-[24px]">
+                            {excluded.map(term => (
+                                <Badge key={term} variant="secondary" className="gap-1 bg-red-50 text-red-700 border-red-100 hover:bg-red-100">
+                                    {term}
+                                    <X
+                                        className="h-3 w-3 cursor-pointer hover:text-red-900"
+                                        onClick={() => removeExclude(term)}
+                                    />
+                                </Badge>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                <Button onClick={handleSearch} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium h-11 mt-2 shadow-sm">
+                    Apply Search Intelligence
                 </Button>
             </CardContent>
         </Card>
