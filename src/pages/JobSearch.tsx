@@ -12,11 +12,13 @@ import { useToast } from "@/hooks/use-toast";
 import { initialMasterProfile } from "@/types/resume";
 import { JobService, ScannedJob } from "@/services/JobService";
 import { JobQueryManager } from "@/components/JobQueryManager";
+import { useJobs } from "@/hooks/useJobs";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function JobSearch() {
   const { masterProfile, loading: profileLoading } = useResume();
+  const { addJob } = useJobs();
   const [activeConfig, setActiveConfig] = useState<SearchConfig>({
     query: "",
     location: "Remote",
@@ -242,12 +244,47 @@ export default function JobSearch() {
 
 
 
-  const handleSaveScannedJob = (job: ScannedJob) => {
-    setSavedJobIds(prev => [...prev, job.id]);
-    toast({
-      title: "Job Saved",
-      description: `Added ${job.title} at ${job.company} to your tracker.`,
-    });
+  const handleSaveScannedJob = async (job: ScannedJob) => {
+    try {
+      // Map ScannedJob to Job
+      // Attempt to parse salary if it's a string range (e.g. $100k - $150k)
+      // For now, we'll just leave salary undefined as strings don't map to number easily without parsing logic
+
+      await addJob({
+        position: job.title,
+        company: job.company,
+        location: job.location,
+        jobUrl: job.job_url, // Maps correctly now
+        description: job.description,
+        status: "Bookmarked",
+        excitement: job.matchScore >= 90 ? 5 : job.matchScore >= 80 ? 4 : 3,
+        dateSaved: new Date().toISOString(),
+        datePosted: job.foundDate,
+        source: "linkedin_auto" // Using the allowed literal type
+      });
+
+      setSavedJobIds(prev => [...prev, job.id]);
+
+      // Remove from scanned jobs list
+      setScannedJobs(prev => prev.filter(j => j.id !== job.id));
+
+      // If the selected job was the one saved, close the dialog
+      if (selectedJob?.id === job.id) {
+        setSelectedJob(null);
+      }
+
+      toast({
+        title: "Job Saved to Tracker",
+        description: `Added ${job.title} at ${job.company}.`,
+      });
+    } catch (error) {
+      console.error("Failed to save job", error);
+      toast({
+        title: "Error Saving Job",
+        description: "Could not add to tracker. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (profileLoading) {
