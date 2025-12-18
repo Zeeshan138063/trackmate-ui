@@ -61,7 +61,7 @@ async function generateEmbedding(text: string) {
  */
 export async function searchWeb(query: string): Promise<string[]> {
     console.log(`Searching Web for: ${query}`);
-    const MAX_RETRIES = 3;
+    const MAX_RETRIES = 5;
     let attempt = 0;
 
     while (attempt < MAX_RETRIES) {
