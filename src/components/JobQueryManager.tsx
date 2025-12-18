@@ -85,7 +85,7 @@ export function JobQueryManager({ activeConfig }: JobQueryManagerProps) {
     };
 
     return (
-        <Card className="h-full bg-gradient-to-b from-white to-indigo-50/30 border-indigo-100 shadow-sm overflow-hidden">
+        <Card className="bg-gradient-to-b from-white to-indigo-50/30 border-indigo-100 shadow-sm overflow-hidden">
             <CardHeader className="pb-4 bg-white/50 border-b border-indigo-50">
                 <CardTitle className="text-lg flex items-center gap-2 text-indigo-950">
                     <Bot className="h-5 w-5 text-indigo-600" />

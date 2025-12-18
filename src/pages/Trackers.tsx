@@ -2,6 +2,9 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { PlusCircle, Menu, Archive, Download, FileText, HelpCircle, ArrowRight, Sparkles } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   DropdownMenu,
@@ -18,7 +21,6 @@ import { ColumnsDropdown, ColumnOption } from "@/components/ColumnsDropdown";
 import { useJobs } from "@/hooks/useJobs";
 import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/Header";
-import { Menu, Archive, Download, FileText, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import { JobStats, Job } from "@/types/job";
 
@@ -46,6 +48,37 @@ export default function Trackers() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [extensionJobData, setExtensionJobData] = useState<Partial<Job> | null>(null);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [importUrl, setImportUrl] = useState("");
+
+  const handleImport = async () => {
+    if (!importUrl) return;
+
+    if (!isAuthenticated) {
+      toast.error("Please login to add jobs.");
+      return;
+    }
+
+    // Basic heuristic to guess company/title or just default
+    // In a real app we'd scrape this. For now, create a placeholder.
+    const newJob: Omit<Job, "id"> = {
+      position: "Imported Job (Pending Details)",
+      company: "Unknown Company",
+      jobUrl: importUrl,
+      location: "Remote",
+      status: "Bookmarked",
+      dateSaved: new Date().toISOString(),
+      excitement: 3
+    };
+
+    try {
+      await addJob(newJob);
+      toast.success("Job added to tracker! Please update details.");
+      setImportUrl("");
+    } catch (error) {
+      toast.error("Failed to add job.");
+      console.error(error);
+    }
+  };
 
   const calculateStats = (): JobStats => {
     return jobs.reduce(
@@ -344,6 +377,52 @@ export default function Trackers() {
     <div className="min-h-screen">
       <Header />
       <div className="p-6 space-y-6">
+        {/* Premium Magic Input Section */}
+        {/* Premium Magic Input Section (Hidden for now) */}
+        {/* <div className="relative z-10 max-w-2xl mx-auto my-8 animate-in fade-in zoom-in-95 duration-500">
+             
+            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl opacity-20 blur-lg transition duration-500 group-hover:opacity-40" />
+            
+            
+            <div className="relative group bg-white/80 backdrop-blur-xl rounded-2xl p-2 shadow-2xl border border-white/50 transition-all duration-300 hover:scale-[1.01] focus-within:scale-[1.01] focus-within:ring-2 focus-within:ring-indigo-500/20">
+                <div className="flex items-center gap-2">
+                    <div className="pl-3 flex items-center justify-center shrink-0">
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 flex items-center justify-center shadow-sm">
+                            <Sparkles className="h-5 w-5 text-indigo-600 animate-pulse" />
+                        </div>
+                    </div>
+                    
+                    <Input
+                        placeholder="Paste a job link to magically track it..."
+                        value={importUrl}
+                        onChange={e => setImportUrl(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handleImport()}
+                        className="flex-1 border-none bg-transparent text-lg h-14 placeholder:text-slate-400 font-medium focus-visible:ring-0 shadow-none selection:bg-indigo-100"
+                        autoFocus
+                    />
+                    
+                    <Button 
+                        size="icon" 
+                        className="h-12 w-12 shrink-0 bg-slate-900 hover:bg-indigo-600 text-white shadow-lg rounded-xl transition-all duration-300 hover:rotate-[-5deg]"
+                        onClick={handleImport}
+                    >
+                        {importUrl ? (
+                            <ArrowRight className="h-6 w-6" />
+                        ) : (
+                            <PlusCircle className="h-6 w-6 opacity-50" />
+                        )}
+                    </Button>
+                </div>
+            </div>
+
+            
+            <div className="absolute -bottom-8 left-0 w-full text-center">
+                <p className="text-[10px] font-semibold tracking-widest text-indigo-300 uppercase opacity-60">
+                    Supports LinkedIn • Indeed • Glassdoor • YCombinator
+                </p>
+            </div>
+        </div> */}
+
         {/* Status Overview */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <StatusCard title="BOOKMARKED" count={stats.bookmarked} />
