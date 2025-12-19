@@ -163,6 +163,30 @@ document.addEventListener('DOMContentLoaded', async () => {
           // Error already logged in setStatus by saveContactDirectly, but we can be explicit
           saveBtn.disabled = false;
         }
+      } else if (currentJobData.type === 'company') {
+        // Company Mode
+        const getVal = (id) => document.getElementById(id).value || '';
+
+        const companyDataToSend = {
+          name: getVal('companyName'),
+          industry: getVal('companyIndustry'),
+          size: getVal('companySize'),
+          location: getVal('companyLocation'),
+          website: getVal('companyWebsite'),
+          linkedinUrl: getVal('companyLinkedin') || currentJobData.linkedinUrl || tab.url || '',
+          about: getVal('companyAbout')
+        };
+
+        // Attempt direct save
+        const savedDirectly = await saveCompanyDirectly(companyDataToSend);
+
+        if (savedDirectly) {
+          setStatus('Company saved directly to TrackMate!', 'success');
+          saveBtn.disabled = true;
+          saveBtn.textContent = 'Saved';
+        } else {
+          saveBtn.disabled = false;
+        }
       } else {
         // Job Mode (Existing logic)
         const jobDataToSend = {
@@ -397,90 +421,90 @@ async function getAuthToken() {
 
 // Display company data
 function displayCompanyData(data) {
-    document.getElementById('jobData').style.display = 'none';
-    document.getElementById('contactData').style.display = 'none';
-    const companyDiv = document.getElementById('companyData');
-    companyDiv.style.display = 'block';
+  document.getElementById('jobData').style.display = 'none';
+  document.getElementById('contactData').style.display = 'none';
+  const companyDiv = document.getElementById('companyData');
+  companyDiv.style.display = 'block';
 
-    document.getElementById('companyName').value = data.name || '';
-    document.getElementById('companyIndustry').value = data.industry || '';
-    document.getElementById('companySize').value = data.size || '';
-    document.getElementById('companyLocation').value = data.location || '';
-    document.getElementById('companyWebsite').value = data.website || '';
-    document.getElementById('companyLinkedin').value = data.linkedinUrl || '';
-    document.getElementById('companyAbout').value = data.about || '';
+  document.getElementById('companyName').value = data.name || '';
+  document.getElementById('companyIndustry').value = data.industry || '';
+  document.getElementById('companySize').value = data.size || '';
+  document.getElementById('companyLocation').value = data.location || '';
+  document.getElementById('companyWebsite').value = data.website || '';
+  document.getElementById('companyLinkedin').value = data.linkedinUrl || '';
+  document.getElementById('companyAbout').value = data.about || '';
 
-    // Hide capture screenshot for company profiling
-    document.getElementById('captureBtn').style.display = 'none';
+  // Hide capture screenshot for company profiling
+  document.getElementById('captureBtn').style.display = 'none';
 }
 
 async function saveCompanyDirectly(companyData) {
-    try {
-        setStatus('Looking for active TrackMate tab...', 'info');
-        const token = await getAuthToken();
+  try {
+    setStatus('Looking for active TrackMate tab...', 'info');
+    const token = await getAuthToken();
 
-        if (!token) {
-            console.log("No auth token found, falling back to redirect.");
-            return false;
-        }
-
-        setStatus('Saving company via API...', 'info');
-
-        let userId = null;
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            userId = payload.sub;
-        } catch (e) {
-            console.error("Failed to decode token", e);
-        }
-
-        if (!userId) return false;
-
-        // Parse array fields
-        const targetRoles = [];
-        const tags = [];
-        const locations = companyData.location ? [companyData.location] : [];
-
-        // Note: status, priority default to Researching/Medium in schema defaults if not sent
-        // But we might want to set defaults here
-
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/dream_companies`, {
-            method: 'POST',
-            headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify({
-                user_id: userId,
-                company_name: companyData.name,
-                industry: companyData.industry,
-                company_size: companyData.size,
-                locations: locations, // array
-                website_url: companyData.website,
-                linkedin_company_url: companyData.linkedinUrl,
-                notes: companyData.about,
-                status: 'Researching',
-                priority: 'Medium'
-            })
-        });
-
-        if (!response.ok) {
-            const err = await response.text();
-            console.error("API Error:", err);
-            throw new Error(`API Error: ${response.status} ${response.statusText}`);
-        }
-
-        return true;
-
-    } catch (e) {
-        console.error("Direct save failed:", e);
-        if (e.message.includes("401") || e.message.includes("403")) {
-            setStatus("Auth Error: Re-login to TrackMate tab.", "error");
-        } else {
-            setStatus(`Error saving: ${e.message}`, "error");
-        }
-        return false;
+    if (!token) {
+      console.log("No auth token found, falling back to redirect.");
+      return false;
     }
+
+    setStatus('Saving company via API...', 'info');
+
+    let userId = null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      userId = payload.sub;
+    } catch (e) {
+      console.error("Failed to decode token", e);
+    }
+
+    if (!userId) return false;
+
+    // Parse array fields
+    const targetRoles = [];
+    const tags = [];
+    const locations = companyData.location ? [companyData.location] : [];
+
+    // Note: status, priority default to Researching/Medium in schema defaults if not sent
+    // But we might want to set defaults here
+
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/dream_companies`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        name: companyData.name,
+        industry: companyData.industry,
+        company_size: companyData.size,
+        location: companyData.location, // string
+        website_url: companyData.website,
+        // linkedin_company_url does not exist in the schema, so we append to notes
+        notes: companyData.about + (companyData.linkedinUrl ? `\n\nLinkedIn: ${companyData.linkedinUrl}` : ''),
+        status: 'Researching',
+        priority: 'Medium'
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      console.error("API Error:", err);
+      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    }
+
+    return true;
+
+  } catch (e) {
+    console.error("Direct save failed:", e);
+    if (e.message.includes("401") || e.message.includes("403")) {
+      setStatus("Auth Error: Re-login to TrackMate tab.", "error");
+    } else {
+      setStatus(`Error saving: ${e.message}`, "error");
+    }
+    return false;
+  }
 }

@@ -19,6 +19,7 @@ import Settings from "./pages/Settings";
 import Connections from "./pages/Connections";
 import GrowthDashboard from "./pages/Growth/Dashboard";
 import DreamCompanies from "./pages/DreamCompanies";
+import ApplicationCopilot from "./pages/ApplicationCopilot";
 
 import NotFound from "./pages/NotFound";
 import PublicJobDiscovery from "./pages/PublicJobDiscovery";
@@ -125,6 +126,13 @@ const App = () => (
             <Route path="/jobs" element={<PublicJobDiscovery />} />
             <Route path="/jobs/:keyword" element={<PublicJobDiscovery />} />
             <Route path="/job-view/:jobId" element={<JobDetails />} />
+            <Route path="/application-copilot" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ApplicationCopilot />
+                </Layout>
+              </ProtectedRoute>
+            } />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -17,13 +17,12 @@ export type Database = {
       dream_companies: {
         Row: {
           careers_page_url: string | null
-          company_name: string
+          name: string
           company_size: string | null
           created_at: string
           id: string
           industry: string | null
-          linkedin_company_url: string | null
-          locations: string[] | null
+          location: string | null
           notes: string | null
           priority: string | null
           status: string | null
@@ -32,16 +31,44 @@ export type Database = {
           updated_at: string
           user_id: string
           website_url: string | null
+          logo_url: string | null
+          founded_year: number | null
+          employee_count: number | null
+          remote_policy: string | null
+          flexibility_score: number | null
+          timezone_flexibility: string[] | null
+          python_usage: string | null
+          tech_stack: string[] | null
+          python_frameworks: string[] | null
+          salary_min: number | null
+          salary_max: number | null
+          salary_currency: string | null
+          salary_level: string | null
+          benefits: Json | null
+          work_life_balance: number | null
+          learning_opportunities: number | null
+          career_growth: number | null
+          diversity_score: number | null
+          hiring_difficulty: string | null
+          average_interview_process: string | null
+          response_rate: number | null
+          glassdoor_rating: number | null
+          glassdoor_reviews_count: number | null
+          recent_funding_amount: number | null
+          recent_funding_date: string | null
+          is_actively_hiring: boolean | null
+          date_added: string | null
+          target_application_date: string | null
+          last_researched: string | null
         }
         Insert: {
           careers_page_url?: string | null
-          company_name: string
+          name: string
           company_size?: string | null
           created_at?: string
           id?: string
           industry?: string | null
-          linkedin_company_url?: string | null
-          locations?: string[] | null
+          location?: string | null
           notes?: string | null
           priority?: string | null
           status?: string | null
@@ -50,16 +77,44 @@ export type Database = {
           updated_at?: string
           user_id: string
           website_url?: string | null
+          logo_url?: string | null
+          founded_year?: number | null
+          employee_count?: number | null
+          remote_policy?: string | null
+          flexibility_score?: number | null
+          timezone_flexibility?: string[] | null
+          python_usage?: string | null
+          tech_stack?: string[] | null
+          python_frameworks?: string[] | null
+          salary_min?: number | null
+          salary_max?: number | null
+          salary_currency?: string | null
+          salary_level?: string | null
+          benefits?: Json | null
+          work_life_balance?: number | null
+          learning_opportunities?: number | null
+          career_growth?: number | null
+          diversity_score?: number | null
+          hiring_difficulty?: string | null
+          average_interview_process?: string | null
+          response_rate?: number | null
+          glassdoor_rating?: number | null
+          glassdoor_reviews_count?: number | null
+          recent_funding_amount?: number | null
+          recent_funding_date?: string | null
+          is_actively_hiring?: boolean | null
+          date_added?: string | null
+          target_application_date?: string | null
+          last_researched?: string | null
         }
         Update: {
           careers_page_url?: string | null
-          company_name?: string
+          name?: string
           company_size?: string | null
           created_at?: string
           id?: string
           industry?: string | null
-          linkedin_company_url?: string | null
-          locations?: string[] | null
+          location?: string | null
           notes?: string | null
           priority?: string | null
           status?: string | null
@@ -68,6 +123,35 @@ export type Database = {
           updated_at?: string
           user_id?: string
           website_url?: string | null
+          logo_url?: string | null
+          founded_year?: number | null
+          employee_count?: number | null
+          remote_policy?: string | null
+          flexibility_score?: number | null
+          timezone_flexibility?: string[] | null
+          python_usage?: string | null
+          tech_stack?: string[] | null
+          python_frameworks?: string[] | null
+          salary_min?: number | null
+          salary_max?: number | null
+          salary_currency?: string | null
+          salary_level?: string | null
+          benefits?: Json | null
+          work_life_balance?: number | null
+          learning_opportunities?: number | null
+          career_growth?: number | null
+          diversity_score?: number | null
+          hiring_difficulty?: string | null
+          average_interview_process?: string | null
+          response_rate?: number | null
+          glassdoor_rating?: number | null
+          glassdoor_reviews_count?: number | null
+          recent_funding_amount?: number | null
+          recent_funding_date?: string | null
+          is_actively_hiring?: boolean | null
+          date_added?: string | null
+          target_application_date?: string | null
+          last_researched?: string | null
         }
         Relationships: []
       }

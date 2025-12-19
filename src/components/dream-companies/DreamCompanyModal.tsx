@@ -22,12 +22,11 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
     const [showAdvanced, setShowAdvanced] = useState(false);
 
     // Local state for array inputs (comma separated strings)
-    const [locationsInput, setLocationsInput] = useState("");
     const [rolesInput, setRolesInput] = useState("");
     const [tagsInput, setTagsInput] = useState("");
 
     const [formData, setFormData] = useState<Partial<DreamCompanyInsert>>({
-        company_name: "",
+        name: "",
         priority: "Medium",
         status: "Researching",
         notes: "",
@@ -35,7 +34,7 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
         company_size: null,
         website_url: "",
         careers_page_url: "",
-        linkedin_company_url: "",
+        location: "", // changed from locations array to single string
     });
 
     const handleChange = (field: keyof DreamCompanyInsert, value: any) => {
@@ -44,7 +43,7 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.company_name) return;
+        if (!formData.name) return;
 
         setIsLoading(true);
         try {
@@ -55,13 +54,11 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
             }
 
             // Process array inputs
-            const locations = locationsInput.split(',').map(s => s.trim()).filter(s => s.length > 0);
             const target_roles = rolesInput.split(',').map(s => s.trim()).filter(s => s.length > 0);
             const tags = tagsInput.split(',').map(s => s.trim()).filter(s => s.length > 0);
 
             await dreamCompaniesService.create({
                 ...formData,
-                locations: locations.length > 0 ? locations : null,
                 target_roles: target_roles.length > 0 ? target_roles : null,
                 tags: tags.length > 0 ? tags : null,
                 user_id: user.id,
@@ -72,8 +69,7 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
             onOpenChange(false);
 
             // Reset form
-            setFormData({ company_name: "", priority: "Medium", status: "Researching", notes: "", industry: "", website_url: "" });
-            setLocationsInput("");
+            setFormData({ name: "", priority: "Medium", status: "Researching", notes: "", industry: "", website_url: "", location: "" });
             setRolesInput("");
             setTagsInput("");
             setShowAdvanced(false);
@@ -99,8 +95,8 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
                         <Label htmlFor="name">Company Name *</Label>
                         <Input
                             id="name"
-                            value={formData.company_name}
-                            onChange={(e) => handleChange("company_name", e.target.value)}
+                            value={formData.name}
+                            onChange={(e) => handleChange("name", e.target.value)}
                             placeholder="e.g. Google, Acme Corp"
                             required
                         />
@@ -181,18 +177,18 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
                             className="w-full text-muted-foreground"
                             onClick={() => setShowAdvanced(true)}
                         >
-                            Show Advanced Fields (Locations, Socials, Roles)
+                            Show Advanced Fields (Location, Careers Page, Roles)
                         </Button>
                     ) : (
                         <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
                             <Separator />
                             <div className="grid gap-2">
-                                <Label htmlFor="locations">Locations</Label>
+                                <Label htmlFor="locations">Location</Label>
                                 <Input
                                     id="locations"
-                                    value={locationsInput}
-                                    onChange={(e) => setLocationsInput(e.target.value)}
-                                    placeholder="e.g. San Francisco, New York, Remote (comma separated)"
+                                    value={typeof formData.location === 'string' ? formData.location : ""}
+                                    onChange={(e) => handleChange("location", e.target.value)}
+                                    placeholder="e.g. San Francisco, CA"
                                 />
                             </div>
 
@@ -206,15 +202,7 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
                                         placeholder="https://..."
                                     />
                                 </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="linkedin">LinkedIn URL</Label>
-                                    <Input
-                                        id="linkedin"
-                                        value={formData.linkedin_company_url || ""}
-                                        onChange={(e) => handleChange("linkedin_company_url", e.target.value)}
-                                        placeholder="https://linkedin.com/company/..."
-                                    />
-                                </div>
+                                {/* LinkedIn URL removed as it's not in schema */}
                             </div>
 
                             <div className="grid gap-2">

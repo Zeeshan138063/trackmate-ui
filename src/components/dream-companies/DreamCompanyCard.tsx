@@ -36,7 +36,7 @@ export function DreamCompanyCard({ company, onClick }: DreamCompanyCardProps) {
             <CardHeader className="pb-2">
                 <div className="flex justify-between items-start gap-2">
                     <CardTitle className="text-lg font-semibold truncate flex items-center gap-2">
-                        {company.company_name}
+                        {company.name}
                     </CardTitle>
                     <Badge variant="outline" className={getPriorityColor(company.priority)}>
                         {company.priority}
@@ -53,10 +53,9 @@ export function DreamCompanyCard({ company, onClick }: DreamCompanyCardProps) {
                             <Building className="w-3 h-3" /> {company.industry}
                         </span>
                     )}
-                    {company.locations && company.locations.length > 0 && (
+                    {company.location && (
                         <span className="flex items-center gap-1 bg-muted/50 px-2 py-0.5 rounded text-xs">
-                            <MapPin className="w-3 h-3" /> {company.locations[0]}
-                            {company.locations.length > 1 && ` +${company.locations.length - 1}`}
+                            <MapPin className="w-3 h-3" /> {company.location}
                         </span>
                     )}
                 </div>

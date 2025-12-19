@@ -13,7 +13,8 @@ import {
   ChevronRight,
   Users,
   TrendingUp,
-  Building
+  Building,
+  Bot
 } from "lucide-react";
 
 import {
@@ -40,6 +41,7 @@ const navigationItems = [
   { title: "Interview Feedback", url: "/interview-feedback", icon: MessageSquare },
   { title: "Work Styles", url: "/work-styles", icon: Briefcase },
   { title: "Job Search", url: "/job-search", icon: Search },
+  { title: "Application Copilot", url: "/application-copilot", icon: Bot },
   { title: "Dream Companies", url: "/dream-companies", icon: Building },
   { title: "Connections", url: "/connections", icon: Users },
   { title: "Growth Engine", url: "/growth", icon: TrendingUp },

@@ -32,7 +32,7 @@ export function DreamCompanySheet({ companyId, open, onOpenChange }: DreamCompan
                         <SheetHeader>
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <SheetTitle className="text-2xl">{company.company_name}</SheetTitle>
+                                    <SheetTitle className="text-2xl">{company.name}</SheetTitle>
                                     <SheetDescription>{company.industry} • {company.company_size}</SheetDescription>
                                 </div>
                                 <Badge variant="outline">{company.status}</Badge>
@@ -58,7 +58,6 @@ export function DreamCompanySheet({ companyId, open, onOpenChange }: DreamCompan
                                     <div className="flex flex-col gap-2 text-sm">
                                         {company.website_url && <a href={company.website_url} target="_blank" className="text-primary hover:underline">Website</a>}
                                         {company.careers_page_url && <a href={company.careers_page_url} target="_blank" className="text-primary hover:underline">Careers Page</a>}
-                                        {company.linkedin_company_url && <a href={company.linkedin_company_url} target="_blank" className="text-primary hover:underline">LinkedIn</a>}
                                     </div>
                                 </div>
                             </TabsContent>

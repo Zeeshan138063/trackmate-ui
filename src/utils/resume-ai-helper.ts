@@ -156,5 +156,65 @@ export const ResumeAIHelper = {
             console.error("Resume Parsing Error:", error);
             throw error;
         }
+    },
+
+    tailorAndScoreResume: async (jobDescription: string, masterProfile: MasterProfile): Promise<{ tailoredProfile: MasterProfile, matchScore: number, explanation: string }> => {
+        const providerId = (localStorage.getItem('AI_PROVIDER') as AIProviderId) || 'gemini';
+        const model = getProvider(providerId);
+
+        if (!model) {
+            throw new Error(`Please configure your ${providerId} API Key in Settings first.`);
+        }
+
+        // Minify profile to save context window tokens
+        const profileJson = JSON.stringify(masterProfile);
+
+        const prompt = `
+      You are an expert Resume Strategist and ATS Specialist.
+      
+      TASK:
+      1. Tailor the provided "Master Profile" to perfectly match the "Job Description" (JD).
+      2. Calculate a "Match Score" (0-100) based on how well the NEW tailored resume fits the JD.
+      
+      GOALS:
+      1.  **Relevance**: Select ONLY the most relevant Experience, Projects, and Skills.
+      2.  **Keywords**: Rewrite the "Summary" and "Experience" bullet points to naturally incorporate keywords from the JD.
+      3.  **Impact**: Ensure all bullet points are action-oriented and results-driven.
+      
+      INPUT DATA:
+      
+      [JOB DESCRIPTION]
+      ${jobDescription.substring(0, 8000)}
+      
+      [MASTER PROFILE JSON]
+      ${profileJson}
+      
+      OUTPUT FORMAT:
+      Return a valid JSON object with the following structure:
+      {
+        "tailoredProfile": { ...MasterProfile object properly tailored... },
+        "matchScore": number, // 0-100 integer
+        "explanation": string // Brief 1-sentence explanation of the score and what was improved.
+      }
+      
+      Do not wrap in markdown code blocks. Just the raw JSON string.
+    `;
+
+        try {
+            const { text } = await generateText({
+                model,
+                prompt,
+            });
+
+            // Clean up potential markdown code blocks if the model ignores the instruction
+            const jsonString = text.replace(/```json/g, "").replace(/```/g, "").trim();
+
+            const result = JSON.parse(jsonString);
+            return result;
+
+        } catch (error) {
+            console.error("Resume Tailoring & Scoring Error:", error);
+            throw error;
+        }
     }
 };
