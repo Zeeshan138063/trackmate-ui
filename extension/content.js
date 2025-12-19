@@ -65,6 +65,14 @@ class JobExtractor {
       };
     }
 
+    // Check if it's a LinkedIn Company Page
+    if (hostname.includes('linkedin.com') && path.includes('/company/')) {
+      return {
+        type: 'company',
+        ...this.extractCompanyPageData()
+      };
+    }
+
     // Default to Job Extraction
     // First, try JSON-LD (Schema.org/JobPosting) - highest quality
     const jsonLdData = this.extractFromJsonLd();
@@ -861,6 +869,93 @@ class JobExtractor {
     return data;
   }
 
+  // Extract LinkedIn Company Page Data
+  extractCompanyPageData() {
+    const data = {
+      name: '',
+      industry: '',
+      size: '',
+      location: '',
+      website: '',
+      linkedinUrl: window.location.href,
+      about: ''
+    };
+
+    // Name
+    const nameSelectors = [
+      'h1.org-top-card-summary__title',
+      'h1.top-card-layout__title',
+      '.org-top-card-summary__title',
+      'h1'
+    ];
+    for (const selector of nameSelectors) {
+      const el = document.querySelector(selector);
+      if (el) {
+        data.name = el.textContent.trim();
+        break;
+      }
+    }
+
+    // Industry & Location (often in subtitle or summary)
+    // Format: "Internet Publishing · San Francisco, CA · 123 followers"
+    const summarySelectors = [
+      '.org-top-card-summary__info-item',
+      '.top-card-layout__first-sub-title',
+      'div.org-top-card-summary-info-list__info-item'
+    ];
+
+    // Fallback: search description lists in About section
+    const dlSelectors = document.querySelectorAll('dl.overflow-hidden dt, dl.overflow-hidden dd');
+    let currentTerm = '';
+    for (const el of dlSelectors) {
+      if (el.tagName === 'DT') {
+        currentTerm = el.textContent.trim().toLowerCase();
+      } else if (el.tagName === 'DD') {
+        const text = el.textContent.trim();
+        if (currentTerm.includes('industry')) data.industry = text;
+        if (currentTerm.includes('website')) data.website = text;
+        if (currentTerm.includes('company size')) data.size = text;
+        if (currentTerm.includes('headquarters')) data.location = text;
+      }
+    }
+
+    // If About section parsing failed (e.g. not on About tab), try top card
+    if (!data.industry) {
+      const subTitleEl = document.querySelector('.org-top-card-summary__info-item') ||
+        document.querySelector('.top-card-layout__first-sub-title');
+      if (subTitleEl) {
+        const text = subTitleEl.textContent.trim();
+        // Heuristic: Industry is usually first, location second? or mixed.
+        // It's hard to parse reliably without the labeled About section.
+        // Let's just grab the whole text as "Industry" fallback or try to split
+        data.industry = text;
+      }
+    }
+
+    // Website (link button)
+    if (!data.website) {
+      const linkBtn = document.querySelector('a[href^="http"].org-top-card-primary-actions__action') ||
+        document.querySelector('a.org-top-card-primary-actions__action');
+      if (linkBtn) data.website = linkBtn.href;
+    }
+
+    // About/Description
+    const aboutSelectors = [
+      '.org-about-us-organization-description__text',
+      'section.artdeco-card p',
+      '.break-words'
+    ];
+    for (const selector of aboutSelectors) {
+      const el = document.querySelector(selector);
+      if (el && el.textContent.length > 50) {
+        data.about = this.cleanHtmlToMarkdown(el);
+        break;
+      }
+    }
+
+    return data;
+  }
+
   // Get current job data
   getJobData() {
     if (!this.jobData) {
@@ -898,4 +993,6 @@ window.addEventListener('load', () => {
     });
   }, 2000);
 });
+
+
 
