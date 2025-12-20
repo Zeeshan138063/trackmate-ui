@@ -23,11 +23,16 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
     e.preventDefault();
     setIsLoading(true);
 
+    const redirectUrl = `${import.meta.env.VITE_SITE_URL ?? window.location.origin}/`;
+    console.log("Sign up redirect URL:", redirectUrl, "Env Var:", import.meta.env.VITE_SITE_URL);
+
     try {
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        emailRedirectTo: `${import.meta.env.VITE_SITE_URL ?? window.location.origin}/`
+        options: {
+          emailRedirectTo: redirectUrl
+        }
       });
 
       if (error) {
