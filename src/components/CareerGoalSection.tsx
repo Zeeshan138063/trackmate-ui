@@ -10,15 +10,15 @@ import { useCareerGoals, type CareerGoal } from "@/hooks/useCareerGoals";
 export function CareerGoalSection() {
   const { goals, addGoal, updateGoal, loading } = useCareerGoals();
   const [isEditing, setIsEditing] = useState(false);
-  
+
   // Use existing goal or default values
   const currentGoal = goals[0] || {
-    targetTitle: "python software engineer",
-    targetDate: "January 2025",
-    salaryMin: 76000,
-    salaryMax: 100000
+    targetTitle: "Set your target role",
+    targetDate: "-",
+    salaryMin: 0,
+    salaryMax: 0
   };
-  
+
   const [editForm, setEditForm] = useState(currentGoal);
 
   const handleSave = async () => {
@@ -53,7 +53,7 @@ export function CareerGoalSection() {
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <div className="flex items-center space-x-2">
           <Target className="h-5 w-5 text-primary" />
-          <CardTitle className="text-lg">Next Career Goal: Land a new job in a new career path</CardTitle>
+          <CardTitle className="text-lg">Next Career Goal</CardTitle>
         </div>
         <Dialog open={isEditing} onOpenChange={setIsEditing}>
           <DialogTrigger asChild>
