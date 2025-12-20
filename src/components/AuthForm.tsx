@@ -20,11 +20,9 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
   const { toast } = useToast();
 
   const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    const redirectUrl = `${import.meta.env.VITE_SITE_URL ?? window.location.origin}/`;
-    console.log("Sign up redirect URL:", redirectUrl, "Env Var:", import.meta.env.VITE_SITE_URL);
+    // Default to strict deployed URL, or env var if set.
+    // Fallback to window.location.origin only if explicitly needed, but user requested deployed URL preference.
+    const redirectUrl = import.meta.env.VITE_SITE_URL || "https://job.zeeshare.com/auth";
 
     try {
       const { error } = await supabase.auth.signUp({
@@ -100,7 +98,7 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: (import.meta.env.VITE_SITE_URL ?? window.location.origin) + '/',
+        redirectTo: (import.meta.env.VITE_SITE_URL || "https://job.zeeshare.com/auth") + '/',
       });
 
       if (error) {
