@@ -57,6 +57,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           saveBtn.style.display = 'block';
           openBtn.style.display = 'block';
+
+          if (currentJobData.type === 'profile') {
+            const importResumeBtn = document.getElementById('importResumeBtn');
+            if (importResumeBtn) importResumeBtn.style.display = 'block';
+            saveBtn.textContent = '💾 Save Contact';
+          }
         } else {
           setStatus('Failed to extract job data', 'error');
         }
@@ -160,7 +166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           saveBtn.disabled = true;
           saveBtn.textContent = 'Saved';
         } else {
-          // Error already logged in setStatus by saveContactDirectly, but we can be explicit
+          // Fallback or error
           saveBtn.disabled = false;
         }
       } else if (currentJobData.type === 'company') {
@@ -235,6 +241,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     const trackMateUrl = trackMateUrlInput.value || 'http://localhost:5173/trackers';
     chrome.tabs.create({ url: trackMateUrl });
   });
+
+  // Import Resume Button
+  const importResumeBtn = document.getElementById('importResumeBtn');
+  if (importResumeBtn) {
+    importResumeBtn.addEventListener('click', async () => {
+      if (!currentJobData || currentJobData.type !== 'profile') return;
+
+      setStatus('Sending profile to Resume Builder...', 'info');
+      importResumeBtn.disabled = true;
+
+      const trackMateUrl = trackMateUrlInput.value || 'http://localhost:8080/trackers';
+
+      // Use background script to open tab with data
+      chrome.runtime.sendMessage(
+        {
+          action: 'sendProfileToTrackMate',
+          data: currentJobData,
+          trackMateUrl: trackMateUrl
+        },
+        (response) => {
+          if (response && response.success) {
+            setStatus('Opening Resume Builder...', 'success');
+          } else {
+            setStatus('Failed to send profile', 'error');
+          }
+          importResumeBtn.disabled = false;
+        }
+      );
+    });
+  }
 
   // Auto-extract on popup open
   setTimeout(() => {

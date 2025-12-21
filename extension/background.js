@@ -132,6 +132,36 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
+  if (request.action === 'sendProfileToTrackMate') {
+    const profileData = request.data;
+    // TrackMate URL
+    const baseUrl = request.trackMateUrl || 'http://localhost:8080';
+    // We'll target the Resume Builder page
+    const resumeUrl = `${baseUrl.replace(/\/trackers\/?$/, '')}/resume`;
+
+    const dataId = 'trackmate_profile_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+    chrome.storage.local.set({ [dataId]: profileData }, () => {
+      const params = new URLSearchParams({
+        action: 'importProfile',
+        dataId: dataId,
+        source: 'linkedin_extension'
+      });
+
+      chrome.tabs.create({
+        url: `${resumeUrl}?${params.toString()}`
+      });
+
+      // Cleanup
+      setTimeout(() => {
+        chrome.storage.local.remove([dataId]);
+      }, 3600000);
+    });
+
+    sendResponse({ success: true });
+    return true;
+  }
+
   // Allow TrackMate page to fetch full job data by ID
   if (request.action === 'getJobData') {
     const dataId = request.dataId;
