@@ -1,9 +1,9 @@
 // Content script to bridge communication between extension and TrackMate page
 // This runs on the TrackMate domain to fetch job data from extension storage
 
-(function() {
-  // Only run on TrackMate pages
-  if (!window.location.href.includes('/trackers')) {
+(function () {
+  // Only run on TrackMate pages (trackers or resume)
+  if (!window.location.href.includes('/trackers') && !window.location.href.includes('/resume')) {
     return;
   }
 
@@ -16,7 +16,7 @@
 
     if (event.data.type === 'TRACKMATE_FETCH_JOB_DATA') {
       const dataId = event.data.dataId;
-      
+
       if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
         chrome.runtime.sendMessage(
           chrome.runtime.id,
