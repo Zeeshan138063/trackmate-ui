@@ -957,8 +957,34 @@ class JobExtractor {
     return data;
   }
 
-  // Get current job data
-  getJobData() {
+  // Get current job data with optional mode override
+  getJobData(mode = 'auto') {
+    if (mode === 'profile') {
+      return { type: 'profile', ...this.extractProfileData() };
+    }
+    if (mode === 'company') {
+      return { type: 'company', ...this.extractCompanyPageData() };
+    }
+    if (mode === 'job') {
+      // Force generic/job logic but we usually rely on auto detection for the specific parser (LinkedIn vs Indeed)
+      // We can just call extractJobData which defaults to job check if profile/company check fails
+      // or we can bypass profile checks.
+      // For now, let's just re-run main extraction but maybe we want to force skipping profile check?
+      // Actually standard extractJobData prioritizes profile/company if URL matches. 
+      // If user forces JOB on a profile page, we should try to find job data on the profile page (unlikely) or just return empty job data.
+      // Let's stick to standard flow but with a hint? 
+      // Simpler: Just run standard flow. If "job" is forced, popup.js handles the type override.
+      // But we can try to avoid returning 'profile' type if 'job' is requested.
+      const data = this.extractJobData();
+      if (data.type === 'profile' || data.type === 'company') {
+        // If we detected profile but user wants job, maybe search for job schema?
+        // This is edge case. Let's just return what we found and popup overrides type if needed for saving.
+        return data;
+      }
+      return data;
+    }
+
+    // Default auto
     if (!this.jobData) {
       this.jobData = this.extractJobData();
     }
@@ -972,7 +998,11 @@ const jobExtractor = new JobExtractor();
 // Listen for messages from popup/background
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'extractJobData') {
-    const jobData = jobExtractor.getJobData();
+    const mode = request.mode || 'auto';
+    // Clear cache if mode is specific to ensure fresh extraction
+    if (mode !== 'auto') jobExtractor.jobData = null;
+
+    const jobData = jobExtractor.getJobData(mode);
     sendResponse({ success: true, data: jobData });
     return true;
   }
@@ -987,7 +1017,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Auto-extract when page loads
 window.addEventListener('load', () => {
   setTimeout(() => {
-    const jobData = jobExtractor.getJobData();
+    const jobData = jobExtractor.getJobData('auto');
     chrome.runtime.sendMessage({
       action: 'jobDataExtracted',
       data: jobData

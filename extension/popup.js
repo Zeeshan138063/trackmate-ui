@@ -2,14 +2,18 @@
 
 let currentJobData = null;
 let currentScreenshot = null;
+let currentMode = 'auto'; // auto, job, company, profile
+let detectedMode = 'job'; // default fallthrough
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
   const extractBtn = document.getElementById('extractBtn');
+  const extractBtnText = extractBtn.querySelector('span'); // Assuming <span> inside button
   const captureBtn = document.getElementById('captureBtn');
   const saveBtn = document.getElementById('saveBtn');
   const openBtn = document.getElementById('openBtn');
   const trackMateUrlInput = document.getElementById('trackMateUrl');
+  const modeSelect = document.getElementById('modeSelect');
 
   // Load saved TrackMate URL
   chrome.storage.local.get(['trackMateUrl'], (result) => {
@@ -23,15 +27,55 @@ document.addEventListener('DOMContentLoaded', async () => {
     chrome.storage.local.set({ trackMateUrl: trackMateUrlInput.value });
   });
 
+  // Detect initial mode from URL
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (tab && tab.url) {
+    if (tab.url.includes('linkedin.com/in/')) {
+      detectedMode = 'profile';
+    } else if (tab.url.includes('linkedin.com/company/') || tab.url.includes('linkedin.com/school/')) {
+      detectedMode = 'company';
+    } else {
+      detectedMode = 'job';
+    }
+    updateUIMode(detectedMode);
+  }
+
+  // specifics for manual mode
+  modeSelect.addEventListener('change', () => {
+    const selected = modeSelect.value;
+    if (selected === 'auto') {
+      updateUIMode(detectedMode);
+    } else {
+      updateUIMode(selected);
+    }
+  });
+
+  function updateUIMode(mode) {
+    currentMode = mode;
+    // Update button text
+    if (mode === 'profile') {
+      extractBtnText.textContent = '👤 Extract Contact';
+      document.querySelector('.header p').textContent = 'Capture Contact';
+    } else if (mode === 'company') {
+      extractBtnText.textContent = '🏢 Extract Company';
+      document.querySelector('.header p').textContent = 'Capture Dream Company';
+    } else {
+      extractBtnText.textContent = '📋 Extract Job Data';
+      document.querySelector('.header p').textContent = 'Capture Job Details';
+    }
+  }
+
   // Extract job data
   extractBtn.addEventListener('click', async () => {
-    setStatus('Extracting job data...', 'info');
+    const effectiveMode = modeSelect.value === 'auto' ? detectedMode : modeSelect.value;
+
+    setStatus(`Extracting ${effectiveMode} data...`, 'info');
     extractBtn.disabled = true;
 
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-      chrome.tabs.sendMessage(tab.id, { action: 'extractJobData' }, (response) => {
+      chrome.tabs.sendMessage(tab.id, { action: 'extractJobData', mode: effectiveMode }, (response) => {
         if (chrome.runtime.lastError) {
           setStatus('Error: ' + chrome.runtime.lastError.message, 'error');
           extractBtn.disabled = false;
@@ -40,19 +84,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (response && response.success) {
           currentJobData = response.data;
+          // Force type override if we manually selected a mode and the content script was confused (optional, but good safety)
+          if (effectiveMode !== 'auto') {
+            currentJobData.type = effectiveMode;
+          }
 
           if (currentJobData.type === 'profile') {
             displayContactData(currentJobData);
             setStatus('Profile data extracted successfully!', 'success');
-            document.querySelector('.header p').textContent = 'Capture Contact';
+            saveBtn.textContent = '💾 Save Contact';
           } else if (currentJobData.type === 'company') {
             displayCompanyData(currentJobData);
             setStatus('Company data extracted successfully!', 'success');
-            document.querySelector('.header p').textContent = 'Capture Dream Company';
+            saveBtn.textContent = '💾 Save Company';
           } else {
             displayJobData(currentJobData);
             setStatus('Job data extracted successfully!', 'success');
-            document.querySelector('.header p').textContent = 'Capture Job Details';
+            saveBtn.textContent = '💾 Save Job';
           }
 
           saveBtn.style.display = 'block';
@@ -61,10 +109,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (currentJobData.type === 'profile') {
             const importResumeBtn = document.getElementById('importResumeBtn');
             if (importResumeBtn) importResumeBtn.style.display = 'block';
-            saveBtn.textContent = '💾 Save Contact';
           }
         } else {
-          setStatus('Failed to extract job data', 'error');
+          setStatus('Failed to extract data', 'error');
         }
         extractBtn.disabled = false;
       });
@@ -125,7 +172,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Save to TrackMate
   saveBtn.addEventListener('click', async () => {
     if (!currentJobData) {
-      setStatus('Please extract job data first', 'error');
+      setStatus('Please extract data first', 'error');
       return;
     }
 
@@ -136,10 +183,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       const trackMateUrl = trackMateUrlInput.value || 'http://localhost:8080/trackers';
 
-      // Ensure we're not sending large data - it will be stored in extension storage
-      // Gather data from inputs (allowing user edits)
-      // Determine mode
       const isProfile = currentJobData.type === 'profile';
+      const isCompany = currentJobData.type === 'company';
 
       if (isProfile) {
         // Contact Mode
@@ -169,7 +214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           // Fallback or error
           saveBtn.disabled = false;
         }
-      } else if (currentJobData.type === 'company') {
+      } else if (isCompany) {
         // Company Mode
         const getVal = (id) => document.getElementById(id).value || '';
 
@@ -251,9 +296,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       setStatus('Sending profile to Resume Builder...', 'info');
       importResumeBtn.disabled = true;
 
+      // Use background script
       const trackMateUrl = trackMateUrlInput.value || 'http://localhost:8080/trackers';
-
-      // Use background script to open tab with data
       chrome.runtime.sendMessage(
         {
           action: 'sendProfileToTrackMate',
@@ -272,9 +316,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Auto-extract on popup open
+  // Auto-extract on popup open - DELAYED to allow detecting mode first
   setTimeout(() => {
-    extractBtn.click();
+    // Check if we have a saved result from lazy loading or just click it
+    // But we want to respect the detected mode which happened quickly
+    if (detectedMode) {
+      // Maybe we don't auto-click if we want user to see the change? 
+      // User requested "buttons not making full sense", so maybe seeing "Extract Company" is better than auto-clicking immediately.
+      // But standard UX is speed. Let's auto-click but ensures text is updated first.
+      extractBtn.click();
+    }
   }, 500);
 });
 
@@ -282,6 +333,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 function displayJobData(data) {
   const jobDataDiv = document.getElementById('jobData');
   jobDataDiv.style.display = 'block';
+  document.getElementById('contactData').style.display = 'none';
+  document.getElementById('companyData').style.display = 'none';
 
   document.getElementById('position').value = data.position || '';
   document.getElementById('company').value = data.company || '';
@@ -298,6 +351,7 @@ function displayContactData(data) {
   document.getElementById('jobData').style.display = 'none';
   const contactDiv = document.getElementById('contactData');
   contactDiv.style.display = 'block';
+  document.getElementById('companyData').style.display = 'none';
 
   document.getElementById('contactName').value = data.name || '';
   document.getElementById('contactPosition').value = data.position || '';
@@ -496,14 +550,6 @@ async function saveCompanyDirectly(companyData) {
     }
 
     if (!userId) return false;
-
-    // Parse array fields
-    const targetRoles = [];
-    const tags = [];
-    const locations = companyData.location ? [companyData.location] : [];
-
-    // Note: status, priority default to Researching/Medium in schema defaults if not sent
-    // But we might want to set defaults here
 
     const response = await fetch(`${SUPABASE_URL}/rest/v1/dream_companies`, {
       method: 'POST',

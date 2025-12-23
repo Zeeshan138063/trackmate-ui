@@ -329,7 +329,7 @@
         <label>Website</label>
         <input type="text" id="companyWebsite" class="input-field" placeholder="https://...">
       </div>
-       <div class="field">
+      <div class="field">
         <label>LinkedIn URL</label>
         <input type="text" id="companyLinkedin" class="input-field" placeholder="https://linkedin.com/company/...">
       </div>
@@ -361,14 +361,24 @@
       </button>
     </div>
 
+    <div class="mode-selector"
+      style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+      <label style="font-size: 12px; color: #6b7280;">Detection Mode:</label>
+      <select id="modeSelect" class="input-field" style="width: auto; padding: 4px 8px; font-size: 12px;">
+        <option value="auto">🤖 Auto-Detect</option>
+        <option value="job">💼 Job</option>
+        <option value="company">🏢 Company</option>
+        <option value="profile">👤 Contact</option>
+      </select>
+    </div>
+
     <div class="settings">
       <label>TrackMate URL:</label>
       <input type="text" id="trackMateUrl" placeholder="http://localhost:8080/trackers"
         value="http://localhost:8080/trackers">
       <div
         style="margin-top: 10px; padding: 8px; background: #fef3c7; border-radius: 6px; font-size: 11px; color: #92400e;">
-        ⚠️ <strong>Note:</strong> Make sure you're logged into TrackMate before saving jobs. All jobs are automatically
-        associated with your account.
+        ⚠️ <strong>Note:</strong> Make sure you're logged into TrackMate before saving.
       </div>
     </div>
   </div>
