@@ -352,19 +352,11 @@ async function saveContactDirectly(contactData) {
 
     if (!token) {
       console.log("No auth token found, falling back to redirect.");
+      setStatus("Error: Please open TrackMate and log in.", "error");
       return false;
     }
 
     setStatus('Saving contact via API...', 'info');
-
-    // Check if user exists (and get user_id from token hopefully, but Supabase standard JWT has sub)
-    // Actually, we need to decode JWT to get 'sub' (user_id) OR just trust RLS to assign it?
-    // Supabase REST API automatically assigns user_id matching the authenticated user? 
-    // Typically: Yes if the table column has default value `auth.uid()`, OR we must send it.
-    // Let's check if we need to send user_id. 
-    // Standard pattern: Table `contacts` usually has `user_id` text/uuid. 
-    // If RLS is enabled and policies are "insert with check (auth.uid() = user_id)", we must enable RLS.
-    // We will assume the API handles it or we decode the token.
 
     let userId = null;
     try {
@@ -374,7 +366,16 @@ async function saveContactDirectly(contactData) {
       console.error("Failed to decode token", e);
     }
 
-    if (!userId) return false;
+    if (!userId) {
+      setStatus("Error: Invalid auth token.", "error");
+      return false;
+    }
+
+    // Append photo URL to notes since there isn't a dedicated column yet
+    let finalNotes = contactData.notes || '';
+    if (contactData.photo_url) {
+      finalNotes += `\n\nProfile Photo: ${contactData.photo_url}`;
+    }
 
     const response = await fetch(`${SUPABASE_URL}/rest/v1/contacts`, {
       method: 'POST',
@@ -391,7 +392,7 @@ async function saveContactDirectly(contactData) {
         position: contactData.position,
         address: contactData.location, // Mapped from location to address
         relationship: contactData.relationship,
-        notes: contactData.notes,
+        notes: finalNotes,
         linkedin_url: contactData.linkedin_url,
         // Default empty fields for schema compliance
         email: '',
@@ -419,7 +420,6 @@ async function saveContactDirectly(contactData) {
     return false;
   }
 }
-
 async function getAuthToken() {
   // Find tabs matching TrackMate (localhost)
   const tabs = await chrome.tabs.query({ url: ['http://localhost:8080/*', 'http://localhost:5173/*', 'http://127.0.0.1:8080/*'] });
@@ -481,6 +481,7 @@ async function saveCompanyDirectly(companyData) {
 
     if (!token) {
       console.log("No auth token found, falling back to redirect.");
+      setStatus("Error: Please open TrackMate and log in.", "error");
       return false;
     }
 

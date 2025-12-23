@@ -143,12 +143,29 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
 
       setMatchResult(null);
       setCoverLetter("");
+      setTailoredResume(null);
 
       setMatchResult(null);
       setCoverLetter("");
 
-      // Load attached resume (S3 or Local)
       const loadAttachedResume = async () => {
+        // 1. Check local storage draft first
+        const draftKey = `trackmate_resume_draft_${job.id}`;
+        const draft = localStorage.getItem(draftKey);
+
+        if (draft) {
+          try {
+            setTailoredResume(JSON.parse(draft));
+            toast.info("Restored your unsaved resume draft");
+            // If we found a draft, we use it and stop here (it's the most recent work)
+            return;
+          } catch (e) {
+            console.error("Failed to parse draft", e);
+            // If parse fails, continue to normal loading
+          }
+        }
+
+        // 2. Check S3
         if (job.resumeS3Key) {
           try {
             const resumeData = await s3Helper.getResume(job.resumeS3Key);
@@ -156,10 +173,11 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
             return;
           } catch (e) {
             console.error("Failed to load resume from S3", e);
-            // Fallthrough to check attachedResume as backup
+            // Fallthrough to attachedResume
           }
         }
 
+        // 3. Check attachedResume
         if (job.attachedResume) {
           try {
             setTailoredResume(JSON.parse(job.attachedResume));
@@ -225,6 +243,14 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
 
     return () => clearTimeout(timeoutId);
   }, [formData.notes, onAutoSave, job]);
+
+  // Auto-save tailored resume to localStorage
+  useEffect(() => {
+    if (job?.id && tailoredResume) {
+      const draftKey = `trackmate_resume_draft_${job.id}`;
+      localStorage.setItem(draftKey, JSON.stringify(tailoredResume));
+    }
+  }, [tailoredResume, job?.id]);
 
   const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newNotes = e.target.value;

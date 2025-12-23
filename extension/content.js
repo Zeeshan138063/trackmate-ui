@@ -112,6 +112,7 @@ class JobExtractor {
       minSalary: null,
       maxSalary: null,
       datePosted: null,
+      deadline: null,
     };
 
     const jsonLdScripts = document.querySelectorAll('script[type="application/ld+json"]');
@@ -993,6 +994,3 @@ window.addEventListener('load', () => {
     });
   }, 2000);
 });
-
-
-
