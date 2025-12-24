@@ -177,13 +177,13 @@ export function JobTable({
               {isColumnVisible('excitement') && <TableCell>{renderStars(job)}</TableCell>}
               {isColumnVisible('source') && (
                 <TableCell>
-                  <Badge variant="outline" className="bg-slate-50 text-xs font-normal">
+                  <Badge variant="outline" className="bg-slate-50 dark:bg-slate-900 text-xs font-normal">
                     {job.source || 'Manual'}
                   </Badge>
                 </TableCell>
               )}
               {(onEditJob || onDeleteJob) && (
-                <TableCell className="bg-card sticky right-0 z-10 shadow-[-10px_0_10px_-5px_rgba(0,0,0,0.05)]">
+                <TableCell className="bg-card sticky right-0 z-10 shadow-[-10px_0_10px_-5px_rgba(0,0,0,0.05)] dark:shadow-[-10px_0_15px_-5px_rgba(0,0,0,0.3)]">
                   <div className="flex gap-1">
                     {onEditJob && (
                       <Button

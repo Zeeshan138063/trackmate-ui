@@ -302,7 +302,7 @@ export default function JobSearch() {
             Leveraging your Master Profile to find the perfect roles across the web.
           </p>
         </div>
-        <Button onClick={() => handleRunScan()} disabled={isScanning} variant="outline" className="gap-2">
+        <Button onClick={() => handleRunScan()} disabled={isScanning} variant="outline" className="gap-2 dark:border-slate-800 dark:hover:bg-slate-900">
           {isScanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
           {isScanning ? "Scanning..." : "Re-Scan Feed"}
         </Button>
@@ -338,9 +338,9 @@ export default function JobSearch() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Google Jobs */}
-              <Card className="hover:border-indigo-300 transition-colors cursor-pointer group shadow-sm bg-gradient-to-br from-white to-slate-50" onClick={() => handleLaunchSearch('google')}>
+              <Card className="hover:border-indigo-300 dark:hover:border-indigo-800 transition-colors cursor-pointer group shadow-sm bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-950" onClick={() => handleLaunchSearch('google')}>
                 <CardContent className="p-4 flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-white border shadow-sm flex items-center justify-center font-serif font-bold text-lg text-slate-700">G</div>
+                  <div className="h-8 w-8 rounded-full bg-white dark:bg-slate-800 border dark:border-slate-700 shadow-sm flex items-center justify-center font-serif font-bold text-lg text-slate-700 dark:text-slate-300">G</div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-sm group-hover:text-indigo-600 transition-colors">Google Jobs</h3>
                     <p className="text-xs text-muted-foreground">Aggregator</p>
@@ -348,7 +348,7 @@ export default function JobSearch() {
                 </CardContent>
               </Card>
               {/* LinkedIn */}
-              <Card className="hover:border-blue-300 transition-colors cursor-pointer group shadow-sm bg-gradient-to-br from-white to-slate-50" onClick={() => handleLaunchSearch('linkedin')}>
+              <Card className="hover:border-blue-300 dark:hover:border-blue-800 transition-colors cursor-pointer group shadow-sm bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-950" onClick={() => handleLaunchSearch('linkedin')}>
                 <CardContent className="p-4 flex items-center gap-3">
                   <div className="h-8 w-8 rounded-full bg-[#0077b5] text-white flex items-center justify-center font-bold text-sm">in</div>
                   <div className="flex-1">
@@ -358,7 +358,7 @@ export default function JobSearch() {
                 </CardContent>
               </Card>
               {/* Indeed */}
-              <Card className="hover:border-blue-300 transition-colors cursor-pointer group shadow-sm bg-gradient-to-br from-white to-slate-50" onClick={() => handleLaunchSearch('indeed')}>
+              <Card className="hover:border-blue-300 dark:hover:border-blue-800 transition-colors cursor-pointer group shadow-sm bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-950" onClick={() => handleLaunchSearch('indeed')}>
                 <CardContent className="p-4 flex items-center gap-3">
                   <div className="h-8 w-8 rounded-full bg-[#2164f3] text-white flex items-center justify-center font-bold text-sm">I</div>
                   <div className="flex-1">
@@ -378,7 +378,7 @@ export default function JobSearch() {
               <h2 className="text-lg font-semibold flex items-center gap-2">
                 <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
                 Live Job Feed
-                <Badge variant="outline" className="ml-2 bg-amber-50 text-amber-700 border-amber-200">
+                <Badge variant="outline" className="ml-2 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900/50">
                   {scannedJobs.length} New Matches
                 </Badge>
               </h2>
@@ -394,20 +394,20 @@ export default function JobSearch() {
             {isScanning ? (
               [1, 2, 3].map(i => (
                 <Card key={i} className="animate-pulse">
-                  <CardContent className="p-6 h-24 bg-slate-50/50" />
+                  <CardContent className="p-6 h-24 bg-slate-50/50 dark:bg-slate-900/50" />
                 </Card>
               ))
             ) : (
               <>
                 {scannedJobs.map((job) => (
-                  <Card key={job.id} className="hover:shadow-md transition-all border-slate-200 group relative overflow-hidden bg-white/50 backdrop-blur-sm">
+                  <Card key={job.id} className="hover:shadow-md transition-all border-slate-200 dark:border-slate-800 group relative overflow-hidden bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
                     <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <CardContent className="p-5">
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="flex-1 space-y-2">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-semibold text-lg text-slate-900 line-clamp-1">{job.title}</h3>
-                            <Badge variant="secondary" className="text-xs font-normal bg-indigo-50 text-indigo-700 border-indigo-100">
+                            <h3 className="font-semibold text-lg text-slate-900 dark:text-white line-clamp-1">{job.title}</h3>
+                            <Badge variant="secondary" className="text-xs font-normal bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-100 dark:border-indigo-900/50">
                               {job.matchScore}% Match
                             </Badge>
                             {job.source && (
@@ -417,15 +417,15 @@ export default function JobSearch() {
                             )}
                           </div>
                           <div className="flex items-center text-sm text-muted-foreground gap-3 flex-wrap">
-                            <span className="font-medium text-slate-700">{job.company}</span>
-                            <span className="text-slate-300">•</span>
+                            <span className="font-medium text-slate-700 dark:text-slate-300">{job.company}</span>
+                            <span className="text-slate-300 dark:text-slate-700">•</span>
                             <span>{job.location}</span>
-                            <span className="text-slate-300">•</span>
-                            <span className="text-green-600 font-medium">{job.salary}</span>
+                            <span className="text-slate-300 dark:text-slate-700">•</span>
+                            <span className="text-green-600 dark:text-green-400 font-medium">{job.salary}</span>
                           </div>
                           <div className="flex gap-2 mt-2">
                             {job.skills.slice(0, 3).map(skill => (
-                              <Badge key={skill} variant="outline" className="text-[10px] px-2 py-0 h-5 bg-slate-50/50">
+                              <Badge key={skill} variant="outline" className="text-[10px] px-2 py-0 h-5 bg-slate-50/50 dark:bg-slate-800/50 dark:border-slate-700">
                                 {skill}
                               </Badge>
                             ))}
@@ -437,7 +437,7 @@ export default function JobSearch() {
                             View Details
                           </Button>
                           {savedJobIds.includes(job.id) ? (
-                            <Button variant="ghost" disabled className="text-green-600 bg-green-50">
+                            <Button variant="ghost" disabled className="text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20">
                               <CheckCircle2 className="h-4 w-4 mr-2" />
                               Saved
                             </Button>
@@ -480,7 +480,7 @@ export default function JobSearch() {
                 </Badge>
               )}
             </DialogTitle>
-            <DialogDescription className="text-base font-medium text-slate-700">
+            <DialogDescription className="text-base font-medium text-slate-700 dark:text-slate-300">
               {selectedJob?.company} • {selectedJob?.location}
             </DialogDescription>
           </DialogHeader>
@@ -488,11 +488,11 @@ export default function JobSearch() {
           <div className="space-y-4 py-4">
             <div className="flex gap-2 flex-wrap">
               {selectedJob?.skills.map(s => (
-                <Badge key={s} variant="outline" className="bg-slate-50">{s}</Badge>
+                <Badge key={s} variant="outline" className="bg-slate-50 dark:bg-slate-900">{s}</Badge>
               ))}
             </div>
 
-            <div className="text-sm text-slate-600 leading-relaxed whitespace-pre-line border-t pt-4">
+            <div className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed whitespace-pre-line border-t dark:border-slate-800 pt-4">
               {selectedJob?.description}
             </div>
 
