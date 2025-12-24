@@ -15,6 +15,14 @@ interface DatesCalendarProps {
 export function DatesCalendar({ jobs, onUpdateJob }: DatesCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
+  // Helper to get YYYY-MM-DD in local time
+  const toLocaleYYYYMMDD = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Edit Job State
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -36,7 +44,7 @@ export function DatesCalendar({ jobs, onUpdateJob }: DatesCalendarProps) {
 
   // Get jobs for selected date
   const getJobsForDate = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = toLocaleYYYYMMDD(date);
     return jobsWithDates.filter(job =>
       job.followUp === dateStr ||
       job.deadline === dateStr ||
@@ -114,7 +122,7 @@ export function DatesCalendar({ jobs, onUpdateJob }: DatesCalendarProps) {
                   }}
                   components={{
                     DayContent: ({ date }) => {
-                      const dateStr = date.toISOString().split('T')[0];
+                      const dateStr = toLocaleYYYYMMDD(date);
                       const hasFollowUp = events.followUps.has(dateStr);
                       const hasDeadline = events.deadlines.has(dateStr);
                       const hasApplied = events.applied.has(dateStr);
@@ -157,9 +165,9 @@ export function DatesCalendar({ jobs, onUpdateJob }: DatesCalendarProps) {
                             className="group flex items-start space-x-3 p-2.5 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
                           >
                             <div className="flex-none mt-0.5">
-                              {job.deadline === selectedDate.toISOString().split('T')[0] ? (
+                              {job.deadline === toLocaleYYYYMMDD(selectedDate) ? (
                                 <AlertCircle className="h-4 w-4 text-red-500" />
-                              ) : job.followUp === selectedDate.toISOString().split('T')[0] ? (
+                              ) : job.followUp === toLocaleYYYYMMDD(selectedDate) ? (
                                 <CheckCircle2 className="h-4 w-4 text-blue-500" />
                               ) : (
                                 <FileText className="h-4 w-4 text-green-500" />
@@ -171,13 +179,13 @@ export function DatesCalendar({ jobs, onUpdateJob }: DatesCalendarProps) {
                               </div>
                               <p className="text-xs text-muted-foreground truncate mb-1">{job.company}</p>
                               <div className="flex flex-wrap gap-1">
-                                {job.deadline === selectedDate.toISOString().split('T')[0] && (
+                                {job.deadline === toLocaleYYYYMMDD(selectedDate) && (
                                   <span className="inline-flex text-[10px] font-medium text-red-600 bg-red-50 px-1.5 py-0.5 rounded">Deadline</span>
                                 )}
-                                {job.followUp === selectedDate.toISOString().split('T')[0] && (
+                                {job.followUp === toLocaleYYYYMMDD(selectedDate) && (
                                   <span className="inline-flex text-[10px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">Follow Up</span>
                                 )}
-                                {job.dateApplied === selectedDate.toISOString().split('T')[0] && (
+                                {job.dateApplied === toLocaleYYYYMMDD(selectedDate) && (
                                   <span className="inline-flex text-[10px] font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded">Applied</span>
                                 )}
                               </div>
