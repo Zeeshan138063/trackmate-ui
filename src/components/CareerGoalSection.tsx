@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -20,6 +20,22 @@ export function CareerGoalSection() {
   };
 
   const [editForm, setEditForm] = useState(currentGoal);
+  const [hasInitialized, setHasInitialized] = useState(false);
+
+  // Synchronize form when goals are loaded for the first time
+  useEffect(() => {
+    if (goals.length > 0 && !hasInitialized) {
+      setEditForm(goals[0]);
+      setHasInitialized(true);
+    }
+  }, [goals, hasInitialized]);
+
+  // Also reset form whenever the dialog opens to ensure it has latest data
+  useEffect(() => {
+    if (isEditing && goals.length > 0) {
+      setEditForm(goals[0]);
+    }
+  }, [isEditing, goals]);
 
   const handleSave = async () => {
     if (goals.length > 0) {
