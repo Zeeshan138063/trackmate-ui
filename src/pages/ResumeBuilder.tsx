@@ -104,7 +104,7 @@ export default function ResumeBuilder() {
                   Download PDF
                 </Button>
               </div>
-              <div className="flex-1 overflow-y-auto rounded-lg border bg-zinc-100/50 shadow-inner p-4 md:p-8 flex justify-center relative">
+              <div className="flex-1 overflow-y-auto rounded-lg border bg-zinc-100/50 dark:bg-zinc-900/50 shadow-inner p-4 md:p-8 flex justify-center relative">
                 <div className="w-full max-w-[8.5in]">
                   <ResumePreview data={previewData} className="min-h-[11in]" />
                 </div>

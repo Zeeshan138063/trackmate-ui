@@ -85,9 +85,9 @@ export function JobQueryManager({ activeConfig }: JobQueryManagerProps) {
     };
 
     return (
-        <Card className="bg-gradient-to-b from-white to-indigo-50/30 border-indigo-100 shadow-sm overflow-hidden">
-            <CardHeader className="pb-4 bg-white/50 border-b border-indigo-50">
-                <CardTitle className="text-lg flex items-center gap-2 text-indigo-950">
+        <Card className="bg-gradient-to-b from-white to-indigo-50/30 dark:from-slate-900 dark:to-indigo-950/10 border-indigo-100 dark:border-indigo-900 shadow-sm overflow-hidden">
+            <CardHeader className="pb-4 bg-white/50 dark:bg-slate-950/50 border-b border-indigo-50 dark:border-indigo-900/50">
+                <CardTitle className="text-lg flex items-center gap-2 text-indigo-950 dark:text-indigo-100">
                     <Bot className="h-5 w-5 text-indigo-600" />
                     Automated Agents
                 </CardTitle>
@@ -103,7 +103,7 @@ export function JobQueryManager({ activeConfig }: JobQueryManagerProps) {
                             value={newKeyword}
                             onChange={e => setNewKeyword(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && handleAdd()}
-                            className="pl-9 bg-white border-indigo-100 focus-visible:ring-indigo-500"
+                            className="pl-9 bg-white dark:bg-slate-900 border-indigo-100 dark:border-slate-800 dark:text-slate-100 focus-visible:ring-indigo-500"
                         />
                         <Sparkles className="absolute left-3 top-2.5 h-4 w-4 text-indigo-400" />
                     </div>
@@ -130,7 +130,7 @@ export function JobQueryManager({ activeConfig }: JobQueryManagerProps) {
                     {loading && <div className="text-center p-4 text-muted-foreground"><Loader2 className="animate-spin h-6 w-6 mx-auto mb-2 text-indigo-600" />Syncing agents...</div>}
 
                     {!loading && queries.length === 0 && (
-                        <div className="text-center p-8 border-2 border-dashed border-indigo-100 rounded-xl bg-white/50">
+                        <div className="text-center p-8 border-2 border-dashed border-indigo-100 dark:border-indigo-900/50 rounded-xl bg-white/50 dark:bg-indigo-950/10">
                             <Bot className="h-8 w-8 text-indigo-200 mx-auto mb-2" />
                             <p className="text-sm text-indigo-900 font-medium">No active agents</p>
                             <p className="text-xs text-muted-foreground">Add a keyword to start hunting.</p>
@@ -138,12 +138,12 @@ export function JobQueryManager({ activeConfig }: JobQueryManagerProps) {
                     )}
 
                     {queries.map(q => (
-                        <div key={q.id} className="flex items-center justify-between p-3 border border-indigo-50 bg-white rounded-lg hover:shadow-md hover:border-indigo-200 transition-all group">
+                        <div key={q.id} className="flex items-center justify-between p-3 border border-indigo-50 dark:border-indigo-900/50 bg-white dark:bg-slate-900/50 rounded-lg hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-800 transition-all group">
                             <div className="flex-1">
                                 <div className="flex items-center gap-2">
-                                    <span className="font-semibold text-sm text-slate-800">{q.keyword}</span>
+                                    <span className="font-semibold text-sm text-slate-800 dark:text-slate-200">{q.keyword}</span>
                                     {q.is_active ? (
-                                        <Badge variant="outline" className="text-[10px] h-5 bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
+                                        <Badge variant="outline" className="text-[10px] h-5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-900/30 flex items-center gap-1">
                                             <span className="relative flex h-2 w-2">
                                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -151,7 +151,7 @@ export function JobQueryManager({ activeConfig }: JobQueryManagerProps) {
                                             Active
                                         </Badge>
                                     ) : (
-                                        <Badge variant="secondary" className="text-[10px] h-5 bg-slate-100 text-slate-500">Paused</Badge>
+                                        <Badge variant="secondary" className="text-[10px] h-5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">Paused</Badge>
                                     )}
                                 </div>
                                 <div className="text-[11px] text-muted-foreground flex items-center gap-2 mt-1.5">
@@ -163,7 +163,7 @@ export function JobQueryManager({ activeConfig }: JobQueryManagerProps) {
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-7 w-7 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                                    className="h-7 w-7 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/50"
                                     onClick={() => handleToggle(q.id, q.is_active)}
                                     title={q.is_active ? "Pause Agent" : "Resume Agent"}
                                 >

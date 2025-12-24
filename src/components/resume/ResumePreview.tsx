@@ -23,7 +23,7 @@ export function ResumePreview({ data, className }: ResumePreviewProps) {
     }, [data]);
 
     return (
-        <div className={cn("bg-white text-black p-[0.5in] shadow-lg max-w-[8.5in] mx-auto min-h-[11in] text-[10.5pt] font-serif leading-normal print:shadow-none print:p-0 print:max-w-none", className)} id="resume-preview">
+        <div className={cn("bg-white text-black p-[0.5in] shadow-lg max-w-[8.5in] mx-auto min-h-[11in] text-[10.5pt] font-serif leading-normal print:shadow-none print:p-0 print:max-w-none border dark:border-slate-800", className)} id="resume-preview">
 
             {/* Header */}
             <header className="text-center mb-4 border-b pb-4">

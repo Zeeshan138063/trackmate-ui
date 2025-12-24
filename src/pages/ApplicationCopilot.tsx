@@ -180,7 +180,7 @@ export default function ApplicationCopilot() {
     }
 
     return (
-        <div className="h-[calc(100vh-4rem)] flex flex-col bg-slate-50/50 dark:bg-slate-900/50">
+        <div className="h-[calc(100vh-4rem)] flex flex-col bg-background/50">
 
             {/* Header */}
             <header className="px-6 py-4 border-b bg-white dark:bg-slate-950 flex items-center justify-between shadow-sm shrink-0">
@@ -217,7 +217,7 @@ export default function ApplicationCopilot() {
                     <CardHeader className="pb-3 bg-white dark:bg-slate-950 shrink-0">
                         <div className="flex justify-between items-start gap-4">
                             <div className="space-y-1">
-                                <Badge variant="outline" className="mb-2 bg-slate-50">{currentJob.status}</Badge>
+                                <Badge variant="outline" className="mb-2 bg-slate-50 dark:bg-slate-900">{currentJob.status}</Badge>
                                 <CardTitle className="text-2xl font-bold text-slate-900 dark:text-slate-100 leading-tight">
                                     {currentJob.position}
                                 </CardTitle>
@@ -227,7 +227,7 @@ export default function ApplicationCopilot() {
                                 </div>
                             </div>
                             <div className="flex flex-col items-end gap-2">
-                                <div className={`flex flex-col items-center justify-center h-16 w-16 rounded-full border-4 ${displayScore >= 80 ? 'border-green-500 text-green-700 bg-green-50' : 'border-amber-500 text-amber-700 bg-amber-50'} `}>
+                                <div className={`flex flex-col items-center justify-center h-16 w-16 rounded-full border-4 ${displayScore >= 80 ? 'border-green-500 text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20' : 'border-amber-500 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20'} `}>
                                     <span className="text-xl font-bold">{displayScore}</span>
                                     <span className="text-[9px] font-bold uppercase">Match</span>
                                 </div>
@@ -236,12 +236,12 @@ export default function ApplicationCopilot() {
 
                         <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-500 mt-3 pt-3 border-t">
                             {currentJob.location && (
-                                <span className="flex items-center gap-1.5 bg-slate-100 px-2 py-1 rounded-md">
+                                <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
                                     <Briefcase className="h-3.5 w-3.5" /> {currentJob.location}
                                 </span>
                             )}
                             {currentJob.jobUrl && (
-                                <a href={currentJob.jobUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-indigo-600 hover:underline px-2 py-1 rounded-md hover:bg-indigo-50 transition-colors">
+                                <a href={currentJob.jobUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400 hover:underline px-2 py-1 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/50 transition-colors">
                                     Original Posting <ExternalLink className="h-3.5 w-3.5" />
                                 </a>
                             )}
@@ -300,7 +300,7 @@ export default function ApplicationCopilot() {
 
                         {/* Explanation Banner if tailored */}
                         {explanation && (
-                            <div className="bg-green-50 px-4 py-2 text-xs text-green-700 border-b border-green-100 flex items-start gap-2">
+                            <div className="bg-green-50 dark:bg-green-950/30 px-4 py-2 text-xs text-green-700 dark:text-green-300 border-b border-green-100 dark:border-green-900/50 flex items-start gap-2">
                                 <Sparkles className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                                 <p><strong>AI Insight:</strong> {explanation}</p>
                             </div>
@@ -308,7 +308,7 @@ export default function ApplicationCopilot() {
 
                         <div className="flex-1 bg-slate-100/50 dark:bg-slate-950/50 overflow-hidden relative">
                             <div className="absolute inset-0 overflow-y-auto p-4 flex justify-center">
-                                <div className="w-full max-w-[8.5in] bg-white shadow-sm min-h-full origin-top scale-[0.65] sm:scale-[0.85] lg:scale-100 transition-transform">
+                                <div className="w-full max-w-[8.5in] bg-white dark:bg-white shadow-sm min-h-full origin-top scale-[0.65] sm:scale-[0.85] lg:scale-100 transition-transform">
                                     <ResumePreview data={resumeToShow!} />
                                 </div>
                             </div>
@@ -327,7 +327,7 @@ export default function ApplicationCopilot() {
                             <Button
                                 variant="outline"
                                 size="lg"
-                                className="flex-1 border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 group transition-all"
+                                className="flex-1 border-slate-200 dark:border-slate-800 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-900 group transition-all"
                                 onClick={handleReject}
                             >
                                 <XCircle className="mr-2 h-5 w-5 text-slate-400 group-hover:text-red-500 transition-colors" />

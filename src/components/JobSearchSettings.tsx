@@ -118,7 +118,7 @@ export function JobSearchSettings({ profile, onSearch, onConfigChange }: JobSear
     };
 
     return (
-        <Card className="border-indigo-100 bg-indigo-50/50">
+        <Card className="border-indigo-100 dark:border-indigo-900 bg-indigo-50/50 dark:bg-indigo-950/10">
             <CardHeader className="pb-3">
                 <CardTitle className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -126,7 +126,7 @@ export function JobSearchSettings({ profile, onSearch, onConfigChange }: JobSear
                         Smart Search Config
                     </div>
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="dark:text-indigo-300/60">
                     Configure advanced intelligence to target the perfect role.
                 </CardDescription>
             </CardHeader>
@@ -134,23 +134,23 @@ export function JobSearchSettings({ profile, onSearch, onConfigChange }: JobSear
                 {/* Top Row: Search Inputs */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold text-slate-600">Target Role</Label>
+                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Target Role</Label>
                         <div className="relative">
                             <Input
                                 value={query}
                                 onChange={e => setQuery(e.target.value)}
                                 placeholder="e.g. Senior Product Designer"
-                                className="bg-white border-slate-200 focus-visible:ring-indigo-500"
+                                className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 dark:text-slate-100 focus-visible:ring-indigo-500"
                             />
                         </div>
                     </div>
                     <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold text-slate-600">Location</Label>
+                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Location</Label>
                         <Input
                             value={location}
                             onChange={e => setLocation(e.target.value)}
                             placeholder="Remote, City, or Country"
-                            className="bg-white border-slate-200 focus-visible:ring-indigo-500"
+                            className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 dark:text-slate-100 focus-visible:ring-indigo-500"
                         />
                     </div>
                 </div>
@@ -163,7 +163,7 @@ export function JobSearchSettings({ profile, onSearch, onConfigChange }: JobSear
                             <Badge
                                 key={s}
                                 variant="outline"
-                                className="cursor-pointer bg-white hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors text-[10px] px-2 py-0.5"
+                                className="cursor-pointer bg-white dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 hover:text-indigo-600 dark:hover:text-indigo-300 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors text-[10px] px-2 py-0.5"
                                 onClick={() => setQuery(cur => cur ? `${cur} OR "${s}"` : s)}
                             >
                                 + {s}
@@ -172,17 +172,17 @@ export function JobSearchSettings({ profile, onSearch, onConfigChange }: JobSear
                     </div>
                 )}
 
-                <Separator className="bg-indigo-100/50" />
+                <Separator className="bg-indigo-100/50 dark:bg-indigo-900/30" />
 
                 {/* Filters Row */}
                 <div className="grid grid-cols-1 gap-3">
 
                     {/* Experience Filter */}
                     <div className="flex-1">
-                        <Label className="text-[10px] font-semibold text-slate-500 mb-1.5 block uppercase tracking-wider">Experience</Label>
+                        <Label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block uppercase tracking-wider">Experience</Label>
                         <Popover>
                             <PopoverTrigger asChild>
-                                <Button variant="outline" role="combobox" className="w-full justify-between bg-white border-slate-200 text-sm font-normal h-10 hover:bg-slate-50">
+                                <Button variant="outline" role="combobox" className="w-full justify-between bg-white dark:bg-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-800 text-sm font-normal h-10 hover:bg-slate-50 dark:hover:bg-slate-800">
                                     {experience.length === 0 ? "Any Level" : `${experience.length} selected`}
                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
@@ -213,10 +213,10 @@ export function JobSearchSettings({ profile, onSearch, onConfigChange }: JobSear
 
                     {/* Workplace Filter */}
                     <div className="flex-1">
-                        <Label className="text-[10px] font-semibold text-slate-500 mb-1.5 block uppercase tracking-wider">Workplace</Label>
+                        <Label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block uppercase tracking-wider">Workplace</Label>
                         <Popover>
                             <PopoverTrigger asChild>
-                                <Button variant="outline" role="combobox" className="w-full justify-between bg-white border-slate-200 text-sm font-normal h-10 hover:bg-slate-50">
+                                <Button variant="outline" role="combobox" className="w-full justify-between bg-white dark:bg-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-800 text-sm font-normal h-10 hover:bg-slate-50 dark:hover:bg-slate-800">
                                     {workplace.length === 0 ? "Any Type" : `${workplace.length} selected`}
                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
@@ -247,9 +247,9 @@ export function JobSearchSettings({ profile, onSearch, onConfigChange }: JobSear
 
                     {/* Date Posted Filter */}
                     <div className="flex-1">
-                        <Label className="text-[10px] font-semibold text-slate-500 mb-1.5 block uppercase tracking-wider">Date Posted</Label>
+                        <Label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block uppercase tracking-wider">Date Posted</Label>
                         <Select value={datePosted} onValueChange={(v: any) => setDatePosted(v)}>
-                            <SelectTrigger className="bg-white border-slate-200 h-10 w-full">
+                            <SelectTrigger className="bg-white dark:bg-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-800 h-10 w-full">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -272,14 +272,14 @@ export function JobSearchSettings({ profile, onSearch, onConfigChange }: JobSear
                 {/* Advanced Section (Excluded Terms) */}
                 {showAdvanced && (
                     <div className="pt-2 animate-in slide-in-from-top-1">
-                        <Label className="text-xs font-semibold text-slate-600 mb-1.5 block">Excluding Terms (Negative Keywords)</Label>
+                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5 block">Excluding Terms (Negative Keywords)</Label>
                         <div className="flex gap-2">
                             <Input
                                 value={excludeInput}
                                 onChange={e => setExcludeInput(e.target.value)}
                                 onKeyDown={handleAddExclude}
                                 placeholder="e.g. C++, Legacy, Clearance"
-                                className="bg-white border-slate-200 h-9 text-sm"
+                                className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 dark:text-slate-100 h-9 text-sm"
                             />
                         </div>
                         <div className="flex flex-wrap gap-1.5 mt-2 min-h-[24px]">
@@ -296,7 +296,7 @@ export function JobSearchSettings({ profile, onSearch, onConfigChange }: JobSear
                     </div>
                 )}
 
-                <Button onClick={handleSearch} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium h-11 mt-2 shadow-sm">
+                <Button onClick={handleSearch} className="w-full bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-medium h-11 mt-2 shadow-sm">
                     Apply Search Intelligence
                 </Button>
             </CardContent>

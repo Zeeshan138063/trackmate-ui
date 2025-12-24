@@ -22,28 +22,28 @@ export function DailyStats({ stats }: DailyStatsProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Bookmarked Card */}
-                <Card className="relative overflow-hidden border-indigo-100 bg-gradient-to-br from-white to-indigo-50/50 hover:shadow-lg transition-all duration-300 group">
+                <Card className="relative overflow-hidden border-indigo-100 dark:border-indigo-900 bg-gradient-to-br from-white to-indigo-50/50 dark:from-slate-900 dark:to-indigo-950/20 hover:shadow-lg transition-all duration-300 group">
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                         <Bookmark className="h-24 w-24 text-indigo-600 -rotate-12 transform translate-x-4 translate-y-[-10px]" />
                     </div>
                     <CardContent className="p-6 relative z-10">
                         <div className="flex items-start justify-between mb-4">
-                            <div className="h-10 w-10 rounded-xl bg-indigo-100/80 flex items-center justify-center text-indigo-600 shadow-sm ring-1 ring-white/50">
+                            <div className="h-10 w-10 rounded-xl bg-indigo-100/80 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm ring-1 ring-white/50 dark:ring-indigo-900/50">
                                 <Bookmark className="h-5 w-5" />
                             </div>
                             <div className={cn(
                                 "px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1",
-                                stats.bookmarked > 0 ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-500"
+                                stats.bookmarked > 0 ? "bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                             )}>
                                 <span>Today</span>
                             </div>
                         </div>
 
                         <div className="space-y-1">
-                            <div className="text-4xl font-bold text-slate-900 tracking-tight">
+                            <div className="text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
                                 {stats.bookmarked}
                             </div>
-                            <p className="text-sm font-medium text-indigo-600/80 flex items-center gap-1">
+                            <p className="text-sm font-medium text-indigo-600/80 dark:text-indigo-400/80 flex items-center gap-1">
                                 New Opportunities
                                 {stats.bookmarked > 0 && <ArrowUpRight className="h-3 w-3" />}
                             </p>
@@ -52,28 +52,28 @@ export function DailyStats({ stats }: DailyStatsProps) {
                 </Card>
 
                 {/* Applied Card */}
-                <Card className="relative overflow-hidden border-teal-100 bg-gradient-to-br from-white to-teal-50/50 hover:shadow-lg transition-all duration-300 group">
+                <Card className="relative overflow-hidden border-teal-100 dark:border-teal-900 bg-gradient-to-br from-white to-teal-50/50 dark:from-slate-900 dark:to-teal-950/20 hover:shadow-lg transition-all duration-300 group">
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                         <Send className="h-24 w-24 text-teal-600 -rotate-12 transform translate-x-4 translate-y-[-10px]" />
                     </div>
                     <CardContent className="p-6 relative z-10">
                         <div className="flex items-start justify-between mb-4">
-                            <div className="h-10 w-10 rounded-xl bg-teal-100/80 flex items-center justify-center text-teal-600 shadow-sm ring-1 ring-white/50">
+                            <div className="h-10 w-10 rounded-xl bg-teal-100/80 dark:bg-teal-900/50 flex items-center justify-center text-teal-600 dark:text-teal-400 shadow-sm ring-1 ring-white/50 dark:ring-teal-900/50">
                                 <Send className="h-5 w-5 ml-0.5" />
                             </div>
                             <div className={cn(
                                 "px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1",
-                                stats.applied > 0 ? "bg-teal-100 text-teal-700" : "bg-slate-100 text-slate-500"
+                                stats.applied > 0 ? "bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                             )}>
                                 <span>Today</span>
                             </div>
                         </div>
 
                         <div className="space-y-1">
-                            <div className="text-4xl font-bold text-slate-900 tracking-tight">
+                            <div className="text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
                                 {stats.applied}
                             </div>
-                            <p className="text-sm font-medium text-teal-600/80 flex items-center gap-1">
+                            <p className="text-sm font-medium text-teal-600/80 dark:text-teal-400/80 flex items-center gap-1">
                                 Applications Sent
                                 {stats.applied > 0 && <ArrowUpRight className="h-3 w-3" />}
                             </p>
@@ -82,28 +82,28 @@ export function DailyStats({ stats }: DailyStatsProps) {
                 </Card>
 
                 {/* Interviewing Card */}
-                <Card className="relative overflow-hidden border-amber-100 bg-gradient-to-br from-white to-amber-50/50 hover:shadow-lg transition-all duration-300 group">
+                <Card className="relative overflow-hidden border-amber-100 dark:border-amber-900 bg-gradient-to-br from-white to-amber-50/50 dark:from-slate-900 dark:to-amber-950/20 hover:shadow-lg transition-all duration-300 group">
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                         <Users className="h-24 w-24 text-amber-600 -rotate-12 transform translate-x-4 translate-y-[-10px]" />
                     </div>
                     <CardContent className="p-6 relative z-10">
                         <div className="flex items-start justify-between mb-4">
-                            <div className="h-10 w-10 rounded-xl bg-amber-100/80 flex items-center justify-center text-amber-600 shadow-sm ring-1 ring-white/50">
+                            <div className="h-10 w-10 rounded-xl bg-amber-100/80 dark:bg-amber-900/50 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-sm ring-1 ring-white/50 dark:ring-amber-900/50">
                                 <Users className="h-5 w-5" />
                             </div>
                             <div className={cn(
                                 "px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1",
-                                stats.interviewing > 0 ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500"
+                                stats.interviewing > 0 ? "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                             )}>
                                 <span>Today</span>
                             </div>
                         </div>
 
                         <div className="space-y-1">
-                            <div className="text-4xl font-bold text-slate-900 tracking-tight">
+                            <div className="text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
                                 {stats.interviewing}
                             </div>
-                            <p className="text-sm font-medium text-amber-600/80 flex items-center gap-1">
+                            <p className="text-sm font-medium text-amber-600/80 dark:text-amber-400/80 flex items-center gap-1">
                                 Active Interactions
                                 {stats.interviewing > 0 && <ArrowUpRight className="h-3 w-3" />}
                             </p>
