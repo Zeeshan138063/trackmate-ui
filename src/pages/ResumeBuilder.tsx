@@ -8,12 +8,15 @@ import { ResumeImporter } from "@/components/resume/ResumeImporter";
 import { Loader2, Printer, Sparkles, Save, CheckCircle2 } from "lucide-react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MasterProfile } from "@/types/resume";
+import { MasterProfile, ResumeConfig, initialResumeConfig } from "@/types/resume";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LayoutList } from "lucide-react";
 
 export default function ResumeBuilder() {
   const { masterProfile, loading, saving, saveMasterProfile, resumeId } = useResume();
   const [liveData, setLiveData] = useState<MasterProfile | null>(null);
   const [editorVersion, setEditorVersion] = useState(0);
+  const [config, setConfig] = useState<ResumeConfig>(initialResumeConfig);
 
   // Sync live data when master profile loads initially
   useEffect(() => {
@@ -99,14 +102,31 @@ export default function ResumeBuilder() {
                     Updates as you type
                   </div>
                 </div>
-                <Button size="sm" variant="outline" className="gap-2 bg-background shadow-sm hover:bg-accent hover:text-accent-foreground" onClick={handlePrint}>
-                  <Printer className="h-4 w-4" />
-                  Download PDF
-                </Button>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <LayoutList className="h-4 w-4 text-muted-foreground" />
+                    <Select
+                      value={config.templateId}
+                      onValueChange={(value) => setConfig(prev => ({ ...prev, templateId: value as any }))}
+                    >
+                      <SelectTrigger className="w-[140px] h-8 text-xs bg-background">
+                        <SelectValue placeholder="Select Template" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ats">ATS Classic</SelectItem>
+                        <SelectItem value="europass">Europass</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button size="sm" variant="outline" className="gap-2 bg-background shadow-sm hover:bg-accent hover:text-accent-foreground" onClick={handlePrint}>
+                    <Printer className="h-4 w-4" />
+                    Download PDF
+                  </Button>
+                </div>
               </div>
               <div className="flex-1 overflow-y-auto rounded-lg border bg-zinc-100/50 dark:bg-zinc-900/50 shadow-inner p-4 md:p-8 flex justify-center relative">
                 <div className="w-full max-w-[8.5in]">
-                  <ResumePreview data={previewData} className="min-h-[11in]" />
+                  <ResumePreview data={previewData} config={config} className="min-h-[11in]" />
                 </div>
               </div>
             </div>
@@ -117,7 +137,7 @@ export default function ResumeBuilder() {
       {/* Print Portal - Renders outside the main layout for clean printing */}
       {createPortal(
         <div id="resume-print-portal" className="hidden print:block">
-          <ResumePreview data={previewData} />
+          <ResumePreview data={previewData} config={config} />
         </div>,
         document.body
       )}

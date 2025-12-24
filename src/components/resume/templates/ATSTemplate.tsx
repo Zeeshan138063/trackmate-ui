@@ -1,45 +1,16 @@
-import { useEffect } from "react";
-import { MasterProfile, ResumeConfig, initialResumeConfig } from "@/types/resume";
-import { ATSTemplate } from "./templates/ATSTemplate";
-import { EuropassTemplate } from "./templates/EuropassTemplate";
+import { MasterProfile } from "@/types/resume";
+import { cn } from "@/lib/utils";
 
-interface ResumePreviewProps {
+interface ATSTemplateProps {
     data: MasterProfile;
-    config?: ResumeConfig;
     className?: string; // For wrapper styling
 }
 
-export function ResumePreview({ data, config = initialResumeConfig, className }: ResumePreviewProps) {
+export function ATSTemplate({ data, className }: ATSTemplateProps) {
     if (!data) return null;
 
-    useEffect(() => {
-        if (data) {
-            const title = data.targetTitle
-                ? `${data.contact.firstName} ${data.contact.lastName} - ${data.targetTitle}`
-                : `${data.contact.firstName} ${data.contact.lastName} Resume`;
-            document.title = title;
-        }
-        return () => {
-            document.title = "Trackmate UI"; // Reset on unmount
-        };
-    }, [data]);
-
-    // Template Selector
-    const renderTemplate = () => {
-        switch (config.templateId) {
-            case 'ats':
-                return <ATSTemplate data={data} className={className} />;
-            case 'europass':
-                return <EuropassTemplate data={data} className={className} />;
-            // Future templates will go here:
-            // case 'europass': return <EuropassTemplate ... />
-            // case 'modern': return <ModernTemplate ... />
-            default:
-                return <ATSTemplate data={data} className={className} />;
-        }
-    }
     return (
-        <div className={cn("bg-white text-black p-[0.5in] shadow-lg max-w-[8.5in] mx-auto min-h-[11in] text-[10.5pt] font-serif leading-normal print:shadow-none print:p-0 print:max-w-none border dark:border-slate-800", className)} id="resume-preview">
+        <div className={cn("bg-white text-black p-[0.5in] shadow-lg max-w-[8.5in] mx-auto min-h-[11in] text-[10.5pt] font-serif leading-normal print:shadow-none print:p-0 print:max-w-none", className)} id="resume-preview">
 
             {/* Header */}
             <header className="text-center mb-4 border-b pb-4">
@@ -57,9 +28,7 @@ export function ResumePreview({ data, config = initialResumeConfig, className }:
                 </div>
             </header>
 
-            {/* 1. Header (Already at top) */}
-
-            {/* 2. Professional Summary (New) */}
+            {/* Professional Summary */}
             {data.summary && (
                 <section className="mb-4">
                     <h2 className="text-sm font-bold uppercase border-b border-black mb-2">Professional Summary</h2>
@@ -67,7 +36,7 @@ export function ResumePreview({ data, config = initialResumeConfig, className }:
                 </section>
             )}
 
-            {/* 3. Skills (Moved Up) */}
+            {/* Technical Skills */}
             {(data.skills.length > 0 || data.interests) && (
                 <section className="mb-4">
                     <h2 className="text-sm font-bold uppercase border-b border-black mb-2">Technical Skills</h2>
@@ -84,7 +53,7 @@ export function ResumePreview({ data, config = initialResumeConfig, className }:
                 </section>
             )}
 
-            {/* 4. Experience */}
+            {/* Experience */}
             {data.experience.length > 0 && (
                 <section className="mb-4">
                     <h2 className="text-sm font-bold uppercase border-b border-black mb-2">Experience</h2>
@@ -104,7 +73,7 @@ export function ResumePreview({ data, config = initialResumeConfig, className }:
                                     if (!trimmed) return null;
                                     const isBullet = trimmed.startsWith('•') || trimmed.startsWith('-');
                                     const content = isBullet ? trimmed.substring(1).trim() : trimmed;
-                                    const finalContent = content.replace(/^[-•]\s*/, ''); // Double clean just in case
+                                    const finalContent = content.replace(/^[-•]\s*/, '');
 
                                     return (
                                         <p key={idx} className="flex">
@@ -119,7 +88,7 @@ export function ResumePreview({ data, config = initialResumeConfig, className }:
                 </section>
             )}
 
-            {/* 5. Projects */}
+            {/* Projects */}
             {data.projects.length > 0 && (
                 <section className="mb-4">
                     <h2 className="text-sm font-bold uppercase border-b border-black mb-2">Projects</h2>
@@ -134,7 +103,7 @@ export function ResumePreview({ data, config = initialResumeConfig, className }:
                                 )}
                             </div>
 
-                            {/* Tech Stack - Distinct Line */}
+                            {/* Tech Stack */}
                             <div className="text-xs font-semibold text-gray-600 mb-1 font-mono tracking-tight">
                                 {Array.isArray(proj.technologies) ? proj.technologies.join(', ') : proj.technologies}
                             </div>
@@ -145,7 +114,7 @@ export function ResumePreview({ data, config = initialResumeConfig, className }:
                 </section>
             )}
 
-            {/* 6. Education (Moved Down) */}
+            {/* Education */}
             {data.education.length > 0 && (
                 <section className="mb-4">
                     <h2 className="text-sm font-bold uppercase border-b border-black mb-2">Education</h2>
@@ -164,7 +133,7 @@ export function ResumePreview({ data, config = initialResumeConfig, className }:
                 </section>
             )}
 
-            {/* 7. Leadership, Certs, etc. (Bottom) */}
+            {/* Volunteering */}
             {data.volunteering.length > 0 && (
                 <section className="mb-4">
                     <h2 className="text-sm font-bold uppercase border-b border-black mb-2">Leadership & Volunteering</h2>
@@ -181,6 +150,7 @@ export function ResumePreview({ data, config = initialResumeConfig, className }:
                 </section>
             )}
 
+            {/* Certifications & Awards */}
             {(data.certifications.length > 0 || data.awards.length > 0) && (
                 <section className="mb-4">
                     <h2 className="text-sm font-bold uppercase border-b border-black mb-2">Certifications & Awards</h2>
@@ -199,5 +169,24 @@ export function ResumePreview({ data, config = initialResumeConfig, className }:
                 </section>
             )}
 
-    return renderTemplate();
+            {/* Publications */}
+            {data.publications.length > 0 && (
+                <section className="mb-4">
+                    <h2 className="text-sm font-bold uppercase border-b border-black mb-2">Publications</h2>
+                    <ul className="list-disc list-outside ml-4">
+                        {data.publications.map((pub, i) => (
+                            <li key={i}>
+                                <span className="font-bold italic">{pub.title}</span>, {pub.publisher} ({pub.date})
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+            )}
+
+            {/* Print Footer */}
+            <footer className="hidden print:block fixed bottom-0 left-0 w-full text-center text-xs text-gray-400 border-t pt-2 bg-white">
+                <span className="font-semibold tracking-widest uppercase">{data.contact.firstName} {data.contact.lastName}</span>
+            </footer>
+        </div>
+    );
 }

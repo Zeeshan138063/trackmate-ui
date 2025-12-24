@@ -110,3 +110,21 @@ export const initialMasterProfile: MasterProfile = {
     publications: [],
     interests: ""
 };
+
+export type ResumeTemplateId = 'ats' | 'europass' | 'modern' | 'hybrid' | 'tech_snapshot';
+
+export interface ResumeConfig {
+    templateId: ResumeTemplateId;
+    showPhoto: boolean;
+    showLocation: boolean;
+    accentColor: string; // Hex code
+    font: 'serif' | 'sans' | 'mono';
+}
+
+export const initialResumeConfig: ResumeConfig = {
+    templateId: 'ats',
+    showPhoto: false,
+    showLocation: true,
+    accentColor: '#000000',
+    font: 'serif'
+};
