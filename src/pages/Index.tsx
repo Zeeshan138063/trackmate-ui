@@ -13,7 +13,7 @@ import { Briefcase, Users, FileText, MessageSquare } from "lucide-react";
 
 export default function Index() {
   const navigate = useNavigate();
-  const { jobs, loading } = useJobs();
+  const { jobs, loading, updateJob } = useJobs();
 
   // Calculate stats for dashboard
   const calculateStats = () => {
@@ -79,7 +79,7 @@ export default function Index() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <JobApplicationsChart appliedCount={stats.applied} />
           <JobSearchPipeline stats={stats} totalJobs={jobs.length} />
-          <DatesCalendar jobs={jobs} />
+          <DatesCalendar jobs={jobs} onUpdateJob={updateJob} />
         </div>
 
         {/* Priorities Section */}
