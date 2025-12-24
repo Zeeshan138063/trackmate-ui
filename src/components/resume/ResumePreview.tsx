@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { MasterProfile, ResumeConfig, initialResumeConfig } from "@/types/resume";
 import { ATSTemplate } from "./templates/ATSTemplate";
+import { EuropassTemplate } from "./templates/EuropassTemplate";
 
 interface ResumePreviewProps {
     data: MasterProfile;
@@ -28,6 +29,8 @@ export function ResumePreview({ data, config = initialResumeConfig, className }:
         switch (config.templateId) {
             case 'ats':
                 return <ATSTemplate data={data} className={className} />;
+            case 'europass':
+                return <EuropassTemplate data={data} className={className} />;
             // Future templates will go here:
             // case 'europass': return <EuropassTemplate ... />
             // case 'modern': return <ModernTemplate ... />
