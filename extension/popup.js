@@ -541,6 +541,27 @@ async function saveCompanyDirectly(companyData) {
 
     setStatus('Saving company via API...', 'info');
 
+    // Parse company size to match constraint ('Startup', 'SMB', 'Enterprise')
+    let size = companyData.size || '';
+    let mappedSize = 'SMB'; // Default fallback
+    
+    // Normalize logic
+    const lowerSize = size.toLowerCase().replace(/,/g, '');
+    if (lowerSize) {
+       // Check for numbers
+       const match = lowerSize.match(/(\d+)/);
+       if (match) {
+         const num = parseInt(match[0], 10);
+         if (num <= 50) mappedSize = 'Startup';
+         else if (num <= 1000) mappedSize = 'SMB';
+         else mappedSize = 'Enterprise';
+       } else if (lowerSize.includes('startup') || lowerSize.includes('small')) {
+          mappedSize = 'Startup';
+       } else if (lowerSize.includes('enterprise') || lowerSize.includes('corporate') || lowerSize.includes('large')) {
+          mappedSize = 'Enterprise';
+       }
+    }
+
     let userId = null;
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
@@ -562,12 +583,14 @@ async function saveCompanyDirectly(companyData) {
       body: JSON.stringify({
         user_id: userId,
         name: companyData.name,
+        company_name: companyData.name, // Schema has company_name, not name
         industry: companyData.industry,
-        company_size: companyData.size,
-        location: companyData.location, // string
+        company_size: mappedSize,
+        locations: companyData.location ? [companyData.location] : [], // Schema expects array
         website_url: companyData.website,
-        // linkedin_company_url does not exist in the schema, so we append to notes
-        notes: companyData.about + (companyData.linkedinUrl ? `\n\nLinkedIn: ${companyData.linkedinUrl}` : ''),
+        // linkedin_company_url exists in schema
+        linkedin_company_url: companyData.linkedinUrl || '',
+        notes: companyData.about, 
         status: 'Researching',
         priority: 'Medium'
       })
