@@ -557,26 +557,8 @@ async function saveCompanyDirectly(companyData) {
 
     setStatus('Saving company via API...', 'info');
 
-    // Parse company size to match constraint ('small', 'mid', 'large')
-    let size = companyData.size || '';
-    let mappedSize = 'mid'; // Default fallback
-
-    // Normalize logic
-    const lowerSize = size.toLowerCase().replace(/,/g, '');
-    if (lowerSize) {
-      // Check for numbers
-      const match = lowerSize.match(/(\d+)/);
-      if (match) {
-        const num = parseInt(match[0], 10);
-        if (num <= 50) mappedSize = 'small';
-        else if (num <= 1000) mappedSize = 'mid';
-        else mappedSize = 'large';
-      } else if (lowerSize.includes('startup') || lowerSize.includes('small')) {
-        mappedSize = 'small';
-      } else if (lowerSize.includes('enterprise') || lowerSize.includes('corporate') || lowerSize.includes('large')) {
-        mappedSize = 'large';
-      }
-    }
+    // Use raw size value (e.g. "51-200 employees") - no mapping
+    // Priority column removed as requested
 
     let userId = null;
     try {
@@ -600,15 +582,15 @@ async function saveCompanyDirectly(companyData) {
         user_id: userId,
         name: companyData.name,
         industry: companyData.industry,
-        company_size: mappedSize,
+        company_size: companyData.size,
         location: companyData.location,
         website_url: companyData.website,
-        notes: (companyData.about || '') + (companyData.linkedinUrl ? `\n\nLinkedIn: ${companyData.linkedinUrl}` : ''),
+        linkedin_company_url: companyData.linkedinUrl,
+        notes: companyData.about || '',
         logo_url: companyData.logoUrl || '',
         founded_year: companyData.foundedYear ? parseInt(companyData.foundedYear) : null,
         employee_count: companyData.employeeCount ? parseInt(companyData.employeeCount) : null,
-        status: 'Researching',
-        priority: 'Medium'
+        status: 'researching'
       })
     });
 

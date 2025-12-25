@@ -948,14 +948,29 @@ class JobExtractor {
       }
     }
 
-    // If About section parsing failed (e.g. not on About tab), try top card
-    if (!data.industry) {
-      const subTitleEl = document.querySelector('.org-top-card-summary__info-item') ||
-        document.querySelector('.top-card-layout__first-sub-title');
-      if (subTitleEl) {
-        const text = subTitleEl.textContent.trim();
-        // Heuristic: Industry is usually first, location second? or mixed.
+    // Check top card info items for Size, Industry, Location (common on Home tab)
+    const topCardItems = document.querySelectorAll('.org-top-card-summary-info-list__info-item, .org-top-card-summary-info-list__info-item-link');
+    for (const item of topCardItems) {
+      const text = item.textContent.trim();
+      if (!text) continue;
+
+      // Size: "51-200 employees"
+      if (!data.size && text.toLowerCase().includes('employees') && !text.includes('See all')) {
+        data.size = text;
+      }
+
+      // Industry fallback
+      if (!data.industry &&
+        !text.toLowerCase().includes('employees') &&
+        !text.toLowerCase().includes('follower') &&
+        !text.match(/\d/) // No numbers usually
+      ) {
         data.industry = text;
+      }
+
+      // Location fallback
+      if (!data.location && !text.toLowerCase().includes('employees') && !text.toLowerCase().includes('follower') && text.includes(',')) {
+        data.location = text;
       }
     }
 
