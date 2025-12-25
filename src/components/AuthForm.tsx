@@ -25,11 +25,10 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
     try {
       if (isSignUp) {
         // Sign Up Logic
-        const redirectUrl = import.meta.env.VITE_SITE_URL || "https://job.zeeshare.com/auth";
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: redirectUrl }
+          options: { emailRedirectTo: `${window.location.origin}/auth` }
         });
         if (error) throw error;
         toast({ title: "Check your email", description: "Confirmation link sent." });
@@ -55,7 +54,7 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
-          redirectTo: (import.meta.env.VITE_SITE_URL || "https://job.zeeshare.com/auth"),
+          redirectTo: `${window.location.origin}/auth`,
         }
       })
       if (error) throw error;
