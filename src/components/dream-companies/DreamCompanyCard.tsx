@@ -2,8 +2,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DreamCompany } from "@/services/dreamCompanies";
-import { Building, Globe, MapPin, Linkedin } from "lucide-react";
+import { Building2, Globe, MapPin, Linkedin } from "lucide-react";
 import { useMemo } from "react";
+import { CompanyLogo } from "./CompanyLogo";
 
 interface DreamCompanyCardProps {
     company: DreamCompany;
@@ -54,9 +55,16 @@ export function DreamCompanyCard({ company, onClick }: DreamCompanyCardProps) {
         >
             <CardHeader className="pb-2">
                 <div className="flex justify-between items-start gap-2">
-                    <CardTitle className="text-lg font-semibold truncate flex items-center gap-2">
-                        {company.name}
-                    </CardTitle>
+                    <div className="flex items-center gap-3 overflow-hidden">
+                        <CompanyLogo
+                            src={company.logo_url}
+                            alt={company.name}
+                            className="h-10 w-10 shrink-0"
+                        />
+                        <CardTitle className="text-lg font-semibold truncate">
+                            {company.name}
+                        </CardTitle>
+                    </div>
                     <Badge variant="outline" className={getPriorityColor(company.priority)}>
                         {normalizedPriority}
                     </Badge>
@@ -69,7 +77,7 @@ export function DreamCompanyCard({ company, onClick }: DreamCompanyCardProps) {
                     </Badge>
                     {company.industry && (
                         <span className="flex items-center gap-1 bg-muted/50 px-2 py-0.5 rounded text-xs">
-                            <Building className="w-3 h-3" /> {company.industry}
+                            <Building2 className="w-3 h-3" /> {company.industry}
                         </span>
                     )}
                     {company.location && (
