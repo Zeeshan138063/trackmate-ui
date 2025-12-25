@@ -22,22 +22,22 @@ export function DreamCompanySheet({ companyId, open, onOpenChange }: DreamCompan
     });
 
     const getStatusColor = (status: string | null) => {
-        if (!status) return "bg-slate-100 text-slate-700 border-slate-200";
+        if (!status) return "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700";
         switch (status.toLowerCase()) {
-            case "hired": return "bg-emerald-100 text-emerald-700 border-emerald-200";
-            case "offer": return "bg-green-100 text-green-700 border-green-200";
-            case "applied": return "bg-purple-100 text-purple-700 border-purple-200";
-            case "rejected": return "bg-red-100 text-red-700 border-red-200";
-            case "interviewing": return "bg-indigo-100 text-indigo-700 border-indigo-200";
-            case "targeting": return "bg-orange-100 text-orange-700 border-orange-200";
-            case "researching": return "bg-blue-100 text-blue-700 border-blue-200";
-            default: return "bg-slate-100 text-slate-700 border-slate-200";
+            case "hired": return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20";
+            case "offer": return "bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20";
+            case "applied": return "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/20";
+            case "rejected": return "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20";
+            case "interviewing": return "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20";
+            case "targeting": return "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/20";
+            case "researching": return "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20";
+            default: return "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700";
         }
     };
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent className="sm:max-w-xl p-0 gap-0 overflow-hidden flex flex-col">
+            <SheetContent className="sm:max-w-xl p-0 gap-0 overflow-hidden flex flex-col border-l border-border bg-background">
                 {isLoading ? (
                     <div className="flex justify-center items-center h-full">
                         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -45,7 +45,7 @@ export function DreamCompanySheet({ companyId, open, onOpenChange }: DreamCompan
                 ) : company ? (
                     <>
                         {/* Header Section */}
-                        <div className="bg-background border-b px-6 py-6 space-y-4">
+                        <div className="bg-background border-b border-border px-6 py-6 space-y-4 pr-12">
                             <div className="flex items-start justify-between gap-4">
                                 <div className="flex gap-4">
                                     <CompanyLogo
