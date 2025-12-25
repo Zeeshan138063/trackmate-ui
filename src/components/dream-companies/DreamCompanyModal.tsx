@@ -24,6 +24,7 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
     // Local state for array inputs (comma separated strings)
     const [rolesInput, setRolesInput] = useState("");
     const [tagsInput, setTagsInput] = useState("");
+    const [linkedinUrl, setLinkedinUrl] = useState(""); // Local state for LinkedIn
 
     const [formData, setFormData] = useState<Partial<DreamCompanyInsert>>({
         name: "",
@@ -31,10 +32,11 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
         status: "Researching",
         notes: "",
         industry: "",
-        company_size: null,
+        company_size: "", // Changed to string for free text
         website_url: "",
+        logo_url: "",
         careers_page_url: "",
-        location: "", // changed from locations array to single string
+        location: "",
     });
 
     const handleChange = (field: keyof DreamCompanyInsert, value: any) => {
@@ -57,10 +59,14 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
             const target_roles = rolesInput.split(',').map(s => s.trim()).filter(s => s.length > 0);
             const tags = tagsInput.split(',').map(s => s.trim()).filter(s => s.length > 0);
 
+            // Construct social_media object
+            const social_media = linkedinUrl ? { linkedin: linkedinUrl } : null;
+
             await dreamCompaniesService.create({
                 ...formData,
                 target_roles: target_roles.length > 0 ? target_roles : null,
                 tags: tags.length > 0 ? tags : null,
+                social_media: social_media,
                 user_id: user.id,
             } as DreamCompanyInsert);
 
@@ -69,9 +75,10 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
             onOpenChange(false);
 
             // Reset form
-            setFormData({ name: "", priority: "Medium", status: "Researching", notes: "", industry: "", website_url: "", location: "" });
+            setFormData({ name: "", priority: "Medium", status: "Researching", notes: "", industry: "", website_url: "", location: "", logo_url: "", careers_page_url: "", company_size: "" });
             setRolesInput("");
             setTagsInput("");
+            setLinkedinUrl("");
             setShowAdvanced(false);
 
         } catch (error: any) {
@@ -114,16 +121,13 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="size">Company Size</Label>
-                            <Select value={formData.company_size || ""} onValueChange={(v) => handleChange("company_size", v)}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select size" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Startup">Startup</SelectItem>
-                                    <SelectItem value="SMB">SMB</SelectItem>
-                                    <SelectItem value="Enterprise">Enterprise</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            {/* Changed to Input for free text */}
+                            <Input
+                                id="size"
+                                value={formData.company_size || ""}
+                                onChange={(e) => handleChange("company_size", e.target.value)}
+                                placeholder="e.g. 50-200, Enterprise"
+                            />
                         </div>
                     </div>
 
@@ -154,18 +158,41 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
                                     <SelectItem value="Applied">Applied</SelectItem>
                                     <SelectItem value="Interviewing">Interviewing</SelectItem>
                                     <SelectItem value="Offer">Offer</SelectItem>
+                                    <SelectItem value="Rejected">Rejected</SelectItem>
+                                    <SelectItem value="On Hold">On Hold</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                     </div>
 
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="website">Website URL</Label>
+                            <Input
+                                id="website"
+                                value={formData.website_url || ""}
+                                onChange={(e) => handleChange("website_url", e.target.value)}
+                                placeholder="https://example.com"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="linkedin">LinkedIn URL</Label>
+                            <Input
+                                id="linkedin"
+                                value={linkedinUrl}
+                                onChange={(e) => setLinkedinUrl(e.target.value)}
+                                placeholder="https://linkedin.com/company/..."
+                            />
+                        </div>
+                    </div>
+
                     <div className="grid gap-2">
-                        <Label htmlFor="website">Website URL</Label>
+                        <Label htmlFor="logo">Logo URL (Optional)</Label>
                         <Input
-                            id="website"
-                            value={formData.website_url || ""}
-                            onChange={(e) => handleChange("website_url", e.target.value)}
-                            placeholder="https://example.com"
+                            id="logo"
+                            value={formData.logo_url || ""}
+                            onChange={(e) => handleChange("logo_url", e.target.value)}
+                            placeholder="https://..."
                         />
                     </div>
 
@@ -183,7 +210,7 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
                         <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
                             <Separator />
                             <div className="grid gap-2">
-                                <Label htmlFor="locations">Location</Label>
+                                <Label htmlFor="locations">HQ Location</Label>
                                 <Input
                                     id="locations"
                                     value={typeof formData.location === 'string' ? formData.location : ""}
@@ -192,17 +219,14 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="careers">Careers Page URL</Label>
-                                    <Input
-                                        id="careers"
-                                        value={formData.careers_page_url || ""}
-                                        onChange={(e) => handleChange("careers_page_url", e.target.value)}
-                                        placeholder="https://..."
-                                    />
-                                </div>
-                                {/* LinkedIn URL removed as it's not in schema */}
+                            <div className="grid gap-2">
+                                <Label htmlFor="careers">Careers Page URL</Label>
+                                <Input
+                                    id="careers"
+                                    value={formData.careers_page_url || ""}
+                                    onChange={(e) => handleChange("careers_page_url", e.target.value)}
+                                    placeholder="https://.../careers"
+                                />
                             </div>
 
                             <div className="grid gap-2">

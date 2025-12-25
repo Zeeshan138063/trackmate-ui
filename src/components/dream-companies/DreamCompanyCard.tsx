@@ -32,6 +32,9 @@ export function DreamCompanyCard({ company, onClick }: DreamCompanyCardProps) {
             case "interviewing": return "bg-indigo-500/10 text-indigo-500";
             case "targeting": return "bg-orange-500/10 text-orange-500";
             case "researching": return "bg-blue-500/10 text-blue-500";
+            case "networking": return "bg-cyan-500/10 text-cyan-500";
+            case "on hold": return "bg-amber-500/10 text-amber-500";
+            case "not contacted": return "bg-slate-500/10 text-slate-500";
             default: return "bg-slate-500/10 text-slate-500";
         }
     };

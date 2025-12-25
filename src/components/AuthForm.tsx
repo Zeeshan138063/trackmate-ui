@@ -1,12 +1,11 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Send, Sparkles, Linkedin, Github } from "lucide-react";
 
 interface AuthFormProps {
   onSuccess: () => void;
@@ -14,300 +13,193 @@ interface AuthFormProps {
 
 export function AuthForm({ onSuccess }: AuthFormProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false); // Toggle state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { toast } = useToast();
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    // Default to strict deployed URL, or env var if set.
-    // Fallback to window.location.origin only if explicitly needed, but user requested deployed URL preference.
-    const redirectUrl = import.meta.env.VITE_SITE_URL || "https://job.zeeshare.com/auth";
-
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl
-        }
-      });
-
-      if (error) {
-        toast({
-          title: "Sign up failed",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Check your email",
-          description: "We sent you a confirmation link to complete your registration.",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-        options: {
-        }
-      });
-
-      if (error) {
-        toast({
-          title: "Sign in failed",
-          description: error.message,
-          variant: "destructive",
+      if (isSignUp) {
+        // Sign Up Logic
+        const redirectUrl = import.meta.env.VITE_SITE_URL || "https://job.zeeshare.com/auth";
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: redirectUrl }
         });
+        if (error) throw error;
+        toast({ title: "Check your email", description: "Confirmation link sent." });
       } else {
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully signed in.",
+        // Sign In Logic
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password
         });
+        if (error) throw error;
+        toast({ title: "Welcome back!", description: "Successfully signed in." });
         onSuccess();
       }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
+  const handleOAuth = async (provider: 'google' | 'linkedin_oidc') => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: (import.meta.env.VITE_SITE_URL || "https://job.zeeshare.com/auth") + '/',
-      });
-
-      if (error) {
-        toast({
-          title: "Reset failed",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Check your email",
-          description: "We sent you a password reset link.",
-        });
-        setIsResettingPassword(false);
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: provider,
+        options: {
+          redirectTo: (import.meta.env.VITE_SITE_URL || "https://job.zeeshare.com/auth"),
+        }
+      })
+      if (error) throw error;
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     }
-  };
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 relative overflow-hidden">
-      {/* Immersive Background Effects */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
-      <div className="absolute top-0 z-0 h-full w-full bg-slate-950/50" />
-      <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-primary/20 blur-[150px] rounded-full pointer-events-none opacity-50" />
-      <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] bg-indigo-500/10 blur-[150px] rounded-full pointer-events-none opacity-50" />
+    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden font-sans">
+      {/* Background Image with Overlay */}
+      <div
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2301&auto=format&fit=crop')`,
+        }}
+      >
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px]" />
+      </div>
 
-      <Card className="w-full max-w-md relative z-10 border-white/[0.08] bg-black/40 backdrop-blur-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-700">
-        <CardHeader className="text-center space-y-3 pb-8 pt-8">
-          <div className="mx-auto h-14 w-14 rounded-2xl bg-gradient-to-br from-primary to-primary/60 shadow-[0_0_30px_-5px_var(--primary)] flex items-center justify-center mb-4 transition-transform hover:scale-105 duration-500">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="white"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-7 w-7"
-            >
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-              <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-              <line x1="12" y1="22.08" x2="12" y2="12" />
-            </svg>
+      {/* Main Card Content */}
+      <div className="relative z-10 w-full max-w-md px-6 py-12 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-700">
+
+        {/* Header Section */}
+        <div className="mb-8 space-y-4">
+          <p className="text-slate-200 text-sm font-medium tracking-widest uppercase">
+            Unlock Your Future.
+          </p>
+
+          <div className="relative inline-block">
+            <Send className="w-10 h-10 text-white mx-auto mb-4 -rotate-12" />
           </div>
+
           <div className="space-y-1">
-            <CardTitle className="text-4xl font-bold tracking-tight text-white drop-shadow-sm">
-              {isResettingPassword ? "Reset Password" : "JobVelocity"}
-            </CardTitle>
-            <CardDescription className="text-slate-400 text-lg">
-              {isResettingPassword ? "Enter your email to receive a reset link" : "Unlock your career potential"}
-            </CardDescription>
+            <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight drop-shadow-lg">
+              AutoJob Pilot
+            </h1>
+            <p className="text-slate-300 text-lg font-light">
+              Find Your Path
+            </p>
           </div>
-        </CardHeader>
+        </div>
 
-        <CardContent className="px-8 pb-8">
-          {isResettingPassword ? (
-            <div className="animate-in slide-in-from-right-2 duration-300">
-              <form onSubmit={handleResetPassword} className="space-y-5">
-                <div className="space-y-2">
-                  <Label htmlFor="reset-email" className="text-slate-300 ml-1">Email</Label>
-                  <Input
-                    id="reset-email"
-                    type="email"
-                    placeholder="name@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus-visible:ring-primary/50 focus-visible:border-primary/50 h-12 rounded-xl transition-all hover:bg-white/10"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full h-12 bg-gradient-to-r from-primary to-primary/80 hover:to-primary text-white font-semibold text-base shadow-[0_0_20px_-5px_var(--primary)] rounded-xl transition-all duration-300 hover:shadow-[0_0_30px_-5px_var(--primary)] hover:scale-[1.01] mt-2 group"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Send Reset Link</span>
-                    </div>
-                  ) : (
-                    "Send Reset Link"
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="w-full h-11 text-slate-400 hover:text-white hover:bg-white/5 transition-all mt-2"
-                  onClick={() => setIsResettingPassword(false)}
-                  disabled={isLoading}
-                >
-                  Back to Sign In
-                </Button>
-              </form>
+        {/* Form Section */}
+        <form onSubmit={handleAuth} className="w-full space-y-4">
+          <div className="space-y-4">
+            <Input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="h-12 bg-white border-0 text-slate-900 placeholder:text-slate-400 rounded-lg shadow-lg focus-visible:ring-2 focus-visible:ring-emerald-400"
+            />
+            <Input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              className="h-12 bg-white border-0 text-slate-900 placeholder:text-slate-400 rounded-lg shadow-lg focus-visible:ring-2 focus-visible:ring-emerald-400"
+            />
+          </div>
+
+          <div className="flex items-center justify-between text-xs text-slate-300 px-1">
+            {/* Simple toggle for UI purposes */}
+            <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="hover:text-white transition-colors hover:underline">
+              {isSignUp ? "Already have an account?" : "Create an account"}
+            </button>
+            <button type="button" className="hover:text-white transition-colors hover:underline">
+              Forgot Password?
+            </button>
+          </div>
+
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full h-12 bg-gradient-to-r from-teal-400 to-emerald-500 hover:from-teal-500 hover:to-emerald-600 text-white font-bold text-lg shadow-lg shadow-emerald-500/20 rounded-lg transition-all transform hover:scale-[1.02]"
+          >
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+              <span className="flex items-center gap-2">
+                {isSignUp ? "Create Account" : "Launch Auto-Pilot"} <Sparkles className="w-4 h-4" />
+              </span>
+            )}
+          </Button>
+        </form>
+
+        {/* Social Login Section */}
+        <div className="mt-8 w-full space-y-4">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-white/20"></span>
             </div>
-          ) : (
-            <Tabs defaultValue="signin" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-8 bg-black/30 border border-white/5 h-14 p-1.5 rounded-xl">
-                <TabsTrigger
-                  value="signin"
-                  className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg text-slate-400 font-medium transition-all duration-300"
-                >
-                  Sign In
-                </TabsTrigger>
-                <TabsTrigger
-                  value="signup"
-                  className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg text-slate-400 font-medium transition-all duration-300"
-                >
-                  New Account
-                </TabsTrigger>
-              </TabsList>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-transparent px-2 text-slate-300">Or continue with</span>
+            </div>
+          </div>
 
-              <TabsContent value="signin" className="animate-in slide-in-from-left-2 duration-300 focus-visible:outline-none focus-visible:ring-0">
-                <form onSubmit={handleSignIn} className="space-y-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-slate-300 ml-1">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="name@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus-visible:ring-primary/50 focus-visible:border-primary/50 h-12 rounded-xl transition-all hover:bg-white/10"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between ml-1">
-                      <Label htmlFor="password" className="text-slate-300">Password</Label>
-                      <button
-                        type="button"
-                        onClick={() => setIsResettingPassword(true)}
-                        className="text-xs text-primary/80 hover:text-primary transition-colors font-medium hover:underline"
-                      >
-                        Forgot password?
-                      </button>
-                    </div>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className="bg-white/5 border-white/10 text-white focus-visible:ring-primary/50 focus-visible:border-primary/50 h-12 rounded-xl transition-all hover:bg-white/10"
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full h-12 bg-gradient-to-r from-primary to-primary/80 hover:to-primary text-white font-semibold text-base shadow-[0_0_20px_-5px_var(--primary)] rounded-xl transition-all duration-300 hover:shadow-[0_0_30px_-5px_var(--primary)] hover:scale-[1.01] mt-2"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Signing in..." : "Connect to Pilot"}
-                  </Button>
-                </form>
-              </TabsContent>
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOAuth('google')}
+              className="h-11 bg-white border border-slate-200 hover:bg-slate-50 text-slate-900 hover:text-slate-900 font-semibold rounded-lg shadow-sm relative z-20 transition-all transform hover:scale-[1.02]"
+            >
+              <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
+                <path
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  fill="#4285F4"
+                />
+                <path
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  fill="#34A853"
+                />
+                <path
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.26.81-.58z"
+                  fill="#FBBC05"
+                />
+                <path
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  fill="#EA4335"
+                />
+              </svg>
+              Google
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOAuth('linkedin_oidc')}
+              className="h-11 bg-white border border-slate-200 hover:bg-slate-50 text-slate-900 hover:text-slate-900 font-semibold rounded-lg shadow-sm relative z-20 transition-all transform hover:scale-[1.02]"
+            >
+              <Linkedin className="w-4 h-4 mr-2 text-[#0077b5]" />
+              LinkedIn
+            </Button>
+          </div>
+        </div>
 
-              <TabsContent value="signup" className="animate-in slide-in-from-right-2 duration-300 focus-visible:outline-none focus-visible:ring-0">
-                <form onSubmit={handleSignUp} className="space-y-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email" className="text-slate-300 ml-1">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="name@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus-visible:ring-primary/50 focus-visible:border-primary/50 h-12 rounded-xl transition-all hover:bg-white/10"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password" className="text-slate-300 ml-1">Password</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      minLength={6}
-                      className="bg-white/5 border-white/10 text-white focus-visible:ring-primary/50 focus-visible:border-primary/50 h-12 rounded-xl transition-all hover:bg-white/10"
-                    />
-                    <p className="text-[10px] text-slate-500 ml-1">Must be at least 6 characters</p>
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full h-12 bg-gradient-to-r from-primary to-primary/80 hover:to-primary text-white font-semibold text-base shadow-[0_0_20px_-5px_var(--primary)] rounded-xl transition-all duration-300 hover:shadow-[0_0_30px_-5px_var(--primary)] hover:scale-[1.01] mt-2"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Creating account..." : "Activate Agent"}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Footer / Copyright */}
-      <div className="absolute bottom-6 text-slate-500 text-xs text-center w-full z-10">
-        © 2024 TrackMate. All rights reserved.
+        {/* Footer */}
+        <div className="mt-12 text-slate-400/60 text-[10px]">
+          © 2024 TrackMate. All rights reserved.
+        </div>
       </div>
     </div>
   );
 }
+
