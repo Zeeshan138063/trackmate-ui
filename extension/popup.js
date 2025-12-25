@@ -22,6 +22,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // Display Version & Update Status
+  const manifest = chrome.runtime.getManifest();
+  const versionEl = document.getElementById('appVersion');
+  if (versionEl) {
+    versionEl.textContent = `v${manifest.version}`;
+  }
+  // Always show the update badge for this version to reassure user
+  const statusEl = document.getElementById('updateStatus');
+  if (statusEl) {
+    statusEl.innerHTML = '✨ Dream Companies Fixed'; // Specific message
+    statusEl.style.display = 'block';
+  }
+
   // Save TrackMate URL when changed
   trackMateUrlInput.addEventListener('change', () => {
     chrome.storage.local.set({ trackMateUrl: trackMateUrlInput.value });
