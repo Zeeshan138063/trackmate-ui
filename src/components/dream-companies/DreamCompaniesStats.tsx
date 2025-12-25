@@ -13,15 +13,17 @@ export function DreamCompaniesStats() {
     if (!companies) return null;
 
     const total = companies.length;
-    const applied = companies.filter(c =>
-        ["Applied", "Interviewing", "Offer", "Rejected"].includes(c.status || "")
-    ).length;
+    const applied = companies.filter(c => {
+        const s = (c.status || "").toLowerCase();
+        return ["applied", "interviewing", "offer", "rejected"].includes(s);
+    }).length;
 
-    const interviewing = companies.filter(c =>
-        ["Interviewing", "Offer"].includes(c.status || "")
-    ).length;
+    const interviewing = companies.filter(c => {
+        const s = (c.status || "").toLowerCase();
+        return ["interviewing", "offer"].includes(s);
+    }).length;
 
-    const offers = companies.filter(c => c.status === "Offer").length;
+    const offers = companies.filter(c => (c.status || "").toLowerCase() === "offer").length;
 
     // Calculate Interview Rate ( Interviews / Applications or Total? User said "Interview rate")
     // Assuming Rate = Interviewing / Applied * 100

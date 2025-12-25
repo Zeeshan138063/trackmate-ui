@@ -31,12 +31,30 @@ export function DreamCompaniesKanban({ onSelectCompany }: DreamCompaniesKanbanPr
     const updateStatusMutation = useMutation({
         mutationFn: ({ id, status }: { id: string; status: string }) =>
             dreamCompaniesService.update(id, { status }),
+        onMutate: async ({ id, status }) => {
+            await queryClient.cancelQueries({ queryKey: ["dream-companies"] });
+            const previousCompanies = queryClient.getQueryData<any[]>(["dream-companies"]);
+
+            if (previousCompanies) {
+                queryClient.setQueryData<any[]>(["dream-companies"],
+                    previousCompanies.map(c => c.id === id ? { ...c, status } : c)
+                );
+            }
+
+            return { previousCompanies };
+        },
+        onError: (err, variables, context) => {
+            if (context?.previousCompanies) {
+                queryClient.setQueryData(["dream-companies"], context.previousCompanies);
+            }
+            console.error("Error updating company status:", err);
+            toast.error("Failed to update status");
+        },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["dream-companies"] });
             toast.success("Status updated");
         },
-        onError: () => {
-            toast.error("Failed to update status");
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ["dream-companies"] });
         }
     });
 
@@ -45,12 +63,14 @@ export function DreamCompaniesKanban({ onSelectCompany }: DreamCompaniesKanbanPr
         const cols: Record<string, typeof companies> = {};
         COLUMNS.forEach(col => cols[col.id] = []);
         companies.forEach(company => {
-            const status = company.status || "Not Contacted";
+            const rawStatus = company.status || "Not Contacted";
+            // Case-insensitive match to our column IDs
+            const matchedCol = COLUMNS.find(c => c.id.toLowerCase() === rawStatus.toLowerCase());
+            const status = matchedCol ? matchedCol.id : "Not Contacted";
+
             if (cols[status]) {
                 cols[status].push(company);
             } else {
-                // Fallback for unknown statuses
-                cols["Not Contacted"] = cols["Not Contacted"] || [];
                 cols["Not Contacted"].push(company);
             }
         });

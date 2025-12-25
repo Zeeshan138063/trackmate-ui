@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DreamCompany } from "@/services/dreamCompanies";
 import { Building, Globe, MapPin } from "lucide-react";
+import { useMemo } from "react";
 
 interface DreamCompanyCardProps {
     company: DreamCompany;
@@ -11,22 +12,39 @@ interface DreamCompanyCardProps {
 
 export function DreamCompanyCard({ company, onClick }: DreamCompanyCardProps) {
     const getPriorityColor = (priority: string | null) => {
-        switch (priority) {
-            case "High": return "bg-red-500/10 text-red-500 hover:bg-red-500/20";
-            case "Medium": return "bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20";
-            case "Low": return "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20";
+        if (!priority) return "bg-slate-500/10 text-slate-500";
+        switch (priority.toLowerCase()) {
+            case "high": return "bg-red-500/10 text-red-500 hover:bg-red-500/20";
+            case "medium": return "bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20";
+            case "low": return "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20";
             default: return "bg-slate-500/10 text-slate-500";
         }
     };
 
     const getStatusColor = (status: string | null) => {
-        switch (status) {
-            case "Offer": return "bg-green-500/10 text-green-500";
-            case "Applied": return "bg-purple-500/10 text-purple-500";
-            case "Rejected": return "bg-red-500/10 text-red-500";
+        if (!status) return "bg-slate-500/10 text-slate-500";
+        switch (status.toLowerCase()) {
+            case "offer": return "bg-green-500/10 text-green-500";
+            case "applied": return "bg-purple-500/10 text-purple-500";
+            case "rejected": return "bg-red-500/10 text-red-500";
+            case "interviewing": return "bg-indigo-500/10 text-indigo-500";
+            case "networking": return "bg-orange-500/10 text-orange-500";
+            case "researching": return "bg-blue-500/10 text-blue-500";
             default: return "bg-slate-500/10 text-slate-500";
         }
     };
+
+    const normalizedStatus = useMemo(() => {
+        if (!company.status) return "Not Contacted";
+        const statuses = ["Not Contacted", "Researching", "Networking", "Applied", "Interviewing", "Offer", "Rejected", "On Hold"];
+        return statuses.find(s => s.toLowerCase() === company.status?.toLowerCase()) || company.status;
+    }, [company.status]);
+
+    const normalizedPriority = useMemo(() => {
+        if (!company.priority) return "Medium";
+        const priorities = ["High", "Medium", "Low"];
+        return priorities.find(p => p.toLowerCase() === company.priority?.toLowerCase()) || company.priority;
+    }, [company.priority]);
 
     return (
         <Card
@@ -39,14 +57,14 @@ export function DreamCompanyCard({ company, onClick }: DreamCompanyCardProps) {
                         {company.name}
                     </CardTitle>
                     <Badge variant="outline" className={getPriorityColor(company.priority)}>
-                        {company.priority}
+                        {normalizedPriority}
                     </Badge>
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
                     <Badge variant="secondary" className={getStatusColor(company.status)}>
-                        {company.status}
+                        {normalizedStatus}
                     </Badge>
                     {company.industry && (
                         <span className="flex items-center gap-1 bg-muted/50 px-2 py-0.5 rounded text-xs">
