@@ -37,7 +37,7 @@ export function DreamCompanySheet({ companyId, open, onOpenChange }: DreamCompan
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent className="sm:max-w-xl p-0 gap-0 overflow-hidden flex flex-col bg-slate-50/50">
+            <SheetContent className="sm:max-w-xl p-0 gap-0 overflow-hidden flex flex-col">
                 {isLoading ? (
                     <div className="flex justify-center items-center h-full">
                         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -45,17 +45,17 @@ export function DreamCompanySheet({ companyId, open, onOpenChange }: DreamCompan
                 ) : company ? (
                     <>
                         {/* Header Section */}
-                        <div className="bg-white border-b px-6 py-6 space-y-4">
+                        <div className="bg-background border-b px-6 py-6 space-y-4">
                             <div className="flex items-start justify-between gap-4">
                                 <div className="flex gap-4">
                                     <CompanyLogo
                                         src={company.logo_url}
                                         alt={company.name}
-                                        className="h-16 w-16 rounded-xl"
-                                        iconClassName="h-8 w-8"
+                                        className="h-16 w-16 rounded-xl border-border/50"
+                                        iconClassName="h-8 w-8 text-muted-foreground/50"
                                     />
                                     <div className="space-y-1">
-                                        <SheetTitle className="text-2xl font-bold tracking-tight">{company.name}</SheetTitle>
+                                        <SheetTitle className="text-2xl font-bold tracking-tight text-foreground">{company.name}</SheetTitle>
                                         <div className="flex items-center gap-2 text-sm text-muted-foreground text-nowrap">
                                             {company.industry && (
                                                 <span className="flex items-center gap-1">
@@ -74,7 +74,7 @@ export function DreamCompanySheet({ companyId, open, onOpenChange }: DreamCompan
                             {/* Quick Actions / Links */}
                             <div className="flex gap-2 pt-2">
                                 {(company as any).social_media?.linkedin && (
-                                    <Button variant="outline" size="sm" className="h-8 gap-2 text-sky-700 border-sky-200 hover:bg-sky-50" asChild>
+                                    <Button variant="outline" size="sm" className="h-8 gap-2 border-sky-200/20 text-sky-600 hover:text-sky-700 hover:bg-sky-50 dark:text-sky-400 dark:border-sky-800/30 dark:hover:bg-sky-950/30" asChild>
                                         <a href={(company as any).social_media.linkedin} target="_blank" rel="noopener noreferrer">
                                             <Linkedin className="w-4 h-4" />
                                             LinkedIn
@@ -94,49 +94,49 @@ export function DreamCompanySheet({ companyId, open, onOpenChange }: DreamCompan
 
                         {/* Tabs & Content */}
                         <Tabs defaultValue="overview" className="flex-1 flex flex-col min-h-0">
-                            <div className="px-6 pt-2 bg-white border-b">
+                            <div className="px-6 pt-2 bg-background border-b z-10">
                                 <TabsList className="bg-transparent h-auto p-0 gap-6 w-full justify-start rounded-none">
                                     <TabsTrigger
                                         value="overview"
-                                        className="rounded-none border-b-2 border-transparent px-0 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                                        className="rounded-none border-b-2 border-transparent px-0 py-3 data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground"
                                     >
                                         Overview
                                     </TabsTrigger>
                                     <TabsTrigger
                                         value="contacts"
-                                        className="rounded-none border-b-2 border-transparent px-0 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                                        className="rounded-none border-b-2 border-transparent px-0 py-3 data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground"
                                     >
                                         Contacts
                                     </TabsTrigger>
                                     <TabsTrigger
                                         value="reminders"
-                                        className="rounded-none border-b-2 border-transparent px-0 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                                        className="rounded-none border-b-2 border-transparent px-0 py-3 data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground"
                                     >
                                         Reminders
                                     </TabsTrigger>
                                 </TabsList>
                             </div>
 
-                            <ScrollArea className="flex-1 bg-slate-50/50">
+                            <ScrollArea className="flex-1 bg-muted/10">
                                 <div className="p-6 space-y-6">
                                     <TabsContent value="overview" className="space-y-6 m-0 border-none outline-none">
 
                                         {/* Company Details Grid */}
                                         <div className="grid grid-cols-2 gap-4">
-                                            <div className="bg-white p-4 rounded-lg border shadow-sm space-y-1">
+                                            <div className="bg-card p-4 rounded-lg border shadow-sm space-y-1">
                                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                                     <Users className="w-4 h-4" /> Company Size
                                                 </div>
                                                 <div className="font-medium">{company.company_size || "N/A"}</div>
                                             </div>
-                                            <div className="bg-white p-4 rounded-lg border shadow-sm space-y-1">
+                                            <div className="bg-card p-4 rounded-lg border shadow-sm space-y-1">
                                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                                     <MapPin className="w-4 h-4" /> HQ Location
                                                 </div>
                                                 <div className="font-medium">{company.location || "N/A"}</div>
                                             </div>
                                             {company.founded_year && (
-                                                <div className="bg-white p-4 rounded-lg border shadow-sm space-y-1">
+                                                <div className="bg-card p-4 rounded-lg border shadow-sm space-y-1">
                                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                                         <Calendar className="w-4 h-4" /> Founded
                                                     </div>
@@ -148,7 +148,7 @@ export function DreamCompanySheet({ companyId, open, onOpenChange }: DreamCompan
                                         {/* About Section */}
                                         <div className="space-y-3">
                                             <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">About</h3>
-                                            <div className="bg-white p-4 rounded-lg border shadow-sm text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
+                                            <div className="bg-card p-4 rounded-lg border shadow-sm text-sm leading-relaxed whitespace-pre-wrap">
                                                 {company.notes || <span className="text-muted-foreground italic">No notes added.</span>}
                                             </div>
                                         </div>
@@ -159,7 +159,7 @@ export function DreamCompanySheet({ companyId, open, onOpenChange }: DreamCompan
                                                 <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Additional Links</h3>
                                                 <div className="flex flex-wrap gap-2">
                                                     {company.careers_page_url && (
-                                                        <a href={company.careers_page_url} target="_blank" className="flex items-center gap-2 text-sm bg-white border px-3 py-2 rounded-md hover:bg-slate-50 transition-colors">
+                                                        <a href={company.careers_page_url} target="_blank" className="flex items-center gap-2 text-sm bg-card border px-3 py-2 rounded-md hover:bg-muted/50 transition-colors">
                                                             <ExternalLink className="w-4 h-4 text-muted-foreground" />
                                                             Careers Page
                                                         </a>
@@ -168,7 +168,7 @@ export function DreamCompanySheet({ companyId, open, onOpenChange }: DreamCompan
                                                     {(company as any).social_media && Object.entries((company as any).social_media).map(([key, url]) => {
                                                         if (key === 'linkedin' || !url || typeof url !== 'string') return null;
                                                         return (
-                                                            <a key={key} href={url} target="_blank" className="flex items-center gap-2 text-sm bg-white border px-3 py-2 rounded-md hover:bg-slate-50 transition-colors capitalize">
+                                                            <a key={key} href={url} target="_blank" className="flex items-center gap-2 text-sm bg-card border px-3 py-2 rounded-md hover:bg-muted/50 transition-colors capitalize">
                                                                 <Globe className="w-4 h-4 text-muted-foreground" />
                                                                 {key}
                                                             </a>
@@ -190,9 +190,9 @@ export function DreamCompanySheet({ companyId, open, onOpenChange }: DreamCompan
                                         <div className="space-y-3">
                                             {company.contacts && company.contacts.length > 0 ? (
                                                 company.contacts.map((contact: any) => (
-                                                    <div key={contact.id} className="bg-white p-4 rounded-lg border shadow-sm flex items-start justify-between group hover:border-primary/20 transition-colors">
+                                                    <div key={contact.id} className="bg-card p-4 rounded-lg border shadow-sm flex items-start justify-between group hover:border-primary/20 transition-colors">
                                                         <div className="flex gap-3">
-                                                            <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-medium">
+                                                            <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-medium">
                                                                 {contact.name.charAt(0)}
                                                             </div>
                                                             <div>
@@ -208,7 +208,7 @@ export function DreamCompanySheet({ companyId, open, onOpenChange }: DreamCompan
                                                     </div>
                                                 ))
                                             ) : (
-                                                <div className="text-center py-12 text-muted-foreground bg-white border border-dashed rounded-lg">
+                                                <div className="text-center py-12 text-muted-foreground bg-card border border-dashed rounded-lg">
                                                     No contacts found.
                                                 </div>
                                             )}
@@ -226,7 +226,7 @@ export function DreamCompanySheet({ companyId, open, onOpenChange }: DreamCompan
                                         <div className="space-y-3">
                                             {company.dream_company_reminders && company.dream_company_reminders.length > 0 ? (
                                                 company.dream_company_reminders.map((reminder: any) => (
-                                                    <div key={reminder.id} className="bg-white p-4 rounded-lg border shadow-sm">
+                                                    <div key={reminder.id} className="bg-card p-4 rounded-lg border shadow-sm">
                                                         <p className="text-sm">{reminder.note}</p>
                                                         <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
                                                             <Calendar className="w-3 h-3" />
@@ -235,7 +235,7 @@ export function DreamCompanySheet({ companyId, open, onOpenChange }: DreamCompan
                                                     </div>
                                                 ))
                                             ) : (
-                                                <div className="text-center py-12 text-muted-foreground bg-white border border-dashed rounded-lg">
+                                                <div className="text-center py-12 text-muted-foreground bg-card border border-dashed rounded-lg">
                                                     No active reminders.
                                                 </div>
                                             )}
