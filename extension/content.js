@@ -879,7 +879,10 @@ class JobExtractor {
       location: '',
       website: '',
       linkedinUrl: window.location.href,
-      about: ''
+      about: '',
+      logoUrl: '',
+      foundedYear: '',
+      employeeCount: ''
     };
 
     // Name
@@ -893,6 +896,20 @@ class JobExtractor {
       const el = document.querySelector(selector);
       if (el) {
         data.name = el.textContent.trim();
+        break;
+      }
+    }
+
+    // Logo
+    const logoSelectors = [
+      'img.org-top-card-primary-content__logo',
+      '.org-top-card-primary-content__logo-container img',
+      'img.company-logo'
+    ];
+    for (const selector of logoSelectors) {
+      const el = document.querySelector(selector);
+      if (el && el.src) {
+        data.logoUrl = el.src;
         break;
       }
     }
@@ -917,6 +934,17 @@ class JobExtractor {
         if (currentTerm.includes('website')) data.website = text;
         if (currentTerm.includes('company size')) data.size = text;
         if (currentTerm.includes('headquarters')) data.location = text;
+        if (currentTerm.includes('founded')) data.foundedYear = text;
+      }
+    }
+
+    // Employee count from "See all X employees" link if available
+    const employeeLink = document.querySelector('a[href*="/search/results/people/"]');
+    if (employeeLink) {
+      const text = employeeLink.textContent.trim();
+      const match = text.match(/[\d,]+/);
+      if (match) {
+        data.employeeCount = match[0].replace(/,/g, '');
       }
     }
 
@@ -927,8 +955,6 @@ class JobExtractor {
       if (subTitleEl) {
         const text = subTitleEl.textContent.trim();
         // Heuristic: Industry is usually first, location second? or mixed.
-        // It's hard to parse reliably without the labeled About section.
-        // Let's just grab the whole text as "Industry" fallback or try to split
         data.industry = text;
       }
     }
