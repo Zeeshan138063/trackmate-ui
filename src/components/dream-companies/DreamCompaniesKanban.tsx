@@ -12,13 +12,13 @@ interface DreamCompaniesKanbanProps {
 }
 
 const COLUMNS = [
-    { id: "Not Contacted", title: "Not Contacted" },
-    { id: "Researching", title: "Researching" },
-    { id: "Networking", title: "Networking" },
-    { id: "Applied", title: "Applied" },
-    { id: "Interviewing", title: "Interviewing" },
-    { id: "Offer", title: "Offer" },
-    // { id: "Rejected", title: "Rejected" }, // Maybe hide Rejected or put at end
+    { id: "researching", title: "Researching" },
+    { id: "targeting", title: "Targeting" },
+    { id: "applied", title: "Applied" },
+    { id: "interviewing", title: "Interviewing" },
+    { id: "offer", title: "Offer" },
+    { id: "hired", title: "Hired" },
+    { id: "rejected", title: "Rejected" },
 ];
 
 export function DreamCompaniesKanban({ onSelectCompany }: DreamCompaniesKanbanProps) {
@@ -63,15 +63,16 @@ export function DreamCompaniesKanban({ onSelectCompany }: DreamCompaniesKanbanPr
         const cols: Record<string, typeof companies> = {};
         COLUMNS.forEach(col => cols[col.id] = []);
         companies.forEach(company => {
-            const rawStatus = company.status || "Not Contacted";
-            // Case-insensitive match to our column IDs
-            const matchedCol = COLUMNS.find(c => c.id.toLowerCase() === rawStatus.toLowerCase());
-            const status = matchedCol ? matchedCol.id : "Not Contacted";
+            const rawStatus = company.status || "researching";
+            // Normalize to lowercase to match column IDs
+            const normalizedStatus = rawStatus.toLowerCase();
+            const matchedCol = COLUMNS.find(c => c.id === normalizedStatus);
+            const status = matchedCol ? matchedCol.id : "researching";
 
             if (cols[status]) {
                 cols[status].push(company);
             } else {
-                cols["Not Contacted"].push(company);
+                cols["researching"]?.push(company);
             }
         });
         return cols;

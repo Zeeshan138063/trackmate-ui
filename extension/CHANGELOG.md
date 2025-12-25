@@ -1,10 +1,9 @@
 # Extension Update Changelog
 
-## Latest Update (v1.4.7): LinkedIn URL Restoration
+## Latest Update (v1.4.8): Social Media Column
 
 ### Changes
-- **LinkedIn URL**: Restored saving to the `linkedin_company_url` column (previously moved to Notes due to a schema cache error).
-- **Notes**: Removed the automatic LinkedIn URL appending from the Notes field.
+- **Social Media**: Now saves LinkedIn URL (and future links) into a `social_media` JSON column instead of a specific `linkedin_company_url` column, allowing for flexible storage of multiple profiles.
 
-## Previous Update (v1.4.6): Status Canonicalization
+## Previous Update (v1.4.7): LinkedIn URL Restoration
 ...

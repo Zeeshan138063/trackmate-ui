@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DreamCompany } from "@/services/dreamCompanies";
-import { Building, Globe, MapPin } from "lucide-react";
+import { Building, Globe, MapPin, Linkedin } from "lucide-react";
 import { useMemo } from "react";
 
 interface DreamCompanyCardProps {
@@ -24,20 +24,21 @@ export function DreamCompanyCard({ company, onClick }: DreamCompanyCardProps) {
     const getStatusColor = (status: string | null) => {
         if (!status) return "bg-slate-500/10 text-slate-500";
         switch (status.toLowerCase()) {
+            case "hired": return "bg-emerald-500/10 text-emerald-500";
             case "offer": return "bg-green-500/10 text-green-500";
             case "applied": return "bg-purple-500/10 text-purple-500";
             case "rejected": return "bg-red-500/10 text-red-500";
             case "interviewing": return "bg-indigo-500/10 text-indigo-500";
-            case "networking": return "bg-orange-500/10 text-orange-500";
+            case "targeting": return "bg-orange-500/10 text-orange-500";
             case "researching": return "bg-blue-500/10 text-blue-500";
             default: return "bg-slate-500/10 text-slate-500";
         }
     };
 
     const normalizedStatus = useMemo(() => {
-        if (!company.status) return "Not Contacted";
-        const statuses = ["Not Contacted", "Researching", "Networking", "Applied", "Interviewing", "Offer", "Rejected", "On Hold"];
-        return statuses.find(s => s.toLowerCase() === company.status?.toLowerCase()) || company.status;
+        if (!company.status) return "Researching";
+        // Simple capitalization since we store valid lowercase values now
+        return company.status.charAt(0).toUpperCase() + company.status.slice(1);
     }, [company.status]);
 
     const normalizedPriority = useMemo(() => {
@@ -84,16 +85,30 @@ export function DreamCompanyCard({ company, onClick }: DreamCompanyCardProps) {
                     </p>
                 )}
 
-                {company.website_url && (
-                    <a
-                        href={company.website_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-primary hover:underline flex items-center gap-1"
-                    >
-                        <Globe className="w-3 h-3" /> Website
-                    </a>
-                )}
+                <div className="flex items-center gap-3 mt-auto pt-2">
+                    {company.website_url && (
+                        <a
+                            href={company.website_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline flex items-center gap-1"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <Globe className="w-3 h-3" /> Website
+                        </a>
+                    )}
+                    {(company as any).social_media?.linkedin && (
+                        <a
+                            href={(company as any).social_media.linkedin}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline flex items-center gap-1"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <Linkedin className="w-3 h-3" /> LinkedIn
+                        </a>
+                    )}
+                </div>
             </CardContent>
         </Card>
     );

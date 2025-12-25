@@ -58,6 +58,17 @@ export function DreamCompanySheet({ companyId, open, onOpenChange }: DreamCompan
                                     <div className="flex flex-col gap-2 text-sm">
                                         {company.website_url && <a href={company.website_url} target="_blank" className="text-primary hover:underline">Website</a>}
                                         {company.careers_page_url && <a href={company.careers_page_url} target="_blank" className="text-primary hover:underline">Careers Page</a>}
+
+                                        {/* Social Media Links */}
+                                        {(company as any).social_media && typeof (company as any).social_media === 'object' &&
+                                            Object.entries((company as any).social_media).map(([platform, url]) => (
+                                                url && typeof url === 'string' && (
+                                                    <a key={platform} href={url} target="_blank" className="text-primary hover:underline capitalize">
+                                                        {platform} ({platform === 'linkedin' ? 'LinkedIn' : platform})
+                                                    </a>
+                                                )
+                                            ))
+                                        }
                                     </div>
                                 </div>
                             </TabsContent>

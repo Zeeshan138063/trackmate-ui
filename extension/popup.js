@@ -585,7 +585,10 @@ async function saveCompanyDirectly(companyData) {
         company_size: companyData.size,
         location: companyData.location,
         website_url: companyData.website,
-        linkedin_company_url: companyData.linkedinUrl,
+        // Store various social links in the JSONB column as requested
+        social_media: {
+          linkedin: companyData.linkedinUrl || ''
+        },
         notes: companyData.about || '',
         logo_url: companyData.logoUrl || '',
         founded_year: companyData.foundedYear ? parseInt(companyData.foundedYear) : null,
