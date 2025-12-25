@@ -1,23 +1,10 @@
 # Extension Update Changelog
 
-## Latest Update (v1.4.0): Dream Company Enhancements
+## Latest Update (v1.4.1): Quick Fix for LinkedIn URL
 
-### What Changed
+### Fixes
+- **Schema Usage**: Removed `linkedin_company_url` which caused a save error (`PGRST204`).
+- **Data Preservation**: LinkedIn URL is now automatically saved to the **Notes** field so it's not lost.
 
-The extension has been updated to support richer Dream Company data capture and fix database schema errors.
-
-### 1. **Fixed Company Insertion Error**
-   - Resolved the `PGRST204` error by correctly mapping `name` instead of `company_name`.
-   - Fixed location format mismatch (single string vs array).
-
-### 2. **Rich Data Capture**
-   - **Company Logo**: Now automatically extracts high-quality logos from LinkedIn Company pages.
-   - **Founded Year**: Scrapes the founding year to give you better context.
-   - **Employee Count**: Captures exact employee numbers (e.g. from "See all 12,345 employees" links).
-
-### 3. **Improved Mapping**
-   - **Company Size**: Automatically categorizes size into 'small', 'mid', 'large' to match your database schema.
-
----
-
-## Previous Update (v1.3.0): Improved Extraction Logic...
+## Major Update (v1.4.0): Dream Company Enhancements
+...
