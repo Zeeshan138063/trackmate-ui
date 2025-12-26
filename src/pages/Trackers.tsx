@@ -4,7 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Menu, Archive, Download, FileText, HelpCircle, ArrowRight, Sparkles } from "lucide-react";
+import { PlusCircle, Menu, Archive, Download, FileText, HelpCircle, ArrowRight, Sparkles, Search } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   DropdownMenu,
@@ -13,6 +13,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { StatusCard } from "@/components/StatusCard";
 import { JobTable } from "@/components/JobTable";
 import { AddJobDialog } from "@/components/AddJobDialog";
@@ -49,6 +59,19 @@ export default function Trackers() {
   const [extensionJobData, setExtensionJobData] = useState<Partial<Job> | null>(null);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [importUrl, setImportUrl] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [jobToDelete, setJobToDelete] = useState<string | "bulk" | null>(null);
+
+  const filteredJobs = jobs.filter(job => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      job.position.toLowerCase().includes(query) ||
+      job.company.toLowerCase().includes(query) ||
+      (job.location && job.location.toLowerCase().includes(query))
+    );
+  });
 
   const handleImport = async () => {
     if (!importUrl) return;
@@ -152,11 +175,29 @@ export default function Trackers() {
     setSelectedJobs(checked ? jobs.map(job => job.id) : []);
   };
 
-  const handleDeleteSelected = async () => {
-    for (const jobId of selectedJobs) {
-      await deleteJob(jobId);
+  const confirmDelete = async () => {
+    if (jobToDelete === "bulk") {
+      for (const jobId of selectedJobs) {
+        await deleteJob(jobId);
+      }
+      setSelectedJobs([]);
+      toast.success("Selected jobs deleted successfully");
+    } else if (jobToDelete) {
+      await deleteJob(jobToDelete);
+      toast.success("Job deleted successfully");
     }
-    setSelectedJobs([]);
+    setDeleteConfirmationOpen(false);
+    setJobToDelete(null);
+  };
+
+  const handleDeleteClick = (jobId: string) => {
+    setJobToDelete(jobId);
+    setDeleteConfirmationOpen(true);
+  };
+
+  const handleBulkDeleteClick = () => {
+    setJobToDelete("bulk");
+    setDeleteConfirmationOpen(true);
   };
 
   const handleToggleColumn = (columnId: string) => {
@@ -467,20 +508,32 @@ export default function Trackers() {
         </div>
 
         {/* Table Controls */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
-            <span className="text-sm text-muted-foreground">
-              {selectedJobs.length} selected
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
+              {jobs.length} total • {filteredJobs.length} visible
             </span>
             {selectedJobs.length > 0 && (
-              <Button variant="destructive" size="sm" onClick={handleDeleteSelected}>
-                Delete Selected
+              <Button variant="destructive" size="sm" onClick={handleBulkDeleteClick}>
+                Delete Selected ({selectedJobs.length})
               </Button>
             )}
+            <div className="relative w-full md:w-64">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search jobs..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-9"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 overflow-x-auto pb-2 md:pb-0">
             <div className="flex items-center space-x-2">
-              <span className="text-sm">Group by:</span>
+              <span className="text-sm whitespace-nowrap">Group by:</span>
               <Select defaultValue="none">
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-32 h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -490,16 +543,14 @@ export default function Trackers() {
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
-          <div className="flex items-center space-x-2">
             <ColumnsDropdown
               columns={visibleColumns}
               onToggleColumn={handleToggleColumn}
             />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="h-9">
                   <Menu className="h-4 w-4 mr-2" />
                   Menu
                 </Button>
@@ -525,6 +576,17 @@ export default function Trackers() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            <div className="hidden md:block">
+              <AddJobDialog
+                onAddJob={addJob}
+                initialData={extensionJobData}
+                open={addDialogOpen}
+                onOpenChange={setAddDialogOpen}
+              />
+            </div>
+          </div>
+          {/* Mobile Add Button */}
+          <div className="md:hidden w-full">
             <AddJobDialog
               onAddJob={addJob}
               initialData={extensionJobData}
@@ -536,12 +598,12 @@ export default function Trackers() {
 
         {/* Job Table */}
         <JobTable
-          jobs={jobs}
+          jobs={filteredJobs}
           selectedJobs={selectedJobs}
           onSelectJob={handleSelectJob}
           onSelectAll={handleSelectAll}
           onUpdateJob={updateJob}
-          onDeleteJob={deleteJob}
+          onDeleteJob={handleDeleteClick}
           onEditJob={handleEditJob}
           visibleColumns={visibleColumns}
         />
@@ -554,6 +616,25 @@ export default function Trackers() {
           onUpdateJob={handleUpdateJob}
           onAutoSave={handleAutoSave}
         />
+
+        <AlertDialog open={deleteConfirmationOpen} onOpenChange={setDeleteConfirmationOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {jobToDelete === "bulk"
+                  ? `This action cannot be undone. This will permanently delete ${selectedJobs.length} selected jobs.`
+                  : "This action cannot be undone. This will permanently delete this job."}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
