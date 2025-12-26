@@ -116,7 +116,7 @@ const AvailabilitySettings = ({ userId }: { userId: string }) => {
                 {preferences.length > 0 && (
                     <Button className="w-full" onClick={handleSave}>Save Preferences</Button>
                 )}
-            </div>
+            </CardContent>
         </Card>
     );
 };

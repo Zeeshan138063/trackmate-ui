@@ -28,7 +28,16 @@ export function MeetingCalendar({ meetings, onSelectMeeting }: MeetingCalendarPr
                     mode="single"
                     selected={selectedDate}
                     onSelect={setSelectedDate}
-                    className="rounded-md border shadow bg-card w-full"
+                    className="rounded-md border shadow bg-card w-full p-4"
+                    classNames={{
+                        months: "w-full flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+                        month: "space-y-4 w-full",
+                        table: "w-full border-collapse space-y-1",
+                        head_row: "flex w-full justify-between",
+                        row: "flex w-full mt-2 justify-between",
+                        cell: "text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20 w-full",
+                        day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 mx-auto"
+                    }}
                     components={{
                         DayContent: ({ date }) => {
                             const hasMeeting = meetings.some(m => isSameDay(new Date(m.scheduled_at), date));
