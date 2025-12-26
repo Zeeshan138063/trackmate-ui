@@ -4,7 +4,7 @@ import { JobService } from "@/services/JobService";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, MapPin, Building, Clock, ExternalLink, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Loader2, MapPin, Building, Clock, ExternalLink, ArrowLeft, CheckCircle2, Calendar } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useJobs } from "@/hooks/useJobs";
 import { toast } from "sonner";
@@ -107,9 +107,14 @@ export default function JobDetails() {
                         </div>
                         <div className="flex gap-3 mt-4 md:mt-0 w-full md:w-auto">
                             {isSaved ? (
-                                <Button disabled variant="outline" className="flex-1 md:flex-none">
-                                    <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" /> Saved
-                                </Button>
+                                <>
+                                    <Button variant="outline" className="flex-1 md:flex-none" onClick={() => navigate('/meeting-hub')}>
+                                        <Calendar className="h-4 w-4 mr-2" /> Schedule Interview
+                                    </Button>
+                                    <Button disabled variant="outline" className="flex-1 md:flex-none">
+                                        <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" /> Saved
+                                    </Button>
+                                </>
                             ) : (
                                 <Button onClick={handleSaveToTracker} variant="outline" className="flex-1 md:flex-none">
                                     Save to Tracker
