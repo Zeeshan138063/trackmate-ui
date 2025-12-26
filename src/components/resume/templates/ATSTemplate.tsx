@@ -10,7 +10,7 @@ export function ATSTemplate({ data, className }: ATSTemplateProps) {
     if (!data) return null;
 
     return (
-        <div className={cn("bg-white text-black p-[0.5in] shadow-lg max-w-[8.5in] mx-auto min-h-[11in] text-[10.5pt] font-serif leading-normal print:shadow-none print:p-0 print:max-w-none border dark:border-slate-800", className)} id="resume-preview">
+        <div className={cn("bg-white text-black p-[0.5in] shadow-lg max-w-[8.5in] mx-auto min-h-[11in] text-[10.5pt] font-serif leading-normal print:shadow-none print:p-0 print:max-w-none border print:border-none dark:border-slate-800", className)} id="resume-preview">
 
             {/* Header */}
             <header className="text-center mb-4 border-b pb-4">
@@ -93,7 +93,7 @@ export function ATSTemplate({ data, className }: ATSTemplateProps) {
                 <section className="mb-4">
                     <h2 className="text-sm font-bold uppercase border-b border-black mb-2">Projects</h2>
                     {data.projects.map((proj, i) => (
-                        <div key={i} className="mb-4 print-break-avoid pl-3 border-l-2 border-gray-300">
+                        <div key={i} className="mb-4 print-break-avoid">
                             <div className="flex justify-between items-baseline">
                                 <span className="font-bold text-gray-900">{proj.name}</span>
                                 {proj.link && (
