@@ -28,24 +28,33 @@ export function MeetingCalendar({ meetings, onSelectMeeting }: MeetingCalendarPr
                     mode="single"
                     selected={selectedDate}
                     onSelect={setSelectedDate}
-                    className="rounded-md border shadow bg-card w-full p-4"
+                    className="rounded-md border p-2 shadow-sm bg-card w-full"
                     classNames={{
-                        months: "w-full flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-                        month: "space-y-4 w-full",
+                        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0 w-full",
+                        month: "space-y-2 w-full",
                         table: "w-full border-collapse space-y-1",
                         head_row: "flex w-full justify-between",
-                        row: "flex w-full mt-2 justify-between",
-                        cell: "text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20 w-full",
-                        day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 mx-auto"
+                        row: "flex w-full justify-between mt-1",
+                        day: "h-8 w-full p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors",
+                        day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                        day_today: "bg-transparent border border-primary text-primary font-semibold",
+                        day_outside: "text-muted-foreground opacity-50",
+                        day_disabled: "text-muted-foreground opacity-50",
+                        day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+                        day_hidden: "invisible",
+                        cell: "h-8 w-full text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                        head_cell: "text-muted-foreground rounded-md w-full font-normal text-[0.8rem]",
+                        caption: "flex justify-center pt-1 relative items-center h-8",
+                        nav_button: "h-6 w-6 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-muted rounded-full transition-colors"
                     }}
                     components={{
                         DayContent: ({ date }) => {
                             const hasMeeting = meetings.some(m => isSameDay(new Date(m.scheduled_at), date));
                             return (
                                 <div className="relative w-full h-full flex items-center justify-center">
-                                    <span>{date.getDate()}</span>
+                                    <span className="z-10">{date.getDate()}</span>
                                     {hasMeeting && (
-                                        <div className="absolute bottom-1 h-1 w-1 rounded-full bg-primary" />
+                                        <div className="absolute bottom-1 h-1 w-1 rounded-full bg-blue-500" />
                                     )}
                                 </div>
                             );
@@ -78,7 +87,11 @@ export function MeetingCalendar({ meetings, onSelectMeeting }: MeetingCalendarPr
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                     {selectedDateMeetings.length > 0 ? (
                         selectedDateMeetings.map((meeting) => (
-                            <Card key={meeting.id} className="hover:border-primary transition-colors cursor-pointer group">
+                            <Card
+                                key={meeting.id}
+                                className="hover:border-primary transition-colors cursor-pointer group"
+                                onClick={() => onSelectMeeting?.(meeting)}
+                            >
                                 <CardContent className="p-3 space-y-2">
                                     <div className="flex justify-between items-start">
                                         <h5 className="font-medium text-sm group-hover:text-primary transition-colors">

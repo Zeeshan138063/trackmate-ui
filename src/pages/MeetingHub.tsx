@@ -9,6 +9,7 @@ import CalendarConnector from "@/components/meetings/CalendarConnector";
 import AvailabilitySharer from "@/components/meetings/AvailabilitySharer";
 import AddMeetingDialog from "@/components/meetings/AddMeetingDialog";
 import AvailabilitySettings from "@/components/meetings/AvailabilitySettings";
+import { EditMeetingDialog } from "@/components/meetings/EditMeetingDialog";
 import { MeetingCalendar } from "@/components/meetings/MeetingCalendar";
 import { MeetingService } from "@/services/MeetingService";
 import { Meeting } from "@/types/meeting";
@@ -21,6 +22,8 @@ const MeetingHub = () => {
     const [meetings, setMeetings] = useState<Meeting[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+    const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
     useEffect(() => {
         const getUser = async () => {
@@ -95,7 +98,13 @@ const MeetingHub = () => {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="min-h-[600px]">
-                        <MeetingCalendar meetings={meetings} />
+                        <MeetingCalendar
+                            meetings={meetings}
+                            onSelectMeeting={(meeting) => {
+                                setEditingMeeting(meeting);
+                                setIsEditDialogOpen(true);
+                            }}
+                        />
                     </CardContent>
                 </Card>
 
@@ -175,7 +184,17 @@ const MeetingHub = () => {
                     </Card>
                 </div>
             </div>
-        </div>
+
+
+            <EditMeetingDialog
+                meeting={editingMeeting}
+                open={isEditDialogOpen}
+                onClose={() => setIsEditDialogOpen(false)}
+                onSuccess={() => {
+                    if (userId) fetchMeetings(userId);
+                }}
+            />
+        </div >
     );
 };
 

@@ -5,20 +5,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MeetingService } from "@/services/MeetingService";
-import { MeetingInsert } from "@/types/meeting";
+import { Meeting } from "@/types/meeting";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Job } from "@/types/job";
 import { Contact } from "@/types/contact";
+import { format } from "date-fns";
 
-interface AddMeetingDialogProps {
-    userId: string;
-    isOpen: boolean;
+interface EditMeetingDialogProps {
+    meeting: Meeting | null;
+    open: boolean;
     onClose: () => void;
     onSuccess: () => void;
 }
 
-const AddMeetingDialog = ({ userId, isOpen, onClose, onSuccess }: AddMeetingDialogProps) => {
+export function EditMeetingDialog({ meeting, open, onClose, onSuccess }: EditMeetingDialogProps) {
     const [loading, setLoading] = useState(false);
     const [jobs, setJobs] = useState<Job[]>([]);
     const [contacts, setContacts] = useState<Contact[]>([]);
@@ -36,29 +37,47 @@ const AddMeetingDialog = ({ userId, isOpen, onClose, onSuccess }: AddMeetingDial
     });
 
     useEffect(() => {
-        if (isOpen) {
-            fetchJobs();
-            fetchContacts();
-        }
-    }, [isOpen]);
+        if (meeting && open) {
+            // Format date for datetime-local input (YYYY-MM-DDThh:mm)
+            const date = new Date(meeting.scheduled_at);
+            const formattedDate = format(date, "yyyy-MM-dd'T'HH:mm");
 
-    const fetchJobs = async () => {
+            setFormData({
+                title: meeting.title,
+                scheduledAt: formattedDate,
+                durationMinutes: meeting.duration_minutes.toString(),
+                jobId: meeting.job_id || "",
+                contactId: meeting.contact_id || "",
+                locationPlatform: meeting.location_platform || "Zoom",
+                meetingLink: meeting.meeting_link || "",
+                description: meeting.description || ""
+            });
+
+            if (meeting.user_id) {
+                fetchJobs(meeting.user_id);
+                fetchContacts(meeting.user_id);
+            }
+        }
+    }, [meeting, open]);
+
+    const fetchJobs = async (userId: string) => {
         const { data } = await supabase.from("jobs").select("*").eq("user_id", userId);
         if (data) setJobs(data as any);
     };
 
-    const fetchContacts = async () => {
+    const fetchContacts = async (userId: string) => {
         const { data } = await supabase.from("contacts").select("*").eq("user_id", userId);
         if (data) setContacts(data as any);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!meeting) return;
+
         setLoading(true);
 
         try {
-            const meeting: MeetingInsert = {
-                user_id: userId,
+            await MeetingService.updateMeeting(meeting.id, {
                 title: formData.title,
                 scheduled_at: new Date(formData.scheduledAt).toISOString(),
                 duration_minutes: parseInt(formData.durationMinutes),
@@ -67,32 +86,31 @@ const AddMeetingDialog = ({ userId, isOpen, onClose, onSuccess }: AddMeetingDial
                 location_platform: formData.locationPlatform,
                 meeting_link: formData.meetingLink,
                 description: formData.description
-            };
+            });
 
-            await MeetingService.createMeeting(meeting);
-            toast({ title: "Meeting scheduled", description: "Your interview has been added to the hub." });
+            toast({ title: "Meeting updated", description: "Your interview details have been saved." });
             onSuccess();
             onClose();
         } catch (error) {
-            console.error("Error creating meeting:", error);
-            toast({ title: "Error", description: "Failed to schedule meeting.", variant: "destructive" });
+            console.error("Error updating meeting:", error);
+            toast({ title: "Error", description: "Failed to update meeting.", variant: "destructive" });
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
+        <Dialog open={open} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                    <DialogTitle>Schedule New Meeting</DialogTitle>
-                    <DialogDescription>Add a new interview or follow-up call to your schedule.</DialogDescription>
+                    <DialogTitle>Edit Meeting</DialogTitle>
+                    <DialogDescription>Update your interview details.</DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4 py-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="title">Title</Label>
+                        <Label htmlFor="edit-title">Title</Label>
                         <Input
-                            id="title"
+                            id="edit-title"
                             placeholder="e.g. Technical Interview at Google"
                             required
                             value={formData.title}
@@ -102,9 +120,9 @@ const AddMeetingDialog = ({ userId, isOpen, onClose, onSuccess }: AddMeetingDial
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="date">Date & Time</Label>
+                            <Label htmlFor="edit-date">Date & Time</Label>
                             <Input
-                                id="date"
+                                id="edit-date"
                                 type="datetime-local"
                                 required
                                 value={formData.scheduledAt}
@@ -112,9 +130,9 @@ const AddMeetingDialog = ({ userId, isOpen, onClose, onSuccess }: AddMeetingDial
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="duration">Duration (mins)</Label>
+                            <Label htmlFor="edit-duration">Duration (mins)</Label>
                             <Input
-                                id="duration"
+                                id="edit-duration"
                                 type="number"
                                 required
                                 value={formData.durationMinutes}
@@ -159,9 +177,9 @@ const AddMeetingDialog = ({ userId, isOpen, onClose, onSuccess }: AddMeetingDial
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="link">Meeting Link</Label>
+                        <Label htmlFor="edit-link">Meeting Link</Label>
                         <Input
-                            id="link"
+                            id="edit-link"
                             placeholder="https://zoom.us/j/..."
                             value={formData.meetingLink}
                             onChange={(e) => {
@@ -183,13 +201,11 @@ const AddMeetingDialog = ({ userId, isOpen, onClose, onSuccess }: AddMeetingDial
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
                         <Button type="submit" disabled={loading}>
-                            {loading ? "Scheduling..." : "Schedule Meeting"}
+                            {loading ? "Saving..." : "Save Changes"}
                         </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
         </Dialog>
     );
-};
-
-export default AddMeetingDialog;
+}
