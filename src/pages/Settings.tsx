@@ -21,45 +21,38 @@ export default function Settings() {
     weeklyDigest: true
   });
 
-  const [provider, setProvider] = useState<AIProviderId>("gemini");
+  const [provider, setProvider] = useState<AIProviderId>(() =>
+    (localStorage.getItem("AI_PROVIDER") as AIProviderId) || "gemini"
+  );
 
   // Provider-specific config states
-  const [geminiConfig, setGeminiConfig] = useState({ key: "", model: "gemini-2.5-flash" });
-  const [openaiConfig, setOpenaiConfig] = useState({ key: "", model: "gpt-4o" });
-  const [deepseekConfig, setDeepseekConfig] = useState({ key: "", model: "deepseek-chat" });
-  const [huggingfaceConfig, setHuggingfaceConfig] = useState({ key: "", model: "meta-llama/Meta-Llama-3-8B-Instruct" });
-  const [openrouterConfig, setOpenrouterConfig] = useState({ key: "", model: "openai/gpt-4o" });
+  const [geminiConfig, setGeminiConfig] = useState(() => ({
+    key: localStorage.getItem("GEMINI_API_KEY") || "",
+    model: localStorage.getItem("GEMINI_MODEL_NAME") || "gemini-2.5-flash"
+  }));
+
+  const [openaiConfig, setOpenaiConfig] = useState(() => ({
+    key: localStorage.getItem("OPENAI_API_KEY") || "",
+    model: localStorage.getItem("OPENAI_MODEL_NAME") || "gpt-4o"
+  }));
+
+  const [deepseekConfig, setDeepseekConfig] = useState(() => ({
+    key: localStorage.getItem("DEEPSEEK_API_KEY") || "",
+    model: localStorage.getItem("DEEPSEEK_MODEL_NAME") || "deepseek-chat"
+  }));
+
+  const [huggingfaceConfig, setHuggingfaceConfig] = useState(() => ({
+    key: localStorage.getItem("HUGGINGFACE_API_KEY") || "",
+    model: localStorage.getItem("HUGGINGFACE_MODEL_NAME") || "meta-llama/Meta-Llama-3-8B-Instruct"
+  }));
+
+  const [openrouterConfig, setOpenrouterConfig] = useState(() => ({
+    key: localStorage.getItem("OPENROUTER_API_KEY") || "",
+    model: localStorage.getItem("OPENROUTER_MODEL_NAME") || "openai/gpt-4o"
+  }));
 
   const [testingConnection, setTestingConnection] = useState(false);
   const [testStatus, setTestStatus] = useState<{ success: boolean; message: string } | null>(null);
-
-  useEffect(() => {
-    // Load general settings
-    const storedProvider = localStorage.getItem("AI_PROVIDER") as AIProviderId;
-    if (storedProvider) setProvider(storedProvider);
-
-    // Load provider configs
-    setGeminiConfig({
-      key: localStorage.getItem("GEMINI_API_KEY") || "",
-      model: localStorage.getItem("GEMINI_MODEL_NAME") || "gemini-2.5-flash"
-    });
-    setOpenaiConfig({
-      key: localStorage.getItem("OPENAI_API_KEY") || "",
-      model: localStorage.getItem("OPENAI_MODEL_NAME") || "gpt-4o"
-    });
-    setDeepseekConfig({
-      key: localStorage.getItem("DEEPSEEK_API_KEY") || "",
-      model: localStorage.getItem("DEEPSEEK_MODEL_NAME") || "deepseek-chat"
-    });
-    setHuggingfaceConfig({
-      key: localStorage.getItem("HUGGINGFACE_API_KEY") || "",
-      model: localStorage.getItem("HUGGINGFACE_MODEL_NAME") || "meta-llama/Meta-Llama-3-8B-Instruct"
-    });
-    setOpenrouterConfig({
-      key: localStorage.getItem("OPENROUTER_API_KEY") || "",
-      model: localStorage.getItem("OPENROUTER_MODEL_NAME") || "openai/gpt-4o"
-    });
-  }, []);
 
   const handleSaveSettings = () => {
     localStorage.setItem("AI_PROVIDER", provider);
