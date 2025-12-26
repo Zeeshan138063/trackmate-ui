@@ -4,7 +4,7 @@ import { MasterProfile } from '@/types/resume';
 
 export const ResumeAIHelper = {
 
-    tailorResume: async (jobDescription: string, masterProfile: MasterProfile): Promise<MasterProfile> => {
+    tailorResume: async (jobDescription: string, masterProfile: MasterProfile, instructions?: string): Promise<MasterProfile> => {
         const providerId = (localStorage.getItem('AI_PROVIDER') as AIProviderId) || 'gemini';
         const model = getProvider(providerId);
 
@@ -33,6 +33,8 @@ export const ResumeAIHelper = {
       
       [MASTER PROFILE JSON]
       ${profileJson}
+
+      ${instructions ? `[USER INSTRUCTIONS - CRITICAL]\n${instructions}\n` : ''}
       
       INSTRUCTIONS:
       -   **Summary**: Rewrite it to pitch the candidate for THIS specific role.

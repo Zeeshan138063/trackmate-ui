@@ -87,6 +87,22 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
   const [tailoredResume, setTailoredResume] = useState<MasterProfile | null>(null);
   const [isTailoring, setIsTailoring] = useState(false);
   const [isEditingResume, setIsEditingResume] = useState(false);
+  const [tailoringInstructions, setTailoringInstructions] = useState("");
+
+  // Update instructions when match result is found
+  useEffect(() => {
+    if (matchResult) {
+      const missingKeywords = matchResult.missingKeywords.join(", ");
+      const newInstructions = `
+Focus on improving the Match Score. 
+MISSING KEYWORDS TO INCLUDE: ${missingKeywords}
+
+FEEDBACK TO ADDRESS:
+${matchResult.explanation}
+      `.trim();
+      setTailoringInstructions(newInstructions);
+    }
+  }, [matchResult]);
 
   // Contacts state
   const {
@@ -144,9 +160,7 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
       setMatchResult(null);
       setCoverLetter("");
       setTailoredResume(null);
-
-      setMatchResult(null);
-      setCoverLetter("");
+      setTailoringInstructions("");
 
       const loadAttachedResume = async () => {
         // 1. Check local storage draft first
@@ -428,7 +442,7 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
 
     setIsTailoring(true);
     try {
-      const tailored = await ResumeAI.tailorResume(job.description || "", masterProfile);
+      const tailored = await ResumeAI.tailorResume(job.description || "", masterProfile, tailoringInstructions);
       setTailoredResume(tailored);
       toast.success("Resume tailored successfully!");
     } catch (error) {
@@ -1101,39 +1115,78 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
                             The AI will select relevant projects and rewrite your experience to match the job description.
                           </p>
                         </div>
-                        <Button onClick={handleTailorResume} disabled={isTailoring}>
-                          {isTailoring ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Tailoring Resume...
-                            </>
-                          ) : "Generate Tailored Resume"}
-                        </Button>
+                        <div className="space-y-4">
+                          <div className="space-y-2 text-left">
+                            <Label htmlFor="instructions" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                              Tailoring Instructions (Optional)
+                            </Label>
+                            <Textarea
+                              id="instructions"
+                              value={tailoringInstructions}
+                              onChange={(e) => setTailoringInstructions(e.target.value)}
+                              placeholder="Add specific instructions, focus areas, or missing keywords..."
+                              className="text-sm min-h-[100px]"
+                            />
+                            <p className="text-[10px] text-muted-foreground">
+                              {matchResult ? "💡 Pre-filled with insights from Match Analysis." : "💡 Tip: Run 'Match Analysis' first to get auto-generated suggestions."}
+                            </p>
+                          </div>
+
+                          <Button onClick={handleTailorResume} disabled={isTailoring} className="w-full">
+                            {isTailoring ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Tailoring Resume...
+                              </>
+                            ) : "Generate Tailored Resume"}
+                          </Button>
+                        </div>
                       </div>
                     ) : (
-                      <div className="flex justify-between items-center bg-muted/30 p-4 rounded-lg border">
-                        <div>
-                          <h3 className="font-semibold">Tailored Resume Ready</h3>
-                          <p className="text-sm text-muted-foreground"> optimized for {formData.company}</p>
+                      <div className="flex flex-col gap-4 bg-muted/30 p-4 rounded-lg border">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h3 className="font-semibold">Tailored Resume Ready</h3>
+                            <p className="text-sm text-muted-foreground"> optimized for {formData.company}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            {!isEditingResume ? (
+                              <Button variant="outline" onClick={() => setIsEditingResume(true)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                              </Button>
+                            ) : (
+                              <Button variant="outline" onClick={() => setIsEditingResume(false)}>
+                                Cancel Edit
+                              </Button>
+                            )}
+                            <Button onClick={handlePrintResume} disabled={isEditingResume}>
+                              <Printer className="mr-2 h-4 w-4" />
+                              Download PDF
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex gap-2">
-                          {!isEditingResume ? (
-                            <Button variant="outline" onClick={() => setIsEditingResume(true)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
+
+                        {/* Regeneration Area */}
+                        <div className="pt-2 border-t flex flex-col gap-2">
+                          <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-2 rounded" onClick={() => {
+                            const el = document.getElementById('regen-instructions');
+                            if (el) el.classList.toggle('hidden');
+                          }}>
+                            <span className="text-xs font-semibold text-muted-foreground">REGENERATION SETTINGS ▼</span>
+                          </div>
+                          <div id="regen-instructions" className="hidden space-y-2">
+                            <Textarea
+                              value={tailoringInstructions}
+                              onChange={(e) => setTailoringInstructions(e.target.value)}
+                              placeholder="Update instructions before regenerating..."
+                              className="text-sm min-h-[80px]"
+                            />
+                            <Button variant="outline" onClick={handleTailorResume} disabled={isTailoring} className="w-full">
+                              {isTailoring ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                              Regenerate with New Instructions
                             </Button>
-                          ) : (
-                            <Button variant="outline" onClick={() => setIsEditingResume(false)}>
-                              Cancel Edit
-                            </Button>
-                          )}
-                          <Button variant="outline" onClick={() => setTailoredResume(null)}>
-                            Regenerate
-                          </Button>
-                          <Button onClick={handlePrintResume} disabled={isEditingResume}>
-                            <Printer className="mr-2 h-4 w-4" />
-                            Download PDF
-                          </Button>
+                          </div>
                         </div>
                       </div>
                     )}
