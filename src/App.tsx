@@ -25,6 +25,8 @@ import NotFound from "./pages/NotFound";
 import PublicJobDiscovery from "./pages/PublicJobDiscovery";
 import JobDetails from "./pages/JobDetails";
 
+import MeetingHub from "./pages/MeetingHub";
+
 const queryClient = new QueryClient();
 
 import { ThemeProvider } from "@/components/theme-provider";
@@ -49,6 +51,13 @@ const App = () => (
               <ProtectedRoute>
                 <Layout>
                   <Trackers />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/meeting-hub" element={
+              <ProtectedRoute>
+                <Layout>
+                  <MeetingHub />
                 </Layout>
               </ProtectedRoute>
             } />

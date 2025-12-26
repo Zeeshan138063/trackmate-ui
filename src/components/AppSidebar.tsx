@@ -14,7 +14,8 @@ import {
   Users,
   TrendingUp,
   Building,
-  Bot
+  Bot,
+  Calendar
 } from "lucide-react";
 
 import {
@@ -22,19 +23,19 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
-  SidebarTrigger,
   SidebarFooter,
+  SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/mode-toggle";
 
 const navigationItems = [
   { title: "Home", url: "/", icon: Home },
+  { title: "Meeting Hub", url: "/meeting-hub", icon: Calendar },
   { title: "Resume Builder", url: "/resume", icon: FileText },
   { title: "Trackers", url: "/trackers", icon: Target },
   { title: "Interview Practice", url: "/interview", icon: MessageSquare },
