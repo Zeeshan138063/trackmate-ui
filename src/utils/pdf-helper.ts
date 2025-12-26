@@ -1,11 +1,9 @@
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Set up the worker source. 
-// In a Vite environment, we can point to the unpkg CDN for the worker to avoid complex build config.
-// Make sure the version matches the installed package version.
-// For simplicity in this setup, we'll try to use the one from node_modules if possible, 
-// but often the CDN approach is most robust for instant usage without config changes.
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+// Use Vite's ?url import to get the correct path to the worker file from node_modules
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 export const extractTextFromPDF = async (file: File): Promise<string> => {
     try {
