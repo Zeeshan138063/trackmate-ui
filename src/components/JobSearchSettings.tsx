@@ -57,6 +57,15 @@ export function JobSearchSettings({ profile, onSearch, onConfigChange }: JobSear
         }
     }, [query]);
 
+    // Custom Time Calculation
+    const [customHours, setCustomHours] = useState(1);
+    const [customMinutes, setCustomMinutes] = useState(0);
+
+    useEffect(() => {
+        const total = (Number(customHours) * 3600) + (Number(customMinutes) * 60);
+        setCustomSeconds(total > 0 ? total : 3600);
+    }, [customHours, customMinutes]);
+
     // Sync remote switch with workplace type
     useEffect(() => {
         if (remote && !workplace.includes("2")) {
@@ -258,8 +267,36 @@ export function JobSearchSettings({ profile, onSearch, onConfigChange }: JobSear
                                 <SelectItem value="3days">Past 3 Days</SelectItem>
                                 <SelectItem value="week">Past Week</SelectItem>
                                 <SelectItem value="month">Past Month</SelectItem>
+                                <SelectItem value="custom">Custom Time</SelectItem>
                             </SelectContent>
                         </Select>
+
+                        {/* Custom Time Inputs */}
+                        {datePosted === 'custom' && (
+                            <div className="flex items-center gap-2 mt-2 animate-in slide-in-from-top-1">
+                                <div className="space-y-0.5 flex-1">
+                                    <Label className="text-[10px] text-slate-500">Hours</Label>
+                                    <Input
+                                        type="number"
+                                        min="0"
+                                        value={customHours}
+                                        onChange={e => setCustomHours(parseInt(e.target.value) || 0)}
+                                        className="h-8 text-xs bg-white dark:bg-slate-900"
+                                    />
+                                </div>
+                                <div className="space-y-0.5 flex-1">
+                                    <Label className="text-[10px] text-slate-500">Minutes</Label>
+                                    <Input
+                                        type="number"
+                                        min="0"
+                                        max="59"
+                                        value={customMinutes}
+                                        onChange={e => setCustomMinutes(parseInt(e.target.value) || 0)}
+                                        className="h-8 text-xs bg-white dark:bg-slate-900"
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
