@@ -88,6 +88,22 @@ export default function Trackers() {
     if (!aValue) return 1;
     if (!bValue) return -1;
 
+    // Status sorting with custom order
+    if (key === 'status') {
+      const statusOrder: Record<string, number> = {
+        "Bookmarked": 0,
+        "Applying": 1,
+        "Applied": 2,
+        "Interviewing": 3,
+        "Negotiating": 4,
+        "Accepted": 5,
+        "Rejected": 6
+      };
+      const orderA = statusOrder[a.status] ?? 999;
+      const orderB = statusOrder[b.status] ?? 999;
+      return (orderA - orderB) * modifier;
+    }
+
     // Date sorting
     if (['dateSaved', 'datePosted', 'deadline', 'dateApplied', 'followUp'].includes(key)) {
       const dateA = new Date(String(aValue)).getTime();
