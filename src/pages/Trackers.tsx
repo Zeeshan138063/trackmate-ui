@@ -24,7 +24,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { StatusCard } from "@/components/StatusCard";
-import { JobTable } from "@/components/JobTable";
+import { JobTable, SortConfig } from "@/components/JobTable";
 import { AddJobDialog } from "@/components/AddJobDialog";
 import { EditJobDialog } from "@/components/EditJobDialog";
 import { ColumnsDropdown, ColumnOption } from "@/components/ColumnsDropdown";
@@ -62,6 +62,7 @@ export default function Trackers() {
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
   const [jobToDelete, setJobToDelete] = useState<string | "bulk" | null>(null);
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
 
   const filteredJobs = jobs.filter(job => {
     if (!searchQuery) return true;
@@ -72,6 +73,48 @@ export default function Trackers() {
       (job.location && job.location.toLowerCase().includes(query))
     );
   });
+
+  const sortedJobs = [...filteredJobs].sort((a, b) => {
+    if (!sortConfig) return 0;
+
+    const { key, direction } = sortConfig;
+    const modifier = direction === 'asc' ? 1 : -1;
+
+    // Handle null/undefined values
+    const aValue = a[key as keyof Job];
+    const bValue = b[key as keyof Job];
+
+    if (!aValue && !bValue) return 0;
+    if (!aValue) return 1;
+    if (!bValue) return -1;
+
+    // Date sorting
+    if (['dateSaved', 'datePosted', 'deadline', 'dateApplied', 'followUp'].includes(key)) {
+      const dateA = new Date(String(aValue)).getTime();
+      const dateB = new Date(String(bValue)).getTime();
+      return (dateA - dateB) * modifier;
+    }
+
+    // Default string/number sorting
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return aValue.localeCompare(bValue) * modifier;
+    }
+
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return (aValue - bValue) * modifier;
+    }
+
+    return 0;
+  });
+
+  const handleSort = (key: string) => {
+    setSortConfig(current => {
+      if (current?.key === key) {
+        return { key, direction: current.direction === 'asc' ? 'desc' : 'asc' };
+      }
+      return { key, direction: 'asc' };
+    });
+  };
 
   const handleImport = async () => {
     if (!importUrl) return;
@@ -598,7 +641,7 @@ export default function Trackers() {
 
         {/* Job Table */}
         <JobTable
-          jobs={filteredJobs}
+          jobs={sortedJobs}
           selectedJobs={selectedJobs}
           onSelectJob={handleSelectJob}
           onSelectAll={handleSelectAll}
@@ -606,6 +649,8 @@ export default function Trackers() {
           onDeleteJob={handleDeleteClick}
           onEditJob={handleEditJob}
           visibleColumns={visibleColumns}
+          sortConfig={sortConfig}
+          onSort={handleSort}
         />
 
         {/* Edit Job Dialog */}

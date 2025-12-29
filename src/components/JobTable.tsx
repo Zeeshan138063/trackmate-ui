@@ -10,9 +10,15 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, StarHalf, Trash2, Edit } from "lucide-react";
+import { Star, StarHalf, Trash2, Edit, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { Job } from "@/types/job";
 import { ColumnOption } from "@/components/ColumnsDropdown";
+
+export type SortDirection = 'asc' | 'desc';
+export interface SortConfig {
+  key: string;
+  direction: SortDirection;
+}
 
 interface JobTableProps {
   jobs: Job[];
@@ -23,6 +29,8 @@ interface JobTableProps {
   onDeleteJob?: (jobId: string) => void;
   onEditJob?: (job: Job) => void;
   visibleColumns: ColumnOption[];
+  sortConfig?: SortConfig | null;
+  onSort?: (key: string) => void;
 }
 
 export function JobTable({
@@ -33,7 +41,9 @@ export function JobTable({
   onUpdateJob,
   onDeleteJob,
   onEditJob,
-  visibleColumns
+  visibleColumns,
+  sortConfig,
+  onSort
 }: JobTableProps) {
   const isAllSelected = jobs.length > 0 && selectedJobs.length === jobs.length;
   const isIndeterminate = selectedJobs.length > 0 && selectedJobs.length < jobs.length;
@@ -105,6 +115,31 @@ export function JobTable({
     return column ? column.checked : true;
   };
 
+  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+    if (!sortConfig || sortConfig.key !== columnKey) {
+      return <ArrowUpDown className="h-3 w-3 ml-1 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity" />;
+    }
+    return sortConfig.direction === 'asc'
+      ? <ArrowUp className="h-3 w-3 ml-1 text-primary" />
+      : <ArrowDown className="h-3 w-3 ml-1 text-primary" />;
+  };
+
+  const SortableHead = ({ id, label, className }: { id: string, label: string, className?: string }) => {
+    if (!onSort) return <TableHead className={className}>{label}</TableHead>;
+
+    return (
+      <TableHead
+        className={`${className} cursor-pointer hover:bg-muted/50 transition-colors group select-none`}
+        onClick={() => onSort(id)}
+      >
+        <div className="flex items-center">
+          {label}
+          <SortIcon columnKey={id} />
+        </div>
+      </TableHead>
+    );
+  };
+
   return (
     <div className="rounded-lg bg-card border h-[600px] overflow-auto relative">
       <Table>
@@ -117,19 +152,19 @@ export function JobTable({
                 className={isIndeterminate ? "data-[state=indeterminate]:bg-primary" : ""}
               />
             </TableHead>
-            <TableHead className="bg-card">Job Position</TableHead>
-            <TableHead className="bg-card">Company</TableHead>
-            {isColumnVisible('minSalary') && <TableHead className="bg-card">Min. Salary</TableHead>}
-            {isColumnVisible('maxSalary') && <TableHead className="bg-card">Max. Salary</TableHead>}
-            {isColumnVisible('location') && <TableHead className="bg-card">Location</TableHead>}
-            {isColumnVisible('status') && <TableHead className="bg-card">Status</TableHead>}
-            {isColumnVisible('datePosted') && <TableHead className="bg-card">Date Posted</TableHead>}
-            {isColumnVisible('dateSaved') && <TableHead className="bg-card">Date Saved</TableHead>}
-            {isColumnVisible('deadline') && <TableHead className="bg-card">Deadline</TableHead>}
-            {isColumnVisible('dateApplied') && <TableHead className="bg-card">Date Applied</TableHead>}
-            {isColumnVisible('followUp') && <TableHead className="bg-card">Follow up</TableHead>}
-            {isColumnVisible('excitement') && <TableHead className="bg-card">Excitement</TableHead>}
-            {isColumnVisible('source') && <TableHead className="bg-card">Source</TableHead>}
+            <SortableHead id="position" label="Job Position" className="bg-card" />
+            <SortableHead id="company" label="Company" className="bg-card" />
+            {isColumnVisible('minSalary') && <SortableHead id="minSalary" label="Min. Salary" className="bg-card" />}
+            {isColumnVisible('maxSalary') && <SortableHead id="maxSalary" label="Max. Salary" className="bg-card" />}
+            {isColumnVisible('location') && <SortableHead id="location" label="Location" className="bg-card" />}
+            {isColumnVisible('status') && <SortableHead id="status" label="Status" className="bg-card" />}
+            {isColumnVisible('datePosted') && <SortableHead id="datePosted" label="Date Posted" className="bg-card" />}
+            {isColumnVisible('dateSaved') && <SortableHead id="dateSaved" label="Date Saved" className="bg-card" />}
+            {isColumnVisible('deadline') && <SortableHead id="deadline" label="Deadline" className="bg-card" />}
+            {isColumnVisible('dateApplied') && <SortableHead id="dateApplied" label="Date Applied" className="bg-card" />}
+            {isColumnVisible('followUp') && <SortableHead id="followUp" label="Follow up" className="bg-card" />}
+            {isColumnVisible('excitement') && <SortableHead id="excitement" label="Excitement" className="bg-card" />}
+            {isColumnVisible('source') && <SortableHead id="source" label="Source" className="bg-card" />}
             {(onEditJob || onDeleteJob) && <TableHead className="w-24 bg-card sticky right-0 z-10 shadow-[-10px_0_10px_-5px_rgba(0,0,0,0.05)]">Actions</TableHead>}
           </TableRow>
         </TableHeader>
