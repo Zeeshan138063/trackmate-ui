@@ -93,7 +93,7 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
               AutoJob Pilot
             </h1>
             <p className="text-slate-300 text-lg font-light">
-              Find Your Path
+              Stop Searching. Start Interviewing.
             </p>
           </div>
         </div>
