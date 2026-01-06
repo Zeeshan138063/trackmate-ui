@@ -6,6 +6,7 @@ import { useResume } from "@/hooks/useResume";
 import { JobSearchSettings } from "@/components/JobSearchSettings";
 import { generateSearchUrl, SearchConfig } from "@/utils/search-intelligence";
 import { ExternalLink, Search, Info, Briefcase, PlusCircle, ArrowRight, Loader2, RefreshCw, Zap, CheckCircle2 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -472,7 +473,7 @@ export default function JobSearch() {
       <Dialog open={!!selectedJob} onOpenChange={() => setSelectedJob(null)}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl flex items-center justify-between">
+            <DialogTitle className="text-xl flex items-center justify-between pr-8">
               <span>{selectedJob?.title}</span>
               {selectedJob?.matchScore && (
                 <Badge variant="secondary" className="ml-2">
@@ -483,6 +484,11 @@ export default function JobSearch() {
             <DialogDescription className="text-base font-medium text-slate-700 dark:text-slate-300">
               {selectedJob?.company} • {selectedJob?.location}
             </DialogDescription>
+            {selectedJob?.foundDate && (
+              <p className="text-sm text-slate-500 mt-1">
+                Posted {formatDistanceToNow(new Date(selectedJob.foundDate), { addSuffix: true })}
+              </p>
+            )}
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -490,10 +496,6 @@ export default function JobSearch() {
               {selectedJob?.skills.map(s => (
                 <Badge key={s} variant="outline" className="bg-slate-50 dark:bg-slate-900">{s}</Badge>
               ))}
-            </div>
-
-            <div className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed whitespace-pre-line border-t dark:border-slate-800 pt-4">
-              {selectedJob?.description}
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t mt-4">
@@ -511,6 +513,6 @@ export default function JobSearch() {
           </div>
         </DialogContent>
       </Dialog>
-    </div >
+    </div>
   );
 }

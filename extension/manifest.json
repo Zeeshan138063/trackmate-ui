@@ -42,10 +42,7 @@
       "matches": [
         "http://localhost:*/*",
         "http://127.0.0.1:*/*",
-        "http://*:8080/*",
-        "http://*:8081/*",
-        "http://*:5173/*",
-        "https://job.zeeshare.com/*"
+        "https://*/*"
       ],
       "js": [
         "trackmate-bridge.js"

@@ -491,8 +491,32 @@ async function saveContactDirectly(contactData) {
   }
 }
 async function getAuthToken() {
-  // Find tabs matching TrackMate (localhost)
-  const tabs = await chrome.tabs.query({ url: ['http://localhost:8080/*', 'http://localhost:5173/*', 'http://127.0.0.1:8080/*'] });
+  const trackMateUrlInput = document.getElementById('trackMateUrl');
+  let targetUrlPattern = 'http://localhost:8080/*'; // Default
+
+  if (trackMateUrlInput && trackMateUrlInput.value) {
+    try {
+      const url = new URL(trackMateUrlInput.value);
+      // Construct a pattern that matches any path on this origin
+      targetUrlPattern = `${url.origin}/*`;
+    } catch (e) {
+      console.error('Invalid TrackMate URL:', e);
+    }
+  }
+
+  // Also include common localhost ports as fallback if the user hasn't configured it perfectly
+  const patterns = [
+    targetUrlPattern,
+    'http://localhost:8080/*',
+    'http://localhost:5173/*',
+    'http://127.0.0.1:8080/*'
+  ];
+
+  // Remove duplicates
+  const uniquePatterns = [...new Set(patterns)];
+
+  console.log('Looking for auth token in tabs matching:', uniquePatterns);
+  const tabs = await chrome.tabs.query({ url: uniquePatterns });
 
   for (const tab of tabs) {
     try {

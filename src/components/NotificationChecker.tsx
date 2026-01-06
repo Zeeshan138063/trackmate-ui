@@ -8,7 +8,7 @@ export function NotificationChecker() {
     const { jobs } = useJobs();
     const { user } = useAuth();
     const { toast } = useToast();
-
+     
     useEffect(() => {
         if (!user || jobs.length === 0) return;
 
