@@ -56,13 +56,19 @@ export const JobService = {
     /**
      * Real Job Discovery from Supabase (LinkedIn Scraper)
      */
-    getDiscoveredJobs: async (keyword?: string, page: number = 0, pageSize: number = 20): Promise<any[]> => {
+    getDiscoveredJobs: async (keyword?: string, page: number = 0, pageSize: number = 20, config?: any): Promise<any[]> => {
         try {
             if (keyword) {
                 // RAG: Use Semantic Search Edge Function
                 const offset = page * pageSize;
                 const { data, error } = await supabase.functions.invoke('search-jobs', {
-                    body: { query: keyword, offset, limit: pageSize }
+                    body: {
+                        query: keyword,
+                        offset,
+                        limit: pageSize,
+                        datePosted: config?.datePosted,
+                        remote: config?.remote
+                    }
                 });
 
                 if (error) throw error;
@@ -100,6 +106,25 @@ export const JobService = {
         } catch (e) {
             console.error("Failed to fetch job details", e);
             return null;
+        }
+    },
+
+    /**
+     * Trigger Perplexity AI Search (Requires Auth)
+     */
+    triggerPerplexitySearch: async (role: string): Promise<any> => {
+        try {
+            console.log(`Triggering Perplexity search for: ${role}`);
+            const { data, error } = await supabase.functions.invoke('perplexity-search', {
+                body: { role }
+            });
+
+            if (error) throw error;
+            console.log("Perplexity search initiated:", data);
+            return data;
+        } catch (e) {
+            console.error("Failed to trigger perplexity search", e);
+            throw e;
         }
     }
 };

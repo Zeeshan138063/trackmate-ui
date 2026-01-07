@@ -55,26 +55,47 @@ Deno.serve(async (req) => {
     }
 
     try {
-        const { query, offset = 0, limit = 20 } = await req.json();
+        const { query, offset = 0, limit = 20, datePosted, remote } = await req.json();
 
         if (!query) {
             return new Response(JSON.stringify([]), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
         }
 
         // 1. Generate Embedding for Query via HF API
-        console.log(`Embedding query: ${query}, Offset: ${offset}, Limit: ${limit}`);
+        console.log(`Embedding query: ${query}, Offset: ${offset}, Limit: ${limit}, Date: ${datePosted}, Remote: ${remote}`);
         const queryEmbedding = await generateEmbedding(query);
 
         if (!queryEmbedding) {
             return new Response(JSON.stringify({ error: "Failed to generate embedding" }), { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
         }
 
-        // 2. Call RPC
+        // 2. Prepare Filters
+        let minPostedDate = null;
+        if (datePosted) {
+            const now = new Date();
+            if (datePosted === 'today') {
+                now.setHours(now.getHours() - 24);
+                minPostedDate = now.toISOString();
+            } else if (datePosted === '3days') {
+                now.setDate(now.getDate() - 3);
+                minPostedDate = now.toISOString();
+            } else if (datePosted === 'week') {
+                now.setDate(now.getDate() - 7);
+                minPostedDate = now.toISOString();
+            } else if (datePosted === 'month') {
+                now.setMonth(now.getMonth() - 1);
+                minPostedDate = now.toISOString();
+            }
+        }
+
+        // 3. Call RPC
         const { data: jobs, error } = await supabase.rpc('match_jobs', {
             query_embedding: queryEmbedding,
             match_threshold: 0.60, // 60% similarity
             match_count: limit,
-            offset_val: offset
+            offset_val: offset,
+            min_posted_date: minPostedDate,
+            is_remote: remote
         });
 
         if (error) {

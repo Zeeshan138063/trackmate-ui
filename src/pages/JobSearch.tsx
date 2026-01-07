@@ -5,7 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useResume } from "@/hooks/useResume";
 import { JobSearchSettings } from "@/components/JobSearchSettings";
 import { generateSearchUrl, SearchConfig } from "@/utils/search-intelligence";
-import { ExternalLink, Search, Info, Briefcase, PlusCircle, ArrowRight, Loader2, RefreshCw, Zap, CheckCircle2 } from "lucide-react";
+import { ExternalLink, Search, Info, Briefcase, PlusCircle, ArrowRight, Loader2, RefreshCw, Zap, CheckCircle2, Bot } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
@@ -148,7 +148,7 @@ export default function JobSearch() {
       const keyword = cfg.query || masterProfile.targetTitle || "Software Engineer";
 
       // 2. Get Real Discovered jobs (if any)
-      const realJobsData = await JobService.getDiscoveredJobs(keyword, 0, 20);
+      const realJobsData = await JobService.getDiscoveredJobs(keyword, 0, 20, cfg);
 
       const realJobs: ScannedJob[] = realJobsData.map((j: any) => ({
         id: j.id,
@@ -196,7 +196,7 @@ export default function JobSearch() {
 
     try {
       const keyword = activeConfig.query || masterProfile?.targetTitle || "Software Engineer";
-      const newJobsData = await JobService.getDiscoveredJobs(keyword, nextPage, 20);
+      const newJobsData = await JobService.getDiscoveredJobs(keyword, nextPage, 20, activeConfig);
 
       if (newJobsData.length === 0) {
         setHasMore(false);
@@ -298,15 +298,33 @@ export default function JobSearch() {
     <div className="container max-w-6xl mx-auto py-8 space-y-8 animate-fade-in">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Job Search Intelligence</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Job Feed</h1>
           <p className="text-muted-foreground mt-2">
-            Leveraging your Master Profile to find the perfect roles across the web.
+            Your personal feed of discovered opportunities.
           </p>
         </div>
-        <Button onClick={() => handleRunScan()} disabled={isScanning} variant="outline" className="gap-2 dark:border-slate-800 dark:hover:bg-slate-900">
-          {isScanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          {isScanning ? "Scanning..." : "Re-Scan Feed"}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={async () => {
+              if (!latestConfig.query) {
+                toast({ title: "Define a Role", description: "Please enter a job title to scout for.", variant: "destructive" });
+                return;
+              }
+              toast({ title: "Deploying Scout...", description: `Agent is hunting for "${latestConfig.query}" jobs.` });
+              try {
+                await JobService.triggerPerplexitySearch(latestConfig.query);
+                toast({ title: "Scout Returned", description: "New jobs found. Refreshing feed..." });
+                handleRunScan();
+              } catch (e) {
+                toast({ title: "Scout Failed", description: "Agent encountered an error.", variant: "destructive" });
+              }
+            }}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 shadow-sm"
+          >
+            <Bot className="h-4 w-4" />
+            Scout Web for New Jobs
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

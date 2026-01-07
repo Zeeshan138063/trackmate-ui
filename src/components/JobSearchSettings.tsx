@@ -334,7 +334,7 @@ export function JobSearchSettings({ profile, onSearch, onConfigChange }: JobSear
                 )}
 
                 <Button onClick={handleSearch} className="w-full bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-medium h-11 mt-2 shadow-sm">
-                    Apply Search Intelligence
+                    Update Feed Filters
                 </Button>
             </CardContent>
         </Card>
