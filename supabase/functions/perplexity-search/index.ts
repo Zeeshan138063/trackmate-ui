@@ -71,8 +71,22 @@ Deno.serve(async (req) => {
         // ------------------------------------------------------------------
         // MODE 2: PULL (Trigger Perplexity API Search)
         // ------------------------------------------------------------------
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader) {
+            throw new Error('Missing Authorization header');
+        }
+
+        const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+        if (authError || !user) {
+            console.error("Auth Error:", authError);
+            return new Response(
+                JSON.stringify({ error: 'Unauthorized: You must be logged in to search.' }),
+                { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+        }
+
         const role = body.role || "Python / AI";
-        console.log(`[PULL] Triggering search for: ${role}`);
+        console.log(`[PULL] Triggering search for: ${role} (User: ${user.email})`);
         return await handlePullMode(role);
 
     } catch (error: any) {

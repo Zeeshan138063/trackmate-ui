@@ -48,16 +48,27 @@ export interface CalendarAccount {
     id: string;
     user_id: string;
     provider: 'google' | 'outlook';
-    account_email: string | null;
+    account_email?: string;
     access_token: string;
-    refresh_token: string | null;
+    refresh_token?: string;
     expires_at: string;
     is_primary: boolean;
     sync_enabled: boolean;
-    settings: {
+    settings?: {
         selected_calendars?: string[];
-        [key: string]: any;
     };
     created_at: string;
     updated_at: string;
+}
+
+export interface CalendarAccountInsert {
+    user_id: string;
+    provider: 'google' | 'outlook';
+    account_email?: string;
+    access_token: string;
+    refresh_token?: string;
+    expires_at: string;
+    is_primary?: boolean;
+    sync_enabled?: boolean;
+    settings?: any;
 }

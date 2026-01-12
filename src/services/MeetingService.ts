@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Meeting, MeetingInsert, AvailabilityPreference, CalendarAccount } from "@/types/meeting";
+import { Meeting, MeetingInsert, AvailabilityPreference, CalendarAccount, CalendarAccountInsert } from "@/types/meeting";
 
 export class MeetingService {
     static async getMeetings(userId: string) {
@@ -86,6 +86,29 @@ export class MeetingService {
 
         if (error) throw error;
         return data as CalendarAccount[];
+    }
+
+    static async connectCalendarAccount(account: CalendarAccountInsert) {
+        const { data, error } = await supabase
+            .from("calendar_accounts")
+            .upsert(account, { onConflict: 'user_id, provider, account_email' })
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    }
+
+    static async updateCalendarSettings(accountId: string, settings: any) {
+        const { data, error } = await supabase
+            .from("calendar_accounts")
+            .update({ settings })
+            .eq("id", accountId)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
     }
 
     // Placeholder for sync logic
