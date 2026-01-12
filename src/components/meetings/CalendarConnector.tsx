@@ -52,26 +52,38 @@ const CalendarConnector = ({ userId }: { userId: string }) => {
                 const provider = session.user.app_metadata.provider;
                 
                 if (provider === 'google' || provider === 'azure') { 
-                     // Azure is usually 'azure' or 'workos', need to check Supabase docs. mapping 'azure' to 'outlook' for our generic term
                      const normalizedProvider = provider === 'azure' ? 'outlook' : provider as 'google' | 'outlook';
+                     
+                     console.log("Connect Calendar Debug:", {
+                        provider: normalizedProvider,
+                        access_token_exists: !!session.provider_token,
+                        refresh_token_exists: !!session.provider_refresh_token,
+                        email: session.user?.email
+                     });
+
+                     if (!session.provider_token) {
+                         console.error("Missing Access Token from Provider!");
+                         // Can't connect without token
+                         return;
+                     }
 
                      try {
                         await MeetingService.connectCalendarAccount({
                             user_id: userId,
                             provider: normalizedProvider,
                             access_token: session.provider_token,
-                            refresh_token: session.provider_refresh_token,
+                            refresh_token: session.provider_refresh_token, // Might be undefined if not first consent
                             expires_at: new Date(Date.now() + (session.expires_in || 3600) * 1000).toISOString(),
-                            is_primary: false, // Logic to determine primary?
+                            is_primary: false, 
                             sync_enabled: true,
-                            account_email: session.user.email // This might be the user's main email, not necessarily the calendar email if they are different accounts. Better to get from profile or user object.
+                            account_email: session.user.email 
                         });
                         
                         toast({ title: "Calendar Connected", description: `Successfully connected ${normalizedProvider} calendar.` });
                         loadAccounts();
-                     } catch (e) {
+                     } catch (e: any) {
                          console.error("Error connecting calendar:", e);
-                         toast({ title: "Connection Failed", description: "Could not save calendar connection.", variant: "destructive" });
+                         toast({ title: "Connection Failed", description: e.message || "Unknown error", variant: "destructive" });
                      }
                 }
             }

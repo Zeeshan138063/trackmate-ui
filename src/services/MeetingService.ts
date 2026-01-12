@@ -91,7 +91,7 @@ export class MeetingService {
     static async connectCalendarAccount(account: CalendarAccountInsert) {
         const { data, error } = await supabase
             .from("calendar_accounts")
-            .upsert(account, { onConflict: 'user_id, provider, account_email' })
+            .upsert(account, { onConflict: 'user_id,provider,account_email' })
             .select()
             .single();
 
