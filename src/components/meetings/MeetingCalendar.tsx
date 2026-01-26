@@ -22,6 +22,14 @@ export function MeetingCalendar({ meetings, onSelectMeeting }: MeetingCalendarPr
     const selectedDateMeetings = selectedDate ? getMeetingsForDate(selectedDate) : [];
     const upcomingCount = meetings.filter(m => m.status === 'SCHEDULED' && new Date(m.scheduled_at) > new Date()).length;
 
+    // Filter meetings for the current month
+    const currentMonthMeetings = meetings.filter(m => {
+        const meetingDate = new Date(m.scheduled_at);
+        const today = new Date();
+        return meetingDate.getMonth() === today.getMonth() &&
+            meetingDate.getFullYear() === today.getFullYear();
+    });
+
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
             <div className="space-y-4">
@@ -69,7 +77,7 @@ export function MeetingCalendar({ meetings, onSelectMeeting }: MeetingCalendarPr
                         <span className="font-medium">Quick Summary</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                        You have {meetings.length} total meetings scheduled this month. {upcomingCount} {upcomingCount === 1 ? 'is' : 'are'} upcoming.
+                        You have {currentMonthMeetings.length} total meetings scheduled this month. {upcomingCount} {upcomingCount === 1 ? 'is' : 'are'} upcoming.
                     </p>
                 </div>
             </div>
