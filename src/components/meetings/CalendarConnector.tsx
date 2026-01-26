@@ -47,44 +47,44 @@ const CalendarConnector = ({ userId }: { userId: string }) => {
                 // Determine provider based on user metadata or session
                 // This is tricky because Supabase 'SIGNED_IN' doesn't explicitly guarantee which provider *just* connected if previously logged in.
                 // However, usually we can infer or we just try to save the token for the provider in the session.
-                
+
                 // Inspect user identities to find the most recent one or provider
                 const provider = session.user.app_metadata.provider;
-                
-                if (provider === 'google' || provider === 'azure') { 
-                     const normalizedProvider = provider === 'azure' ? 'outlook' : provider as 'google' | 'outlook';
-                     
-                     console.log("Connect Calendar Debug:", {
+
+                if (provider === 'google' || provider === 'azure') {
+                    const normalizedProvider = provider === 'azure' ? 'outlook' : provider as 'google' | 'outlook';
+
+                    console.log("Connect Calendar Debug:", {
                         provider: normalizedProvider,
                         access_token_exists: !!session.provider_token,
                         refresh_token_exists: !!session.provider_refresh_token,
                         email: session.user?.email
-                     });
+                    });
 
-                     if (!session.provider_token) {
-                         console.error("Missing Access Token from Provider!");
-                         // Can't connect without token
-                         return;
-                     }
+                    if (!session.provider_token) {
+                        console.error("Missing Access Token from Provider!");
+                        // Can't connect without token
+                        return;
+                    }
 
-                     try {
+                    try {
                         await MeetingService.connectCalendarAccount({
                             user_id: userId,
                             provider: normalizedProvider,
                             access_token: session.provider_token,
                             refresh_token: session.provider_refresh_token, // Might be undefined if not first consent
                             expires_at: new Date(Date.now() + (session.expires_in || 3600) * 1000).toISOString(),
-                            is_primary: false, 
+                            is_primary: false,
                             sync_enabled: true,
-                            account_email: session.user.email 
+                            account_email: session.user.email
                         });
-                        
+
                         toast({ title: "Calendar Connected", description: `Successfully connected ${normalizedProvider} calendar.` });
                         loadAccounts();
-                     } catch (e: any) {
-                         console.error("Error connecting calendar:", e);
-                         toast({ title: "Connection Failed", description: e.message || "Unknown error", variant: "destructive" });
-                     }
+                    } catch (e: any) {
+                        console.error("Error connecting calendar:", e);
+                        toast({ title: "Connection Failed", description: e.message || "Unknown error", variant: "destructive" });
+                    }
                 }
             }
         });
@@ -94,58 +94,62 @@ const CalendarConnector = ({ userId }: { userId: string }) => {
         };
     }, [userId]);
 
-    const handleConnect = async (provider: 'google' | 'outlook') => {
-        try {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: provider === 'outlook' ? 'azure' : 'google', // Map 'outlook' to 'azure'
-                options: {
-                    redirectTo: window.location.href,
-                    scopes: provider === 'google' 
-                        ? 'https://www.googleapis.com/auth/calendar.readonly' 
-                        : 'Calendars.Read',
-                    queryParams: {
-                        access_type: 'offline',
-                        prompt: 'consent'
-                    }
-                }
-            });
-            if (error) throw error;
-        } catch (error) {
-            console.error("OAuth error:", error);
-            toast({ title: "Connection Error", description: "Failed to initiate connection.", variant: "destructive" });
-        }
-    };
+    // const handleConnect = async (provider: 'google' | 'outlook') => {
+    //     try {
+    //         const { error } = await supabase.auth.signInWithOAuth({
+    //             provider: provider === 'outlook' ? 'azure' : 'google', // Map 'outlook' to 'azure'
+    //             options: {
+    //                 redirectTo: window.location.href,
+    //                 scopes: provider === 'google' 
+    //                     ? 'https://www.googleapis.com/auth/calendar.readonly' 
+    //                     : 'Calendars.Read',
+    //                 queryParams: {
+    //                     access_type: 'offline',
+    //                     prompt: 'consent'
+    //                 }
+    //             }
+    //         });
+    //         if (error) throw error;
+    //     } catch (error) {
+    //         console.error("OAuth error:", error);
+    //         toast({ title: "Connection Error", description: "Failed to initiate connection.", variant: "destructive" });
+    //     }
+    // };
 
     const fetchSubCalendars = async (accountId: string, provider: 'google' | 'outlook') => {
         // In a real implementation, this calls an Edge Function or uses the stored token.
         // For now, we'll mock it or assume a future implementation.
-        setLoadingCalendars(prev => ({...prev, [accountId]: true}));
-        
+        setLoadingCalendars(prev => ({ ...prev, [accountId]: true }));
+
         try {
-             const { data, error } = await supabase.functions.invoke('manage-calendar', {
+            const { data, error } = await supabase.functions.invoke('manage-calendar', {
                 body: { action: 'list-calendars', accountId }
             });
 
             if (error) throw error;
-            setAvailableCalendars(prev => ({...prev, [accountId]: data.calendars || []}));
+            setAvailableCalendars(prev => ({ ...prev, [accountId]: data.calendars || [] }));
         } catch (e) {
             console.error("Error fetching calendars:", e);
-             // Verify with mock data if function fails (for dev/demo)
-             if (provider === 'google') {
-                 setAvailableCalendars(prev => ({...prev, [accountId]: [
-                     { id: 'primary', summary: 'Primary', primary: true },
-                     { id: 'birthdays', summary: 'Birthdays' },
-                     { id: 'family', summary: 'Family' },
-                     { id: 'tasks', summary: 'Tasks' }
-                 ]}));
-             } else {
-                 setAvailableCalendars(prev => ({...prev, [accountId]: [
-                     { id: 'calendar', summary: 'Calendar', primary: true },
-                     { id: 'tasks', summary: 'Tasks' }
-                 ]}));
-             }
+            // Verify with mock data if function fails (for dev/demo)
+            if (provider === 'google') {
+                setAvailableCalendars(prev => ({
+                    ...prev, [accountId]: [
+                        { id: 'primary', summary: 'Primary', primary: true },
+                        { id: 'birthdays', summary: 'Birthdays' },
+                        { id: 'family', summary: 'Family' },
+                        { id: 'tasks', summary: 'Tasks' }
+                    ]
+                }));
+            } else {
+                setAvailableCalendars(prev => ({
+                    ...prev, [accountId]: [
+                        { id: 'calendar', summary: 'Calendar', primary: true },
+                        { id: 'tasks', summary: 'Tasks' }
+                    ]
+                }));
+            }
         } finally {
-            setLoadingCalendars(prev => ({...prev, [accountId]: false}));
+            setLoadingCalendars(prev => ({ ...prev, [accountId]: false }));
         }
     };
 
@@ -154,7 +158,7 @@ const CalendarConnector = ({ userId }: { userId: string }) => {
         const newSelected = selected.includes(calendarId)
             ? selected.filter((id: string) => id !== calendarId)
             : [...selected, calendarId];
-        
+
         try {
             // Update local state first for responsiveness (optimistic update could be better)
             await MeetingService.updateCalendarSettings(accountId, { ...currentSettings, selected_calendars: newSelected });
@@ -173,7 +177,7 @@ const CalendarConnector = ({ userId }: { userId: string }) => {
                         <p className="text-sm text-muted-foreground">No calendars connected yet.</p>
                     </div>
                 ) : (
-                accounts.map((account) => (
+                    accounts.map((account) => (
                         <Card key={account.id} className="overflow-hidden">
                             <CardContent className="p-4">
                                 <div className="flex items-center justify-between mb-2">
@@ -198,11 +202,11 @@ const CalendarConnector = ({ userId }: { userId: string }) => {
                                         onCheckedChange={() => { }}
                                     />
                                 </div>
-                                
+
                                 <Accordion type="single" collapsible className="w-full">
                                     <AccordionItem value="item-1" className="border-b-0">
-                                        <AccordionTrigger 
-                                            className="text-xs py-1" 
+                                        <AccordionTrigger
+                                            className="text-xs py-1"
                                             onClick={() => {
                                                 if (!availableCalendars[account.id]) {
                                                     fetchSubCalendars(account.id, account.provider);
@@ -218,8 +222,8 @@ const CalendarConnector = ({ userId }: { userId: string }) => {
                                                 <div className="space-y-2 mt-2 pl-2">
                                                     {(availableCalendars[account.id] || []).map(cal => (
                                                         <div key={cal.id} className="flex items-center space-x-2">
-                                                            <Checkbox 
-                                                                id={`${account.id}-${cal.id}`} 
+                                                            <Checkbox
+                                                                id={`${account.id}-${cal.id}`}
                                                                 checked={account.settings?.selected_calendars?.includes(cal.id)}
                                                                 onCheckedChange={() => toggleCalendar(account.id, cal.id, account.settings)}
                                                             />
@@ -242,7 +246,7 @@ const CalendarConnector = ({ userId }: { userId: string }) => {
                 <UIButton
                     variant="outline"
                     className="w-full justify-start gap-3"
-                    onClick={() => handleConnect('google')}
+                    onClick={() => toast({ title: "Coming Soon", description: "Calendar connecting feature coming soon." })}
                 >
                     <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
                     Connect Google Calendar
@@ -250,7 +254,7 @@ const CalendarConnector = ({ userId }: { userId: string }) => {
                 <UIButton
                     variant="outline"
                     className="w-full justify-start gap-3"
-                    onClick={() => handleConnect('outlook')}
+                    onClick={() => toast({ title: "Coming Soon", description: "Calendar connecting feature coming soon." })}
                 >
                     <img src="https://www.microsoft.com/favicon.ico" className="w-4 h-4" alt="Microsoft" />
                     Connect Outlook Calendar
