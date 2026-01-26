@@ -64,6 +64,8 @@ export default function Trackers() {
   const [jobToDelete, setJobToDelete] = useState<string | "bulk" | null>(null);
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
 
+  const [grouping, setGrouping] = useState<string>("none");
+
   const filteredJobs = jobs.filter(job => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
@@ -591,7 +593,7 @@ export default function Trackers() {
           <div className="flex items-center space-x-2 overflow-x-auto pb-2 md:pb-0">
             <div className="flex items-center space-x-2">
               <span className="text-sm whitespace-nowrap">Group by:</span>
-              <Select defaultValue="none">
+              <Select value={grouping} onValueChange={setGrouping}>
                 <SelectTrigger className="w-32 h-9">
                   <SelectValue />
                 </SelectTrigger>
@@ -667,6 +669,7 @@ export default function Trackers() {
           visibleColumns={visibleColumns}
           sortConfig={sortConfig}
           onSort={handleSort}
+          grouping={grouping}
         />
 
         {/* Edit Job Dialog */}
