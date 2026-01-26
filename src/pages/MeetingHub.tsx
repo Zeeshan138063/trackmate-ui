@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Plus, Settings, Share2, Info, Clock } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Plus, Settings, Share2, Calendar as CalendarIcon, Clock } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import CalendarConnector from "@/components/meetings/CalendarConnector";
@@ -13,8 +13,6 @@ import { EditMeetingDialog } from "@/components/meetings/EditMeetingDialog";
 import { MeetingCalendar } from "@/components/meetings/MeetingCalendar";
 import { MeetingService } from "@/services/MeetingService";
 import { Meeting } from "@/types/meeting";
-import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
 
 const MeetingHub = () => {
     const navigate = useNavigate();
@@ -48,17 +46,18 @@ const MeetingHub = () => {
     };
 
     return (
-        <div className="container mx-auto py-6 space-y-6">
-            <div className="flex justify-between items-center">
+        <div className="container mx-auto py-6 space-y-8 max-w-7xl">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Meeting Hub</h1>
-                    <p className="text-muted-foreground">Manage your interview schedule and availability.</p>
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground">Meeting Hub</h1>
+                    <p className="text-muted-foreground mt-1">Manage your interview schedule and availability settings.</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-3">
                     <Dialog>
                         <DialogTrigger asChild>
-                            <Button variant="outline">
-                                <Share2 className="mr-2 h-4 w-4" />
+                            <Button variant="outline" className="gap-2">
+                                <Share2 className="h-4 w-4" />
                                 Share Availability
                             </Button>
                         </DialogTrigger>
@@ -73,118 +72,83 @@ const MeetingHub = () => {
                         </DialogContent>
                     </Dialog>
 
-                    <Button onClick={() => setIsAddDialogOpen(true)}>
-                        <Plus className="mr-2 h-4 w-4" />
+                    <Button onClick={() => setIsAddDialogOpen(true)} className="gap-2 shadow-sm">
+                        <Plus className="h-4 w-4" />
                         New Meeting
                     </Button>
-
-                    {userId && (
-                        <AddMeetingDialog
-                            userId={userId}
-                            isOpen={isAddDialogOpen}
-                            onClose={() => setIsAddDialogOpen(false)}
-                            onSuccess={() => fetchMeetings(userId)}
-                        />
-                    )}
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="md:col-span-2">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Calendar className="h-5 w-5" />
-                            Interview Calendar
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="min-h-[600px]">
-                        <MeetingCalendar
-                            meetings={meetings}
-                            onSelectMeeting={(meeting) => {
-                                setEditingMeeting(meeting);
-                                setIsEditDialogOpen(true);
-                            }}
-                        />
-                    </CardContent>
-                </Card>
+            {/* Main Dashboard Grid */}
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
 
-                <div className="space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Settings className="h-5 w-5 text-primary" />
-                                Calendar Sync
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {userId ? (
-                                <CalendarConnector userId={userId} />
-                            ) : (
-                                <div className="text-center py-4 text-sm text-muted-foreground">
-                                    Please sign in to manage calendars.
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                {/* Left & Center: Calendar & Agenda (Spans 8 or 9 cols) */}
+                <div className="xl:col-span-8 lg:col-span-8 w-full">
+                    <MeetingCalendar
+                        meetings={meetings}
+                        onSelectMeeting={(meeting) => {
+                            setEditingMeeting(meeting);
+                            setIsEditDialogOpen(true);
+                        }}
+                        onNewMeeting={() => setIsAddDialogOpen(true)}
+                    />
+                </div>
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Clock className="h-5 w-5 text-primary" />
-                                Availability Settings
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {userId ? (
-                                <AvailabilitySettings userId={userId} />
-                            ) : (
-                                <div className="text-center py-4 text-sm text-muted-foreground">
-                                    Please sign in.
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                {/* Right Column: Sidebar Utils (Spans 4 or 3 cols) */}
+                <div className="xl:col-span-4 lg:col-span-4 space-y-6">
+                    {/* Availability Widget */}
+                    <div className="space-y-2">
+                        <h3 className="text-sm font-medium text-muted-foreground px-1 uppercase tracking-wider">Settings</h3>
+                        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+                            <div className="p-4 border-b bg-muted/10 flex items-center justify-between">
+                                <h4 className="font-semibold flex items-center gap-2">
+                                    <Clock className="h-4 w-4 text-primary" />
+                                    Interview Hours
+                                </h4>
+                                <Button variant="ghost" size="icon" className="h-6 w-6">
+                                    <Settings className="h-3.5 w-3.5" />
+                                </Button>
+                            </div>
+                            <div className="p-0">
+                                {userId ? (
+                                    <AvailabilitySettings userId={userId} embedded={true} />
+                                ) : (
+                                    <div className="p-4 text-sm text-center text-muted-foreground">Sign in to manage</div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Upcoming Interviews</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {isLoading ? (
-                                <div className="text-center py-8">
-                                    <p className="text-sm text-muted-foreground animate-pulse">Loading meetings...</p>
-                                </div>
-                            ) : meetings.length === 0 ? (
-                                <div className="text-center py-8">
-                                    <p className="text-sm text-muted-foreground">No upcoming interviews scheduled.</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    {meetings.map((meeting) => (
-                                        <div key={meeting.id} className="flex flex-col p-3 rounded-lg border bg-muted/30">
-                                            <div className="flex justify-between items-start">
-                                                <h4 className="font-medium text-sm">{meeting.title}</h4>
-                                                <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded">
-                                                    {format(new Date(meeting.scheduled_at), "h:mm a")}
-                                                </span>
-                                            </div>
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                                {format(new Date(meeting.scheduled_at), "EEEE, MMMM do")}
-                                            </p>
-                                            {meeting.meeting_link && (
-                                                <Button variant="link" className="p-0 h-auto text-xs justify-start mt-2" onClick={() => window.open(meeting.meeting_link!, '_blank')}>
-                                                    Join Meeting
-                                                </Button>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                    {/* Sync Widget */}
+                    <div className="space-y-2">
+                        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+                            <div className="p-4 border-b bg-muted/10">
+                                <h4 className="font-semibold flex items-center gap-2">
+                                    <Share2 className="h-4 w-4 text-primary" />
+                                    Calendar Sync
+                                </h4>
+                            </div>
+                            <div className="p-4">
+                                {userId ? (
+                                    <CalendarConnector userId={userId} />
+                                ) : (
+                                    <div className="text-sm text-center text-muted-foreground">Sign in to sync</div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
+            {/* Dialogs */}
+            {userId && (
+                <AddMeetingDialog
+                    userId={userId}
+                    isOpen={isAddDialogOpen}
+                    onClose={() => setIsAddDialogOpen(false)}
+                    onSuccess={() => fetchMeetings(userId)}
+                />
+            )}
 
             <EditMeetingDialog
                 meeting={editingMeeting}
@@ -194,7 +158,7 @@ const MeetingHub = () => {
                     if (userId) fetchMeetings(userId);
                 }}
             />
-        </div >
+        </div>
     );
 };
 

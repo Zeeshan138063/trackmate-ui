@@ -11,8 +11,9 @@ import { Clock, Plus, Trash2 } from "lucide-react";
 
 const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-const AvailabilitySettings = ({ userId }: { userId: string }) => {
+const AvailabilitySettings = ({ userId, embedded = false }: { userId: string, embedded?: boolean }) => {
     const [preferences, setPreferences] = useState<AvailabilityPreference[]>([]);
+    const [originalPreferences, setOriginalPreferences] = useState<AvailabilityPreference[]>([]); // Track original state for diffing
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
 
@@ -24,6 +25,7 @@ const AvailabilitySettings = ({ userId }: { userId: string }) => {
         try {
             const data = await MeetingService.getAvailabilityPreferences(userId);
             setPreferences(data);
+            setOriginalPreferences(JSON.parse(JSON.stringify(data))); // Deep copy
         } catch (error) {
             console.error("Error loading preferences:", error);
         } finally {
@@ -39,6 +41,7 @@ const AvailabilitySettings = ({ userId }: { userId: string }) => {
             end_time: "17:00:00",
             is_active: true
         };
+        // We cast to AvailabilityPreference but it won't have an ID yet, which is fine for our logic
         setPreferences([...preferences, newPref as AvailabilityPreference]);
     };
 
@@ -49,18 +52,128 @@ const AvailabilitySettings = ({ userId }: { userId: string }) => {
     };
 
     const handleRemovePreference = (index: number) => {
+        const prefToRemove = preferences[index];
         setPreferences(preferences.filter((_, i) => i !== index));
     };
 
     const handleSave = async () => {
         try {
-            await MeetingService.updateAvailabilityPreference(userId, preferences);
+            // Diffing Logic
+            const toCreate: Partial<AvailabilityPreference>[] = [];
+            const toUpdate: Partial<AvailabilityPreference>[] = [];
+            const toDelete: string[] = [];
+
+            // 1. Identify Creates and Updates
+            preferences.forEach(pref => {
+                if (!pref.id) {
+                    // New item (no ID)
+                    toCreate.push(pref);
+                } else {
+                    // Existing item - check if changed
+                    const original = originalPreferences.find(p => p.id === pref.id);
+                    if (original) {
+                        const hasChanged =
+                            original.day_of_week !== pref.day_of_week ||
+                            original.start_time !== pref.start_time ||
+                            original.end_time !== pref.end_time ||
+                            original.is_active !== pref.is_active;
+
+                        if (hasChanged) {
+                            toUpdate.push(pref);
+                        }
+                    }
+                }
+            });
+
+            // 2. Identify Deletes
+            originalPreferences.forEach(orig => {
+                const stillExists = preferences.find(p => p.id === orig.id);
+                if (!stillExists) {
+                    toDelete.push(orig.id);
+                }
+            });
+
+            if (toCreate.length === 0 && toUpdate.length === 0 && toDelete.length === 0) {
+                toast({ title: "No changes", description: "Your availability is already up to date." });
+                return;
+            }
+
+            await MeetingService.bulkSyncAvailability(userId, { toCreate, toUpdate, toDelete });
+
             toast({ title: "Preferences saved", description: "Your interview-only hours have been updated." });
+
+            // Reload to get fresh IDs and state
+            loadPreferences();
+
         } catch (error) {
             console.error("Error saving preferences:", error);
             toast({ title: "Error", description: "Failed to save preferences.", variant: "destructive" });
         }
     };
+
+    const Content = (
+        <div className={embedded ? "space-y-3" : "space-y-4"}>
+            {!embedded && (
+                <p className="text-xs text-muted-foreground">
+                    Define your "ideal" slots for interviews. These will be highlighted when you share availability.
+                </p>
+            )}
+
+            <div className="space-y-2">
+                {preferences.map((pref, index) => (
+                    <div key={index} className="flex flex-col gap-2 p-2 rounded-lg border bg-muted/30">
+                        <div className="flex items-center justify-between">
+                            <SelectDay
+                                value={pref.day_of_week}
+                                onChange={(val) => handleUpdatePreference(index, { day_of_week: val })}
+                            />
+                            <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => handleRemovePreference(index)}>
+                                <Trash2 className="h-3 w-3" />
+                            </Button>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <Input
+                                type="time"
+                                value={pref.start_time}
+                                onChange={(e) => handleUpdatePreference(index, { start_time: e.target.value })}
+                                className="h-7 text-xs px-1 bg-background border-input"
+                            />
+                            <span className="text-muted-foreground text-[10px]">to</span>
+                            <Input
+                                type="time"
+                                value={pref.end_time}
+                                onChange={(e) => handleUpdatePreference(index, { end_time: e.target.value })}
+                                className="h-7 text-xs px-1 bg-background border-input"
+                            />
+                            <Switch
+                                checked={pref.is_active}
+                                onCheckedChange={(val) => handleUpdatePreference(index, { is_active: val })}
+                                className="scale-75 origin-right"
+                            />
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Always show save button if there are preferences, or if deletes happened (but tracking deletes in UI needs state comparison) */}
+            {/* User can see save button, handleSave will check logic */}
+            <Button className="w-full h-8 text-xs" onClick={handleSave}>Save Changes</Button>
+
+            {embedded && (
+                <Button size="sm" variant="outline" className="w-full text-xs h-8 border-dashed" onClick={handleAddPreference}>
+                    <Plus className="h-3 w-3 mr-1" /> Add Slot
+                </Button>
+            )}
+        </div>
+    );
+
+    if (embedded) {
+        return (
+            <div className="p-4">
+                {Content}
+            </div>
+        );
+    }
 
     return (
         <Card>
@@ -73,49 +186,8 @@ const AvailabilitySettings = ({ userId }: { userId: string }) => {
                     <Plus className="h-4 w-4 mr-1" /> Add
                 </Button>
             </CardHeader>
-            <CardContent className="space-y-4">
-                <p className="text-xs text-muted-foreground">
-                    Define your "ideal" slots for interviews. These will be highlighted when you share availability.
-                </p>
-
-                <div className="space-y-3">
-                    {preferences.map((pref, index) => (
-                        <div key={index} className="flex flex-col gap-2 p-3 rounded-lg border bg-muted/30">
-                            <div className="flex items-center justify-between">
-                                <SelectDay
-                                    value={pref.day_of_week}
-                                    onChange={(val) => handleUpdatePreference(index, { day_of_week: val })}
-                                />
-                                <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => handleRemovePreference(index)}>
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Input
-                                    type="time"
-                                    value={pref.start_time}
-                                    onChange={(e) => handleUpdatePreference(index, { start_time: e.target.value })}
-                                    className="h-8 text-xs"
-                                />
-                                <span className="text-muted-foreground text-xs">to</span>
-                                <Input
-                                    type="time"
-                                    value={pref.end_time}
-                                    onChange={(e) => handleUpdatePreference(index, { end_time: e.target.value })}
-                                    className="h-8 text-xs"
-                                />
-                                <Switch
-                                    checked={pref.is_active}
-                                    onCheckedChange={(val) => handleUpdatePreference(index, { is_active: val })}
-                                />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                {preferences.length > 0 && (
-                    <Button className="w-full" onClick={handleSave}>Save Preferences</Button>
-                )}
+            <CardContent>
+                {Content}
             </CardContent>
         </Card>
     );
@@ -125,10 +197,10 @@ const SelectDay = ({ value, onChange }: { value: number, onChange: (val: number)
     <select
         value={value}
         onChange={(e) => onChange(parseInt(e.target.value))}
-        className="bg-transparent text-sm font-medium focus:outline-none"
+        className="bg-transparent text-xs font-medium focus:outline-none"
     >
         {days.map((day, i) => (
-            <option key={i} value={i}>{day}</option>
+            <option key={i} value={i}>{day.substring(0, 3)}</option>
         ))}
     </select>
 );
