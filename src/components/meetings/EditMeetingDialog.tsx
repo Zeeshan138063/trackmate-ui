@@ -11,6 +11,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { Job } from "@/types/job";
 import { Contact } from "@/types/contact";
 import { format, subMonths, isBefore } from "date-fns";
+import { Trash2 } from "lucide-react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface EditMeetingDialogProps {
     meeting: Meeting | null;
@@ -116,6 +128,29 @@ export function EditMeetingDialog({ meeting, open, onClose, onSuccess }: EditMee
         }
     };
 
+    const handleDelete = async () => {
+        if (!meeting) return;
+        setLoading(true);
+        try {
+            await MeetingService.deleteMeeting(meeting.id);
+            toast({
+                title: "Meeting deleted",
+                description: "The scheduled interview has been removed."
+            });
+            onSuccess();
+            onClose();
+        } catch (error) {
+            console.error("Error deleting meeting:", error);
+            toast({
+                title: "Error",
+                description: "Failed to delete the meeting.",
+                variant: "destructive"
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[500px]">
@@ -216,11 +251,41 @@ export function EditMeetingDialog({ meeting, open, onClose, onSuccess }: EditMee
                         />
                     </div>
 
-                    <DialogFooter>
-                        <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-                        <Button type="submit" disabled={loading}>
-                            {loading ? "Saving..." : "Save Changes"}
-                        </Button>
+                    <DialogFooter className="flex justify-between items-center">
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    disabled={loading}
+                                    className="gap-2"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                    Delete
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete the scheduled
+                                        interview from your calendar.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                        Delete
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                        <div className="flex gap-2">
+                            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+                            <Button type="submit" disabled={loading}>
+                                {loading ? "Saving..." : "Save Changes"}
+                            </Button>
+                        </div>
                     </DialogFooter>
                 </form>
             </DialogContent>
