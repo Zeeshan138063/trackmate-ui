@@ -20,6 +20,7 @@ export function MeetingCalendar({ meetings, onSelectMeeting }: MeetingCalendarPr
     };
 
     const selectedDateMeetings = selectedDate ? getMeetingsForDate(selectedDate) : [];
+    const upcomingCount = meetings.filter(m => m.status === 'SCHEDULED' && new Date(m.scheduled_at) > new Date()).length;
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
@@ -68,8 +69,7 @@ export function MeetingCalendar({ meetings, onSelectMeeting }: MeetingCalendarPr
                         <span className="font-medium">Quick Summary</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                        You have {meetings.length} total meetings scheduled this month.
-                        {meetings.filter(m => m.status === 'SCHEDULED' && new Date(m.scheduled_at) > new Date()).length} are upcoming.
+                        You have {meetings.length} total meetings scheduled this month. {upcomingCount} {upcomingCount === 1 ? 'is' : 'are'} upcoming.
                     </p>
                 </div>
             </div>
