@@ -90,6 +90,24 @@ export function DreamCompanyCard({ company, onClick }: DreamCompanyCardProps) {
                     )}
                 </div>
 
+                <div className="flex flex-wrap gap-2 text-xs">
+                    {company.offers_remote && (
+                        <Badge variant="outline" className="bg-emerald-500/5 text-emerald-500 border-emerald-500/20 text-[10px] px-1.5 py-0">
+                            Remote
+                        </Badge>
+                    )}
+                    {company.offers_visa_sponsorship && (
+                        <Badge variant="outline" className="bg-orange-500/5 text-orange-500 border-orange-500/20 text-[10px] px-1.5 py-0">
+                            Visa
+                        </Badge>
+                    )}
+                    {company.offers_referral && (
+                        <Badge variant="outline" className="bg-blue-500/5 text-blue-500 border-blue-500/20 text-[10px] px-1.5 py-0">
+                            Referral
+                        </Badge>
+                    )}
+                </div>
+
                 {company.notes && (
                     <p className="text-sm text-muted-foreground line-clamp-2">
                         {company.notes}

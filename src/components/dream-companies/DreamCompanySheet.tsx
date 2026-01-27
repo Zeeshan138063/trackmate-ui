@@ -138,6 +138,37 @@ export function DreamCompanySheet({ companyId, open, onOpenChange }: DreamCompan
                                                 </div>
                                                 <div className="font-medium">{company.location || "N/A"}</div>
                                             </div>
+
+                                            {/* Feature Badges */}
+                                            <div className="col-span-2 bg-card p-4 rounded-lg border shadow-sm space-y-3">
+                                                <div className="text-sm text-muted-foreground">Company Perks & Policy</div>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {company.offers_remote && (
+                                                        <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
+                                                            Remote Friendly
+                                                        </Badge>
+                                                    )}
+                                                    {company.offers_referral && (
+                                                        <Badge variant="secondary" className="bg-blue-500/10 text-blue-500 border-blue-500/20">
+                                                            Referral Program
+                                                        </Badge>
+                                                    )}
+                                                    {company.offers_relocation && (
+                                                        <Badge variant="secondary" className="bg-purple-500/10 text-purple-500 border-purple-500/20">
+                                                            Relocation Assistance
+                                                        </Badge>
+                                                    )}
+                                                    {company.offers_visa_sponsorship && (
+                                                        <Badge variant="secondary" className="bg-orange-500/10 text-orange-500 border-orange-500/20">
+                                                            Visa Sponsorship
+                                                        </Badge>
+                                                    )}
+                                                    {!company.offers_remote && !company.offers_referral && !company.offers_relocation && !company.offers_visa_sponsorship && (
+                                                        <span className="text-sm text-muted-foreground italic">No specific perks listed.</span>
+                                                    )}
+                                                </div>
+                                            </div>
+
                                             {company.founded_year && (
                                                 <div className="bg-card p-4 rounded-lg border shadow-sm space-y-1">
                                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -148,6 +179,20 @@ export function DreamCompanySheet({ companyId, open, onOpenChange }: DreamCompan
                                             )}
                                         </div>
 
+                                        {/* Keywords Section */}
+                                        {company.keywords && company.keywords.length > 0 && (
+                                            <div className="space-y-3">
+                                                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Job Keywords</h3>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {company.keywords.map((keyword: string) => (
+                                                        <Badge key={keyword} variant="outline" className="bg-muted/50">
+                                                            {keyword}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {/* About Section */}
                                         <div className="space-y-3">
                                             <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">About</h3>
@@ -157,7 +202,7 @@ export function DreamCompanySheet({ companyId, open, onOpenChange }: DreamCompan
                                         </div>
 
                                         {/* Other URLs */}
-                                        {(company.careers_page_url || ((company as any).social_media && Object.keys((company as any).social_media).length > 1)) && (
+                                        {(company.careers_page_url || company.job_board_url || ((company as any).social_media && Object.keys((company as any).social_media).length > 1)) && (
                                             <div className="space-y-3">
                                                 <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Additional Links</h3>
                                                 <div className="flex flex-wrap gap-2">
@@ -165,6 +210,12 @@ export function DreamCompanySheet({ companyId, open, onOpenChange }: DreamCompan
                                                         <a href={company.careers_page_url} target="_blank" className="flex items-center gap-2 text-sm bg-card border px-3 py-2 rounded-md hover:bg-muted/50 transition-colors">
                                                             <ExternalLink className="w-4 h-4 text-muted-foreground" />
                                                             Careers Page
+                                                        </a>
+                                                    )}
+                                                    {company.job_board_url && (
+                                                        <a href={company.job_board_url} target="_blank" className="flex items-center gap-2 text-sm bg-card border px-3 py-2 rounded-md hover:bg-muted/50 transition-colors">
+                                                            <Briefcase className="w-4 h-4 text-muted-foreground" />
+                                                            Job Board
                                                         </a>
                                                     )}
                                                     {/* Other generic links */}

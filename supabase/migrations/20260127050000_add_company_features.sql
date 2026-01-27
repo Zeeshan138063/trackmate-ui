@@ -1,0 +1,8 @@
+-- Migration to add company features
+ALTER TABLE dream_companies
+ADD COLUMN IF NOT EXISTS offers_remote BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS offers_relocation BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS offers_visa_sponsorship BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS offers_referral BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS keywords TEXT[] DEFAULT '{}',
+ADD COLUMN IF NOT EXISTS job_board_url TEXT;
