@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { dreamCompaniesService, DreamCompany } from "@/services/dreamCompanies";
 import { DreamCompanyCard } from "./DreamCompanyCard";
 import { Loader2 } from "lucide-react";
-import { DreamCompanyModal } from "@/components/dream-companies/DreamCompanyModal"; // Added as per instruction
 
 interface DreamCompaniesListProps {
     onSelectCompany: (id: string) => void;

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DreamCompanySearch, CompanyFilters } from "@/components/dream-companies/DreamCompanySearch";
+import { DreamCompanyModal } from "@/components/dream-companies/DreamCompanyModal";
 import { DreamCompaniesList } from "@/components/dream-companies/DreamCompaniesList";
 import { DreamCompanySheet } from "@/components/dream-companies/DreamCompanySheet";
 import { DreamCompaniesKanban } from "@/components/dream-companies/DreamCompaniesKanban";
