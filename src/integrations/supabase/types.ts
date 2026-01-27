@@ -66,6 +66,7 @@ export type Database = {
           offers_referral: boolean | null
           keywords: string[] | null
           job_board_url: string | null
+          social_media: Json | null
         }
         Insert: {
           careers_page_url?: string | null
@@ -118,6 +119,7 @@ export type Database = {
           offers_referral?: boolean | null
           keywords?: string[] | null
           job_board_url?: string | null
+          social_media?: Json | null
         }
         Update: {
           careers_page_url?: string | null
@@ -170,6 +172,7 @@ export type Database = {
           offers_referral?: boolean | null
           keywords?: string[] | null
           job_board_url?: string | null
+          social_media?: Json | null
         }
         Relationships: []
       }
