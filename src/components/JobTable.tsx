@@ -31,6 +31,7 @@ interface JobTableProps {
   visibleColumns: ColumnOption[];
   sortConfig?: SortConfig | null;
   onSort?: (key: string) => void;
+  grouping?: string;
 }
 
 export function JobTable({
@@ -43,7 +44,8 @@ export function JobTable({
   onEditJob,
   visibleColumns,
   sortConfig,
-  onSort
+  onSort,
+  grouping = "none"
 }: JobTableProps) {
   const isAllSelected = jobs.length > 0 && selectedJobs.length === jobs.length;
   const isIndeterminate = selectedJobs.length > 0 && selectedJobs.length < jobs.length;
@@ -140,6 +142,147 @@ export function JobTable({
     );
   };
 
+  // Helper to group jobs
+  const groupJobs = () => {
+    if (grouping === "none") return { "All Jobs": jobs };
+
+    const groups: Record<string, Job[]> = {};
+
+    // Define explicit order for status
+    const statusOrder: Record<string, number> = {
+      "Bookmarked": 0,
+      "Applying": 1,
+      "Applied": 2,
+      "Interviewing": 3,
+      "Negotiating": 4,
+      "Accepted": 5,
+      "Rejected": 6
+    };
+
+    jobs.forEach(job => {
+      let key = "";
+      if (grouping === "status") {
+        key = job.status || "Unknown";
+      } else if (grouping === "company") {
+        key = job.company || "Unknown";
+      } else {
+        key = "Other";
+      }
+
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(job);
+    });
+
+    // Sort keys if necessary
+    // If grouping by status, we might want to respect the standard order, 
+    // or just rely on the table sort if that's what user expects.
+    // Ideally, for grouped view, the groups themselves should be sorted.
+    // For now, let's just sort keys alphabetically or custom for status.
+
+    return groups;
+  };
+
+  const groupedJobs = groupJobs();
+
+  // Sort group keys
+  const getSortedGroupKeys = () => {
+    const keys = Object.keys(groupedJobs);
+    if (grouping === "status") {
+      const statusOrder: Record<string, number> = {
+        "Bookmarked": 0,
+        "Applying": 1,
+        "Applied": 2,
+        "Interviewing": 3,
+        "Negotiating": 4,
+        "Accepted": 5,
+        "Rejected": 6
+      };
+      return keys.sort((a, b) => (statusOrder[a] ?? 999) - (statusOrder[b] ?? 999));
+    }
+    return keys.sort();
+  };
+
+  const sortedGroupKeys = getSortedGroupKeys();
+
+  const totalColSpan = 3 + visibleColumns.filter(c => c.checked).length + (onEditJob || onDeleteJob ? 1 : 0);
+
+  const renderJobRow = (job: Job) => (
+    <TableRow key={job.id} className="hover:bg-muted/50">
+      <TableCell>
+        <Checkbox
+          checked={selectedJobs.includes(job.id)}
+          onCheckedChange={() => onSelectJob(job.id)}
+        />
+      </TableCell>
+      <TableCell className="font-medium">
+        {job.jobUrl ? (
+          <a
+            href={job.jobUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            {job.position}
+          </a>
+        ) : (
+          job.position
+        )}
+      </TableCell>
+      <TableCell>{job.company}</TableCell>
+      {isColumnVisible('minSalary') && (
+        <TableCell>
+          {job.minSalary ? `$${job.minSalary.toLocaleString()}` : "$0.00"}
+        </TableCell>
+      )}
+      {isColumnVisible('maxSalary') && (
+        <TableCell>
+          {job.maxSalary ? `$${job.maxSalary.toLocaleString()}` : "$0.00"}
+        </TableCell>
+      )}
+      {isColumnVisible('location') && <TableCell>{job.location || "Add location"}</TableCell>}
+      {isColumnVisible('status') && <TableCell>{getStatusBadge(job.status)}</TableCell>}
+      {isColumnVisible('datePosted') && <TableCell>{job.datePosted || "N/A"}</TableCell>}
+      {isColumnVisible('dateSaved') && <TableCell>{job.dateSaved}</TableCell>}
+      {isColumnVisible('deadline') && <TableCell>{job.deadline || "N/A"}</TableCell>}
+      {isColumnVisible('dateApplied') && <TableCell>{job.dateApplied || "N/A"}</TableCell>}
+      {isColumnVisible('followUp') && <TableCell>{job.followUp || "Add date"}</TableCell>}
+      {isColumnVisible('excitement') && <TableCell>{renderStars(job)}</TableCell>}
+      {isColumnVisible('source') && (
+        <TableCell>
+          <Badge variant="outline" className="bg-slate-50 dark:bg-slate-900 text-xs font-normal">
+            {job.source || 'Manual'}
+          </Badge>
+        </TableCell>
+      )}
+      {(onEditJob || onDeleteJob) && (
+        <TableCell className="bg-card sticky right-0 z-10 shadow-[-10px_0_10px_-5px_rgba(0,0,0,0.05)] dark:shadow-[-10px_0_15px_-5px_rgba(0,0,0,0.3)]">
+          <div className="flex gap-1">
+            {onEditJob && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onEditJob(job)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            )}
+            {onDeleteJob && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onDeleteJob(job.id)}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </TableCell>
+      )}
+    </TableRow>
+  );
+
   return (
     <div className="rounded-lg bg-card border h-[600px] overflow-auto relative">
       <Table>
@@ -169,82 +312,28 @@ export function JobTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {jobs.map((job) => (
-            <TableRow key={job.id} className="hover:bg-muted/50">
-              <TableCell>
-                <Checkbox
-                  checked={selectedJobs.includes(job.id)}
-                  onCheckedChange={() => onSelectJob(job.id)}
-                />
-              </TableCell>
-              <TableCell className="font-medium">
-                {job.jobUrl ? (
-                  <a
-                    href={job.jobUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    {job.position}
-                  </a>
-                ) : (
-                  job.position
-                )}
-              </TableCell>
-              <TableCell>{job.company}</TableCell>
-              {isColumnVisible('minSalary') && (
-                <TableCell>
-                  {job.minSalary ? `$${job.minSalary.toLocaleString()}` : "$0.00"}
-                </TableCell>
-              )}
-              {isColumnVisible('maxSalary') && (
-                <TableCell>
-                  {job.maxSalary ? `$${job.maxSalary.toLocaleString()}` : "$0.00"}
-                </TableCell>
-              )}
-              {isColumnVisible('location') && <TableCell>{job.location || "Add location"}</TableCell>}
-              {isColumnVisible('status') && <TableCell>{getStatusBadge(job.status)}</TableCell>}
-              {isColumnVisible('datePosted') && <TableCell>{job.datePosted || "N/A"}</TableCell>}
-              {isColumnVisible('dateSaved') && <TableCell>{job.dateSaved}</TableCell>}
-              {isColumnVisible('deadline') && <TableCell>{job.deadline || "N/A"}</TableCell>}
-              {isColumnVisible('dateApplied') && <TableCell>{job.dateApplied || "N/A"}</TableCell>}
-              {isColumnVisible('followUp') && <TableCell>{job.followUp || "Add date"}</TableCell>}
-              {isColumnVisible('excitement') && <TableCell>{renderStars(job)}</TableCell>}
-              {isColumnVisible('source') && (
-                <TableCell>
-                  <Badge variant="outline" className="bg-slate-50 dark:bg-slate-900 text-xs font-normal">
-                    {job.source || 'Manual'}
-                  </Badge>
-                </TableCell>
-              )}
-              {(onEditJob || onDeleteJob) && (
-                <TableCell className="bg-card sticky right-0 z-10 shadow-[-10px_0_10px_-5px_rgba(0,0,0,0.05)] dark:shadow-[-10px_0_15px_-5px_rgba(0,0,0,0.3)]">
-                  <div className="flex gap-1">
-                    {onEditJob && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onEditJob(job)}
-                        className="text-muted-foreground hover:text-foreground"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    )}
-                    {onDeleteJob && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDeleteJob(job.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </TableCell>
-              )}
-            </TableRow>
-          ))}
+          {grouping === "none" ? (
+            jobs.map(renderJobRow)
+          ) : (
+            sortedGroupKeys.map(groupKey => (
+              <>
+                <TableRow key={`group-${groupKey}`} className="bg-muted/30 hover:bg-muted/40">
+                  <TableCell colSpan={totalColSpan} className="font-semibold py-3 px-4">
+                    <div className="flex items-center gap-2">
+                      {grouping === 'status' && getStatusBadge(groupKey)}
+                      <span className={grouping !== 'status' ? "text-primary" : ""}>
+                        {grouping !== 'status' && groupKey}
+                      </span>
+                      <span className="text-muted-foreground text-xs bg-muted px-2 py-0.5 rounded-full">
+                        {groupedJobs[groupKey].length}
+                      </span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+                {groupedJobs[groupKey].map(renderJobRow)}
+              </>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>

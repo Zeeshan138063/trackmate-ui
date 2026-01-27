@@ -90,9 +90,37 @@ export function DreamCompanyCard({ company, onClick }: DreamCompanyCardProps) {
                     )}
                 </div>
 
+                <div className="flex flex-wrap gap-2 text-xs">
+                    {company.offers_remote && (
+                        <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] px-1.5 py-0">
+                            Remote
+                        </Badge>
+                    )}
+                    {company.offers_visa_sponsorship && (
+                        <Badge variant="secondary" className="bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20 text-[10px] px-1.5 py-0">
+                            Visa
+                        </Badge>
+                    )}
+                    {company.offers_referral && (
+                        <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 text-[10px] px-1.5 py-0">
+                            Referral
+                        </Badge>
+                    )}
+                </div>
+
                 {company.notes && (
                     <p className="text-sm text-muted-foreground line-clamp-2">
                         {company.notes}
+                        {/* Summary of perks for quick spotting */}
+                        {(company.offers_remote || company.offers_visa_sponsorship || company.offers_referral) && (
+                            <span className="block mt-1 text-[10px] uppercase tracking-wider font-bold text-primary/70">
+                                Features: {[
+                                    company.offers_remote && "Remote",
+                                    company.offers_visa_sponsorship && "Visa",
+                                    company.offers_referral && "Referral"
+                                ].filter(Boolean).join(" • ")}
+                            </span>
+                        )}
                     </p>
                 )}
 

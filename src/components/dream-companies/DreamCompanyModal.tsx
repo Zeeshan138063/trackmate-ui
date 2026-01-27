@@ -1,12 +1,11 @@
-
-import { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useEffect, useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { dreamCompaniesService, DreamCompanyInsert } from "@/services/dreamCompanies";
+import { dreamCompaniesService, DreamCompanyInsert, DreamCompany } from "@/services/dreamCompanies";
 import { useToast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
 
@@ -14,9 +13,10 @@ interface DreamCompanyModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSuccess: () => void;
+    initialData?: DreamCompany | null;
 }
 
-export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompanyModalProps) {
+export function DreamCompanyModal({ open, onOpenChange, onSuccess, initialData }: DreamCompanyModalProps) {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
     const [showAdvanced, setShowAdvanced] = useState(false);
@@ -32,12 +32,58 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
         status: "Researching",
         notes: "",
         industry: "",
-        company_size: "", // Changed to string for free text
+        company_size: "",
         website_url: "",
         logo_url: "",
         careers_page_url: "",
         location: "",
+        job_board_url: "",
+        offers_remote: false,
+        offers_relocation: false,
+        offers_visa_sponsorship: false,
+        offers_referral: false,
+        keywords: []
     });
+
+    useEffect(() => {
+        if (initialData && open) {
+            setFormData({
+                name: initialData.name,
+                priority: initialData.priority as any || "Medium",
+                status: initialData.status as any || "Researching",
+                notes: initialData.notes,
+                industry: initialData.industry,
+                company_size: initialData.company_size,
+                website_url: initialData.website_url,
+                logo_url: initialData.logo_url,
+                careers_page_url: initialData.careers_page_url,
+                location: initialData.location,
+                job_board_url: initialData.job_board_url,
+                offers_remote: initialData.offers_remote || false,
+                offers_relocation: initialData.offers_relocation || false,
+                offers_visa_sponsorship: initialData.offers_visa_sponsorship || false,
+                offers_referral: initialData.offers_referral || false,
+                keywords: initialData.keywords || []
+            });
+            setRolesInput(initialData.target_roles?.join(", ") || "");
+            setTagsInput(initialData.tags?.join(", ") || "");
+            setLinkedinUrl((initialData.social_media as any)?.linkedin || "");
+            setShowAdvanced(true); // Open advanced fields if we have data there
+        } else if (!initialData && open) {
+            // Reset for new entry
+            setFormData({
+                name: "", priority: "Medium", status: "Researching", notes: "", industry: "",
+                website_url: "", location: "", logo_url: "", careers_page_url: "",
+                company_size: "", job_board_url: "", offers_remote: false,
+                offers_relocation: false, offers_visa_sponsorship: false,
+                offers_referral: false, keywords: []
+            });
+            setRolesInput("");
+            setTagsInput("");
+            setLinkedinUrl("");
+            setShowAdvanced(false);
+        }
+    }, [initialData, open]);
 
     const handleChange = (field: keyof DreamCompanyInsert, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -62,25 +108,24 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
             // Construct social_media object
             const social_media = linkedinUrl ? { linkedin: linkedinUrl } : null;
 
-            await dreamCompaniesService.create({
+            const finalData = {
                 ...formData,
                 target_roles: target_roles.length > 0 ? target_roles : null,
                 tags: tags.length > 0 ? tags : null,
                 social_media: social_media,
                 user_id: user.id,
-            } as DreamCompanyInsert);
+            };
 
-            toast({ title: "Success", description: "Dream company added!" });
+            if (initialData?.id) {
+                await dreamCompaniesService.update(initialData.id, finalData);
+                toast({ title: "Success", description: "Dream company updated!" });
+            } else {
+                await dreamCompaniesService.create(finalData as DreamCompanyInsert);
+                toast({ title: "Success", description: "Dream company added!" });
+            }
+
             onSuccess();
             onOpenChange(false);
-
-            // Reset form
-            setFormData({ name: "", priority: "Medium", status: "Researching", notes: "", industry: "", website_url: "", location: "", logo_url: "", careers_page_url: "", company_size: "" });
-            setRolesInput("");
-            setTagsInput("");
-            setLinkedinUrl("");
-            setShowAdvanced(false);
-
         } catch (error: any) {
             toast({ title: "Error", description: error.message, variant: "destructive" });
         } finally {
@@ -92,9 +137,9 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Add Dream Company</DialogTitle>
+                    <DialogTitle>{initialData ? "Edit Dream Company" : "Add Dream Company"}</DialogTitle>
                     <DialogDescription>
-                        Add a company to your target list.
+                        {initialData ? "Update company details." : "Add a company to your target list."}
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -176,6 +221,18 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
                             />
                         </div>
                         <div className="grid gap-2">
+                            <Label htmlFor="careers">Careers Page URL</Label>
+                            <Input
+                                id="careers"
+                                value={formData.careers_page_url || ""}
+                                onChange={(e) => handleChange("careers_page_url", e.target.value)}
+                                placeholder="https://.../careers"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
                             <Label htmlFor="linkedin">LinkedIn URL</Label>
                             <Input
                                 id="linkedin"
@@ -184,15 +241,67 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
                                 placeholder="https://linkedin.com/company/..."
                             />
                         </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="logo">Logo URL (Optional)</Label>
+                            <Input
+                                id="logo"
+                                value={formData.logo_url || ""}
+                                onChange={(e) => handleChange("logo_url", e.target.value)}
+                                placeholder="https://..."
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="flex items-center space-x-2">
+                            <input
+                                type="checkbox"
+                                id="remote"
+                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                checked={formData.offers_remote || false}
+                                onChange={(e) => handleChange("offers_remote", e.target.checked)}
+                            />
+                            <Label htmlFor="remote">Offers Remote</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <input
+                                type="checkbox"
+                                id="referral"
+                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                checked={formData.offers_referral || false}
+                                onChange={(e) => handleChange("offers_referral", e.target.checked)}
+                            />
+                            <Label htmlFor="referral">Offers Referral</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <input
+                                type="checkbox"
+                                id="relocation"
+                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                checked={formData.offers_relocation || false}
+                                onChange={(e) => handleChange("offers_relocation", e.target.checked)}
+                            />
+                            <Label htmlFor="relocation">Relocation Assistance</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <input
+                                type="checkbox"
+                                id="visa"
+                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                checked={formData.offers_visa_sponsorship || false}
+                                onChange={(e) => handleChange("offers_visa_sponsorship", e.target.checked)}
+                            />
+                            <Label htmlFor="visa">Visa Sponsor</Label>
+                        </div>
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="logo">Logo URL (Optional)</Label>
+                        <Label htmlFor="job_board">Job Board URL</Label>
                         <Input
-                            id="logo"
-                            value={formData.logo_url || ""}
-                            onChange={(e) => handleChange("logo_url", e.target.value)}
-                            placeholder="https://..."
+                            id="job_board"
+                            value={formData.job_board_url || ""}
+                            onChange={(e) => handleChange("job_board_url", e.target.value)}
+                            placeholder="https://.../jobs"
                         />
                     </div>
 
@@ -204,7 +313,7 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
                             className="w-full text-muted-foreground"
                             onClick={() => setShowAdvanced(true)}
                         >
-                            Show Advanced Fields (Location, Careers Page, Roles)
+                            Show More Details (Location, Careers Page, Roles, Keywords)
                         </Button>
                     ) : (
                         <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
@@ -216,16 +325,6 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
                                     value={typeof formData.location === 'string' ? formData.location : ""}
                                     onChange={(e) => handleChange("location", e.target.value)}
                                     placeholder="e.g. San Francisco, CA"
-                                />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="careers">Careers Page URL</Label>
-                                <Input
-                                    id="careers"
-                                    value={formData.careers_page_url || ""}
-                                    onChange={(e) => handleChange("careers_page_url", e.target.value)}
-                                    placeholder="https://.../careers"
                                 />
                             </div>
 
@@ -245,7 +344,17 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
                                     id="tags"
                                     value={tagsInput}
                                     onChange={(e) => setTagsInput(e.target.value)}
-                                    placeholder="e.g. Remote, Visa Sponsor (comma separated)"
+                                    placeholder="e.g. High Growth, Series B (comma separated)"
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="keywords">Job Keywords (Search optimization)</Label>
+                                <Input
+                                    id="keywords"
+                                    value={formData.keywords?.join(", ") || ""}
+                                    onChange={(e) => handleChange("keywords", e.target.value.split(",").map(s => s.trim()))}
+                                    placeholder="e.g. Python, distributed systems, React"
                                 />
                             </div>
                         </div>
@@ -264,7 +373,7 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
                         <Button type="submit" disabled={isLoading}>
-                            {isLoading ? "Adding..." : "Add Company"}
+                            {isLoading ? (initialData ? "Updating..." : "Adding...") : (initialData ? "Update Company" : "Add Company")}
                         </Button>
                     </DialogFooter>
                 </form>

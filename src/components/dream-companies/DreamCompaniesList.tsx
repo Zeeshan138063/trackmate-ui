@@ -1,18 +1,24 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { dreamCompaniesService } from "@/services/dreamCompanies";
+import { dreamCompaniesService, DreamCompany } from "@/services/dreamCompanies";
 import { DreamCompanyCard } from "./DreamCompanyCard";
 import { Loader2 } from "lucide-react";
 
 interface DreamCompaniesListProps {
     onSelectCompany: (id: string) => void;
+    companies?: DreamCompany[];
+    isLoading?: boolean;
 }
 
-export function DreamCompaniesList({ onSelectCompany }: DreamCompaniesListProps) {
-    const { data: companies, isLoading, error } = useQuery({
+export function DreamCompaniesList({ onSelectCompany, companies: propCompanies, isLoading: propLoading }: DreamCompaniesListProps) {
+    const { data: fetchedCompanies, isLoading: isFetching, error } = useQuery({
         queryKey: ["dream-companies"],
-        queryFn: dreamCompaniesService.getAll
+        queryFn: dreamCompaniesService.getAll,
+        enabled: !propCompanies
     });
+
+    const companies = propCompanies ?? fetchedCompanies;
+    const isLoading = propLoading ?? isFetching;
 
     if (isLoading) {
         return (

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Job } from "@/types/job";
 import { Contact } from "@/types/contact";
+import { subMonths, format, isBefore } from "date-fns";
 
 interface AddMeetingDialogProps {
     userId: string;
@@ -23,6 +24,11 @@ const AddMeetingDialog = ({ userId, isOpen, onClose, onSuccess }: AddMeetingDial
     const [jobs, setJobs] = useState<Job[]>([]);
     const [contacts, setContacts] = useState<Contact[]>([]);
     const { toast } = useToast();
+
+    const minDate = useMemo(() => {
+        const date = subMonths(new Date(), 2);
+        return format(date, "yyyy-MM-dd'T'HH:mm");
+    }, []);
 
     const [formData, setFormData] = useState({
         title: "",
@@ -54,13 +60,26 @@ const AddMeetingDialog = ({ userId, isOpen, onClose, onSuccess }: AddMeetingDial
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        const selectedDate = new Date(formData.scheduledAt);
+        const minAllowedDate = subMonths(new Date(), 2);
+
+        if (isBefore(selectedDate, minAllowedDate)) {
+            toast({
+                title: "Invalid Date",
+                description: "You cannot schedule meetings more than 2 months in the past.",
+                variant: "destructive"
+            });
+            return;
+        }
+
         setLoading(true);
 
         try {
             const meeting: MeetingInsert = {
                 user_id: userId,
                 title: formData.title,
-                scheduled_at: new Date(formData.scheduledAt).toISOString(),
+                scheduled_at: selectedDate.toISOString(),
                 duration_minutes: parseInt(formData.durationMinutes),
                 job_id: formData.jobId || null,
                 contact_id: formData.contactId || null,
@@ -107,6 +126,7 @@ const AddMeetingDialog = ({ userId, isOpen, onClose, onSuccess }: AddMeetingDial
                                 id="date"
                                 type="datetime-local"
                                 required
+                                min={minDate}
                                 value={formData.scheduledAt}
                                 onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.value })}
                             />

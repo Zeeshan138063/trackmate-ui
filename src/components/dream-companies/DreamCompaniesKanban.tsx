@@ -1,7 +1,7 @@
 
 import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { dreamCompaniesService } from "@/services/dreamCompanies";
+import { dreamCompaniesService, DreamCompany } from "@/services/dreamCompanies";
 import { DreamCompanyCard } from "./DreamCompanyCard";
 import { Loader2 } from "lucide-react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
@@ -9,6 +9,8 @@ import { toast } from "sonner";
 
 interface DreamCompaniesKanbanProps {
     onSelectCompany: (id: string) => void;
+    initialCompanies?: DreamCompany[];
+    isLoading?: boolean;
 }
 
 const COLUMNS = [
@@ -21,12 +23,16 @@ const COLUMNS = [
     { id: "rejected", title: "Rejected" },
 ];
 
-export function DreamCompaniesKanban({ onSelectCompany }: DreamCompaniesKanbanProps) {
+export function DreamCompaniesKanban({ onSelectCompany, initialCompanies, isLoading: propLoading }: DreamCompaniesKanbanProps) {
     const queryClient = useQueryClient();
-    const { data: companies, isLoading } = useQuery({
+    const { data: fetchedCompanies, isLoading: isFetching } = useQuery({
         queryKey: ["dream-companies"],
-        queryFn: dreamCompaniesService.getAll
+        queryFn: dreamCompaniesService.getAll,
+        enabled: !initialCompanies
     });
+
+    const companies = initialCompanies ?? fetchedCompanies;
+    const isLoading = propLoading ?? isFetching;
 
     const updateStatusMutation = useMutation({
         mutationFn: ({ id, status }: { id: string; status: string }) =>
