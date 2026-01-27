@@ -112,6 +112,12 @@ export type Database = {
           date_added?: string | null
           target_application_date?: string | null
           last_researched?: string | null
+          offers_remote?: boolean | null
+          offers_relocation?: boolean | null
+          offers_visa_sponsorship?: boolean | null
+          offers_referral?: boolean | null
+          keywords?: string[] | null
+          job_board_url?: string | null
         }
         Update: {
           careers_page_url?: string | null
@@ -158,6 +164,12 @@ export type Database = {
           date_added?: string | null
           target_application_date?: string | null
           last_researched?: string | null
+          offers_remote?: boolean | null
+          offers_relocation?: boolean | null
+          offers_visa_sponsorship?: boolean | null
+          offers_referral?: boolean | null
+          keywords?: string[] | null
+          job_board_url?: string | null
         }
         Relationships: []
       }

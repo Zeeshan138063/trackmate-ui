@@ -182,6 +182,18 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
                             />
                         </div>
                         <div className="grid gap-2">
+                            <Label htmlFor="careers">Careers Page URL</Label>
+                            <Input
+                                id="careers"
+                                value={formData.careers_page_url || ""}
+                                onChange={(e) => handleChange("careers_page_url", e.target.value)}
+                                placeholder="https://.../careers"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
                             <Label htmlFor="linkedin">LinkedIn URL</Label>
                             <Input
                                 id="linkedin"
@@ -190,15 +202,67 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
                                 placeholder="https://linkedin.com/company/..."
                             />
                         </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="logo">Logo URL (Optional)</Label>
+                            <Input
+                                id="logo"
+                                value={formData.logo_url || ""}
+                                onChange={(e) => handleChange("logo_url", e.target.value)}
+                                placeholder="https://..."
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="flex items-center space-x-2">
+                            <input
+                                type="checkbox"
+                                id="remote"
+                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                checked={formData.offers_remote || false}
+                                onChange={(e) => handleChange("offers_remote", e.target.checked)}
+                            />
+                            <Label htmlFor="remote">Offers Remote</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <input
+                                type="checkbox"
+                                id="referral"
+                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                checked={formData.offers_referral || false}
+                                onChange={(e) => handleChange("offers_referral", e.target.checked)}
+                            />
+                            <Label htmlFor="referral">Offers Referral</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <input
+                                type="checkbox"
+                                id="relocation"
+                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                checked={formData.offers_relocation || false}
+                                onChange={(e) => handleChange("offers_relocation", e.target.checked)}
+                            />
+                            <Label htmlFor="relocation">Relocation Assistance</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <input
+                                type="checkbox"
+                                id="visa"
+                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                checked={formData.offers_visa_sponsorship || false}
+                                onChange={(e) => handleChange("offers_visa_sponsorship", e.target.checked)}
+                            />
+                            <Label htmlFor="visa">Visa Sponsor</Label>
+                        </div>
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="logo">Logo URL (Optional)</Label>
+                        <Label htmlFor="job_board">Job Board URL</Label>
                         <Input
-                            id="logo"
-                            value={formData.logo_url || ""}
-                            onChange={(e) => handleChange("logo_url", e.target.value)}
-                            placeholder="https://..."
+                            id="job_board"
+                            value={formData.job_board_url || ""}
+                            onChange={(e) => handleChange("job_board_url", e.target.value)}
+                            placeholder="https://.../jobs"
                         />
                     </div>
 
@@ -210,7 +274,7 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
                             className="w-full text-muted-foreground"
                             onClick={() => setShowAdvanced(true)}
                         >
-                            Show Advanced Fields (Location, Careers Page, Roles)
+                            Show More Details (Location, Careers Page, Roles, Keywords)
                         </Button>
                     ) : (
                         <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
@@ -226,16 +290,6 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="careers">Careers Page URL</Label>
-                                <Input
-                                    id="careers"
-                                    value={formData.careers_page_url || ""}
-                                    onChange={(e) => handleChange("careers_page_url", e.target.value)}
-                                    placeholder="https://.../careers"
-                                />
-                            </div>
-
-                            <div className="grid gap-2">
                                 <Label htmlFor="roles">Target Roles</Label>
                                 <Input
                                     id="roles"
@@ -243,59 +297,6 @@ export function DreamCompanyModal({ open, onOpenChange, onSuccess }: DreamCompan
                                     onChange={(e) => setRolesInput(e.target.value)}
                                     placeholder="e.g. Frontend Engineer, Product Manager (comma separated)"
                                 />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="job_board">Job Board URL</Label>
-                                <Input
-                                    id="job_board"
-                                    value={formData.job_board_url || ""}
-                                    onChange={(e) => handleChange("job_board_url", e.target.value)}
-                                    placeholder="https://.../jobs"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="flex items-center space-x-2">
-                                    <input
-                                        type="checkbox"
-                                        id="remote"
-                                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                        checked={formData.offers_remote || false}
-                                        onChange={(e) => handleChange("offers_remote", e.target.checked)}
-                                    />
-                                    <Label htmlFor="remote">Offers Remote</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <input
-                                        type="checkbox"
-                                        id="referral"
-                                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                        checked={formData.offers_referral || false}
-                                        onChange={(e) => handleChange("offers_referral", e.target.checked)}
-                                    />
-                                    <Label htmlFor="referral">Offers Referral</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <input
-                                        type="checkbox"
-                                        id="relocation"
-                                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                        checked={formData.offers_relocation || false}
-                                        onChange={(e) => handleChange("offers_relocation", e.target.checked)}
-                                    />
-                                    <Label htmlFor="relocation">Offers Relocation</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <input
-                                        type="checkbox"
-                                        id="visa"
-                                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                        checked={formData.offers_visa_sponsorship || false}
-                                        onChange={(e) => handleChange("offers_visa_sponsorship", e.target.checked)}
-                                    />
-                                    <Label htmlFor="visa">Visa Sponsor</Label>
-                                </div>
                             </div>
 
                             <div className="grid gap-2">
