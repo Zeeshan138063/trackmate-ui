@@ -5,8 +5,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MapPin, Building, Clock, ArrowRight, Search, Briefcase } from "lucide-react";
+import { Loader2, MapPin, Building, Clock, ArrowRight, Search, Briefcase, Linkedin, Twitter } from "lucide-react";
 import { Header } from "@/components/Header";
+import { useAuth } from "@/hooks/useAuth";
 
 // Helper to format "time ago"
 const formatTimeAgo = (dateString: string) => {
@@ -23,6 +24,7 @@ const formatTimeAgo = (dateString: string) => {
 export default function PublicJobDiscovery() {
     const { keyword } = useParams();
     const navigate = useNavigate();
+    const { isAuthenticated } = useAuth();
     const [jobs, setJobs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState(keyword || "");
@@ -72,9 +74,15 @@ export default function PublicJobDiscovery() {
                         />
                     </form>
 
-                    <Button variant="ghost" onClick={() => navigate('/auth')}>
-                        Sign In
-                    </Button>
+                    {isAuthenticated ? (
+                        <Button onClick={() => navigate('/')} className="bg-indigo-600 hover:bg-indigo-700">
+                            Dashboard
+                        </Button>
+                    ) : (
+                        <Button variant="ghost" onClick={() => navigate('/auth')}>
+                            Sign In
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -141,9 +149,80 @@ export default function PublicJobDiscovery() {
                                 ))}
                             </div>
                         )}
+
+                        <Card className="mt-12 bg-indigo-600 text-white overflow-hidden relative border-none">
+                            <div className="p-8 relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                                <div className="max-w-md text-center md:text-left">
+                                    <h2 className="text-2xl font-bold mb-2">Help others find their next role</h2>
+                                    <p className="opacity-90 text-sm">
+                                        Know someone searching for a job? Share TrackMate's discovery platform
+                                        with your network and help them land their dream job.
+                                    </p>
+                                </div>
+                                <div className="flex gap-3">
+                                    <Button
+                                        className="bg-white text-indigo-600 hover:bg-slate-100 font-semibold"
+                                        onClick={() => {
+                                            const url = "https://trackmate.ai/jobs";
+                                            const text = "Found an amazing AI job discovery platform! TrackMate helps you track applications and automate your search. Check it out: ";
+                                            const shareUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text + " " + url)}`;
+                                            window.open(shareUrl, '_blank', 'width=600,height=600');
+                                        }}
+                                    >
+                                        <Linkedin className="h-4 w-4 mr-2" /> Share on LinkedIn
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="border-white text-white hover:bg-white/10"
+                                        onClick={() => {
+                                            const url = "https://trackmate.ai/jobs";
+                                            const text = "Found an amazing AI job discovery platform! #careers #jobs";
+                                            window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank');
+                                        }}
+                                    >
+                                        <Twitter className="h-4 w-4 mr-2" /> Tweet
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+                        </Card>
                     </>
                 )}
             </div>
-        </div>
+
+            <footer className="bg-slate-900 text-white py-12 mt-20">
+                <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-12">
+                    <div>
+                        <div className="flex items-center gap-2 mb-4">
+                            <Briefcase className="h-6 w-6 text-indigo-400" />
+                            <span className="font-bold text-xl tracking-tight">TrackMate</span>
+                        </div>
+                        <p className="text-slate-400 text-sm leading-relaxed">
+                            The ultimate AI-powered career assistant. Track applications,
+                            build your network, and land your dream job with intelligent insights.
+                        </p>
+                    </div>
+                    <div>
+                        <h4 className="font-semibold mb-4">Quick Links</h4>
+                        <ul className="space-y-2 text-sm text-slate-400">
+                            <li><a href="#" className="hover:text-white transition-colors">Resources</a></li>
+                            <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
+                            <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="font-semibold mb-4">Connect</h4>
+                        <ul className="space-y-2 text-sm text-slate-400">
+                            <li><a href="#" className="hover:text-white transition-colors">LinkedIn</a></li>
+                            <li><a href="#" className="hover:text-white transition-colors">Twitter</a></li>
+                            <li><a href="#" className="hover:text-white transition-colors">Contact Us</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div className="container mx-auto px-4 mt-12 pt-8 border-t border-slate-800 text-center text-xs text-slate-500">
+                    &copy; {new Date().getFullYear()} TrackMate AI. All rights reserved.
+                </div>
+            </footer>
+        </div >
     );
 }

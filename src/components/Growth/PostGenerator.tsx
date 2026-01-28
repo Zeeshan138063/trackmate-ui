@@ -108,6 +108,25 @@ export function PostGenerator() {
                             value={topic}
                             onChange={(e) => setTopic(e.target.value)}
                         />
+                        <div className="flex flex-wrap gap-2 pt-2">
+                            {[
+                                "Industry Insight",
+                                "Personal Achievement",
+                                "Networking Request",
+                                "Career Milestone",
+                                "Learning Experience"
+                            ].map((t) => (
+                                <Button
+                                    key={t}
+                                    variant="secondary"
+                                    size="sm"
+                                    className="text-xs h-7"
+                                    onClick={() => setTopic(t === topic ? "" : t)}
+                                >
+                                    {t}
+                                </Button>
+                            ))}
+                        </div>
                     </div>
 
                     <div className="space-y-2">

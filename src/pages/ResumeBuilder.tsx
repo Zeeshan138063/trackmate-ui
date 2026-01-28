@@ -5,7 +5,7 @@ import { useResume } from "@/hooks/useResume";
 import { MasterProfileEditor } from "@/components/resume/MasterProfileEditor";
 import { ResumePreview } from "@/components/resume/ResumePreview";
 import { ResumeImporter } from "@/components/resume/ResumeImporter";
-import { Loader2, Printer, Sparkles, Save, CheckCircle2 } from "lucide-react";
+import { Loader2, Printer, Sparkles, Save, CheckCircle2, Share2 } from "lucide-react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MasterProfile, ResumeConfig, initialResumeConfig } from "@/types/resume";
@@ -118,10 +118,26 @@ export default function ResumeBuilder() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button size="sm" variant="outline" className="gap-2 bg-background shadow-sm hover:bg-accent hover:text-accent-foreground" onClick={handlePrint}>
-                    <Printer className="h-4 w-4" />
-                    Download PDF
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-2 bg-background shadow-sm hover:text-indigo-600"
+                      onClick={() => {
+                        const baseUrl = 'https://trackmate.ai';
+                        const text = `I just updated my resume using TrackMate! Check out this awesome AI career assistant that helps you track jobs and build a technical profile. #career #jobs #trackmate`;
+                        const shareUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text + " " + baseUrl)}`;
+                        window.open(shareUrl, '_blank', 'width=600,height=600');
+                      }}
+                    >
+                      <Share2 className="h-4 w-4" />
+                      Share
+                    </Button>
+                    <Button size="sm" variant="outline" className="gap-2 bg-background shadow-sm hover:bg-accent hover:text-accent-foreground" onClick={handlePrint}>
+                      <Printer className="h-4 w-4" />
+                      Download PDF
+                    </Button>
+                  </div>
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto rounded-lg border bg-zinc-100/50 dark:bg-zinc-900/50 shadow-inner p-4 md:p-8 flex justify-center relative">

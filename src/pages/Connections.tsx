@@ -11,6 +11,8 @@ import { useFollowUps } from "@/hooks/useFollowUps";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/EmptyState";
+
 
 export default function Connections() {
     const { contacts, loading, addContact, updateContact, deleteContact } = useContacts();
@@ -243,23 +245,15 @@ export default function Connections() {
                     ))}
                 </div>
             ) : filteredContacts.length === 0 ? (
-                <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
-                    <div className="p-4 bg-muted rounded-full w-fit mx-auto mb-4">
-                        <Users className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-lg font-semibold">No connections found</h3>
-                    <p className="text-muted-foreground max-w-sm mx-auto mt-2 mb-6">
-                        {searchQuery
-                            ? "No contacts match your search."
-                            : "Start building your network by adding your first contact."}
-                    </p>
-                    {!searchQuery && (
-                        <Button onClick={() => setIsAddDialogOpen(true)}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Add Connection
-                        </Button>
-                    )}
-                </div>
+                <EmptyState
+                    icon={Users}
+                    title={searchQuery ? "No connections found" : "Start your network"}
+                    description={searchQuery
+                        ? "No contacts match your search criteria. Try a different keyword."
+                        : "Start building your professional network by adding your first contact."}
+                    actionLabel={!searchQuery ? "Add Connection" : undefined}
+                    onAction={!searchQuery ? () => setIsAddDialogOpen(true) : undefined}
+                />
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {filteredContacts.map((contact) => (

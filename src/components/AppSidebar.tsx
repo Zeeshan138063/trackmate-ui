@@ -44,6 +44,7 @@ const navigationItems = [
   { title: "Job Search", url: "/job-search", icon: Search },
   { title: "Application Copilot", url: "/application-copilot", icon: Bot },
   { title: "Dream Companies", url: "/dream-companies", icon: Building },
+  { title: "Strategy Guide", url: "/strategy-guide", icon: Bot }, // Reusing Bot for now or add Compass
   { title: "Connections", url: "/connections", icon: Users },
   { title: "Growth Engine", url: "/growth", icon: TrendingUp },
 ];
@@ -82,9 +83,9 @@ export function AppSidebar() {
             {!collapsed && (
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-sm">J</span>
+                  <span className="text-primary-foreground font-bold text-sm">T</span>
                 </div>
-                <span className="font-semibold text-lg">JobVelocity</span>
+                <span className="font-semibold text-lg">TrackMate</span>
               </div>
             )}
             <SidebarTrigger />

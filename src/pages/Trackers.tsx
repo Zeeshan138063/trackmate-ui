@@ -33,6 +33,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { JobStats, Job } from "@/types/job";
 import { DailyStats } from "@/components/DailyStats";
+import { JobKanban } from "@/components/JobKanban";
+import { LayoutGrid, Table as TableIcon } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const defaultColumns: ColumnOption[] = [
   { id: "minSalary", label: "Min. Salary", checked: false },
@@ -65,6 +68,7 @@ export default function Trackers() {
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
 
   const [grouping, setGrouping] = useState<string>("none");
+  const [view, setView] = useState<"table" | "board">("table");
 
   const filteredJobs = jobs.filter(job => {
     if (!searchQuery) return true;
@@ -568,7 +572,6 @@ export default function Trackers() {
           </div>
         </div>
 
-        {/* Table Controls */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
             <span className="text-sm text-muted-foreground whitespace-nowrap">
@@ -588,27 +591,43 @@ export default function Trackers() {
                 className="pl-9 h-9"
               />
             </div>
+            <Tabs value={view} onValueChange={(v) => setView(v as "table" | "board")} className="hidden md:flex">
+              <TabsList className="h-9">
+                <TabsTrigger value="table" className="h-7 px-2">
+                  <TableIcon className="h-4 w-4 mr-1" />
+                  Table
+                </TabsTrigger>
+                <TabsTrigger value="board" className="h-7 px-2">
+                  <LayoutGrid className="h-4 w-4 mr-1" />
+                  Board
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
 
           <div className="flex items-center space-x-2 overflow-x-auto pb-2 md:pb-0">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm whitespace-nowrap">Group by:</span>
-              <Select value={grouping} onValueChange={setGrouping}>
-                <SelectTrigger className="w-32 h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="status">Status</SelectItem>
-                  <SelectItem value="company">Company</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {view === 'table' && (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm whitespace-nowrap">Group by:</span>
+                <Select value={grouping} onValueChange={setGrouping}>
+                  <SelectTrigger className="w-32 h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="status">Status</SelectItem>
+                    <SelectItem value="company">Company</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-            <ColumnsDropdown
-              columns={visibleColumns}
-              onToggleColumn={handleToggleColumn}
-            />
+            {view === 'table' && (
+              <ColumnsDropdown
+                columns={visibleColumns}
+                onToggleColumn={handleToggleColumn}
+              />
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="h-9">
@@ -647,7 +666,13 @@ export default function Trackers() {
             </div>
           </div>
           {/* Mobile Add Button */}
-          <div className="md:hidden w-full">
+          <div className="md:hidden w-full flex gap-2">
+            <Tabs value={view} onValueChange={(v) => setView(v as "table" | "board")} className="flex-1">
+              <TabsList className="w-full h-9">
+                <TabsTrigger value="table" className="flex-1 h-7">Table</TabsTrigger>
+                <TabsTrigger value="board" className="flex-1 h-7">Board</TabsTrigger>
+              </TabsList>
+            </Tabs>
             <AddJobDialog
               onAddJob={addJob}
               initialData={extensionJobData}
@@ -657,20 +682,28 @@ export default function Trackers() {
           </div>
         </div>
 
-        {/* Job Table */}
-        <JobTable
-          jobs={sortedJobs}
-          selectedJobs={selectedJobs}
-          onSelectJob={handleSelectJob}
-          onSelectAll={handleSelectAll}
-          onUpdateJob={updateJob}
-          onDeleteJob={handleDeleteClick}
-          onEditJob={handleEditJob}
-          visibleColumns={visibleColumns}
-          sortConfig={sortConfig}
-          onSort={handleSort}
-          grouping={grouping}
-        />
+        {/* Job Content */}
+        {view === "table" ? (
+          <JobTable
+            jobs={sortedJobs}
+            selectedJobs={selectedJobs}
+            onSelectJob={handleSelectJob}
+            onSelectAll={handleSelectAll}
+            onUpdateJob={updateJob}
+            onDeleteJob={handleDeleteClick}
+            onEditJob={handleEditJob}
+            visibleColumns={visibleColumns}
+            sortConfig={sortConfig}
+            onSort={handleSort}
+            grouping={grouping}
+          />
+        ) : (
+          <JobKanban
+            jobs={filteredJobs}
+            onUpdateJob={updateJob}
+            onEditJob={handleEditJob}
+          />
+        )}
 
         {/* Edit Job Dialog */}
         <EditJobDialog

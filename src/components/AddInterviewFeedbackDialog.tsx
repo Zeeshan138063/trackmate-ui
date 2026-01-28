@@ -44,9 +44,10 @@ const formSchema = z.object({
 
 interface Props {
   onSubmit: (feedback: Omit<InterviewFeedback, "id" | "user_id" | "created_at" | "updated_at">) => void;
+  trigger?: React.ReactNode;
 }
 
-export const AddInterviewFeedbackDialog = ({ onSubmit }: Props) => {
+export const AddInterviewFeedbackDialog = ({ onSubmit, trigger }: Props) => {
   const [open, setOpen] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -105,7 +106,7 @@ export const AddInterviewFeedbackDialog = ({ onSubmit }: Props) => {
       next_steps: values.next_steps || undefined,
       follow_up_date: values.follow_up_date || undefined,
     };
-    
+
     onSubmit(feedbackData);
     setOpen(false);
     form.reset();
@@ -114,10 +115,12 @@ export const AddInterviewFeedbackDialog = ({ onSubmit }: Props) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Interview Feedback
-        </Button>
+        {trigger || (
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Interview Feedback
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -188,9 +191,9 @@ export const AddInterviewFeedbackDialog = ({ onSubmit }: Props) => {
                   <FormItem>
                     <FormLabel>Duration (minutes)</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="number" 
-                        {...field} 
+                      <Input
+                        type="number"
+                        {...field}
                         onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                       />
                     </FormControl>
@@ -460,10 +463,10 @@ export const AddInterviewFeedbackDialog = ({ onSubmit }: Props) => {
                   <FormItem>
                     <FormLabel>Overall Rating (1-10)</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="number" 
-                        min="1" 
-                        max="10" 
+                      <Input
+                        type="number"
+                        min="1"
+                        max="10"
                         {...field}
                         onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                       />
