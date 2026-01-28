@@ -179,7 +179,7 @@ export function MeetingCalendar({ meetings, onSelectMeeting, onNewMeeting }: Mee
                                     cell: "w-full p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
                                     day: "w-full h-full aspect-square p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-md transition-all flex items-center justify-center",
                                     day_selected: "bg-[hsl(173,58%,39%)] text-primary-foreground hover:bg-[hsl(173,58%,39%)] hover:text-primary-foreground focus:bg-[hsl(173,58%,39%)] focus:text-primary-foreground shadow-md scale-100",
-                                    day_today: "bg-muted text-foreground font-semibold",
+                                    day_today: "bg-muted text-foreground font-semibold aria-selected:bg-[hsl(173,58%,39%)] aria-selected:text-primary-foreground",
                                     day_outside: "text-muted-foreground opacity-50",
                                 }}
                                 components={{
