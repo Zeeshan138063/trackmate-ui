@@ -44,6 +44,7 @@ const navigationItems = [
   { title: "Job Search", url: "/job-search", icon: Search },
   { title: "Application Copilot", url: "/application-copilot", icon: Bot },
   { title: "Dream Companies", url: "/dream-companies", icon: Building },
+  { title: "Strategy Guide", url: "/strategy-guide", icon: Bot }, // Reusing Bot for now or add Compass
   { title: "Connections", url: "/connections", icon: Users },
   { title: "Growth Engine", url: "/growth", icon: TrendingUp },
 ];

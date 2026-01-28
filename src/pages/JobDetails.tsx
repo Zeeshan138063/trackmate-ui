@@ -4,7 +4,7 @@ import { JobService } from "@/services/JobService";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, MapPin, Building, Clock, ExternalLink, ArrowLeft, CheckCircle2, Calendar } from "lucide-react";
+import { Loader2, MapPin, Building, Clock, ExternalLink, ArrowLeft, CheckCircle2, Calendar, Share2, Linkedin, Twitter, Link2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useJobs } from "@/hooks/useJobs";
 import { toast } from "sonner";
@@ -89,8 +89,62 @@ export default function JobDetails() {
         );
     }
 
+    // JSON-LD JobPosting schema for GEO
+    const jobPostingSchema = {
+        "@context": "https://schema.org/",
+        "@type": "JobPosting",
+        "title": job.title,
+        "description": job.description || `Apply for ${job.title} at ${job.company} in ${job.location}. Full job details and application tracking available on TrackMate.`,
+        "datePosted": job.posted_at,
+        "validThrough": new Date(new Date(job.posted_at).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days fallback
+        "employmentType": "FULL_TIME",
+        "hiringOrganization": {
+            "@type": "Organization",
+            "name": job.company,
+            "sameAs": `https://www.google.com/search?q=${encodeURIComponent(job.company)}`
+        },
+        "jobLocation": {
+            "@type": "Place",
+            "address": {
+                "@type": "PostalAddress",
+                "addressLocality": job.location,
+                "addressRegion": "",
+                "postalCode": "",
+                "addressCountry": "Global"
+            }
+        },
+        "baseSalary": {
+            "@type": "MonetaryAmount",
+            "currency": "USD",
+            "value": {
+                "@type": "QuantitativeValue",
+                "value": 0,
+                "unitText": "YEAR"
+            }
+        },
+        "url": window.location.href
+    };
+
+    const handleShare = (platform: 'linkedin' | 'twitter' | 'copy') => {
+        const url = window.location.href;
+        const text = `Check out this ${job?.title} position at ${job?.company} on TrackMate!`;
+
+        if (platform === 'linkedin') {
+            const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+            window.open(shareUrl, '_blank', 'width=600,height=600');
+        } else if (platform === 'twitter') {
+            window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank');
+        } else if (platform === 'copy') {
+            navigator.clipboard.writeText(url);
+            toast.success("Link copied to clipboard!");
+        }
+    };
+
     return (
         <div className="min-h-screen bg-white">
+            <script type="application/ld+json">
+                {JSON.stringify(jobPostingSchema)}
+            </script>
             <div className="max-w-4xl mx-auto px-4 py-8">
                 <Button variant="ghost" className="mb-6 pl-0 hover:pl-2 transition-all" onClick={() => navigate(-1)}>
                     <ArrowLeft className="h-4 w-4 mr-2" /> Back
@@ -105,24 +159,38 @@ export default function JobDetails() {
                                 {job.company}
                             </div>
                         </div>
-                        <div className="flex gap-3 mt-4 md:mt-0 w-full md:w-auto">
-                            {isSaved ? (
-                                <>
-                                    <Button variant="outline" className="flex-1 md:flex-none" onClick={() => navigate('/meeting-hub')}>
-                                        <Calendar className="h-4 w-4 mr-2" /> Schedule Interview
+                        <div className="flex flex-col gap-3 w-full md:w-auto">
+                            <div className="flex gap-3">
+                                {isSaved ? (
+                                    <>
+                                        <Button variant="outline" className="flex-1 md:flex-none" onClick={() => navigate('/meeting-hub')}>
+                                            <Calendar className="h-4 w-4 mr-2" /> Schedule Interview
+                                        </Button>
+                                        <Button disabled variant="outline" className="flex-1 md:flex-none">
+                                            <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" /> Saved
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <Button onClick={handleSaveToTracker} variant="outline" className="flex-1 md:flex-none">
+                                        Save to Tracker
                                     </Button>
-                                    <Button disabled variant="outline" className="flex-1 md:flex-none">
-                                        <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" /> Saved
-                                    </Button>
-                                </>
-                            ) : (
-                                <Button onClick={handleSaveToTracker} variant="outline" className="flex-1 md:flex-none">
-                                    Save to Tracker
+                                )}
+                                <Button onClick={handleApply} className="bg-blue-600 hover:bg-blue-700 flex-1 md:flex-none">
+                                    Apply on LinkedIn <ExternalLink className="h-4 w-4 ml-2" />
                                 </Button>
-                            )}
-                            <Button onClick={handleApply} className="bg-blue-600 hover:bg-blue-700 flex-1 md:flex-none">
-                                Apply on LinkedIn <ExternalLink className="h-4 w-4 ml-2" />
-                            </Button>
+                            </div>
+                            <div className="flex items-center justify-end gap-2 text-muted-foreground mt-2">
+                                <span className="text-xs font-medium mr-2">Share:</span>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-[#0077b5]" onClick={() => handleShare('linkedin')}>
+                                    <Linkedin className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-[#1da1f2]" onClick={() => handleShare('twitter')}>
+                                    <Twitter className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleShare('copy')}>
+                                    <Link2 className="h-4 w-4" />
+                                </Button>
+                            </div>
                         </div>
                     </div>
 

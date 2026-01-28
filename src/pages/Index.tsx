@@ -8,6 +8,7 @@ import { JobSearchPipeline } from "@/components/JobSearchPipeline";
 import { DatesCalendar } from "@/components/DatesCalendar";
 import { PrioritiesSection } from "@/components/PrioritiesSection";
 import { RecentActivity } from "@/components/RecentActivity";
+import { WeeklySummary } from "@/components/WeeklySummary";
 import { useJobs } from "@/hooks/useJobs";
 import { useNavigate } from "react-router-dom";
 import { Briefcase, Users, FileText, MessageSquare } from "lucide-react";
@@ -92,8 +93,15 @@ export default function Index() {
           </div>
         </div>
 
-        {/* Priorities Section */}
-        <PrioritiesSection />
+        {/* Weekly Insights & Priority Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1">
+            <WeeklySummary />
+          </div>
+          <div className="lg:col-span-2">
+            <PrioritiesSection />
+          </div>
+        </div>
 
         {/* Original Welcome Section */}
         <div className="text-center py-12">

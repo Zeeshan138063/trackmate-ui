@@ -20,6 +20,7 @@ import Connections from "./pages/Connections";
 import GrowthDashboard from "./pages/Growth/Dashboard";
 import DreamCompanies from "./pages/DreamCompanies";
 import ApplicationCopilot from "./pages/ApplicationCopilot";
+import StrategyGuide from "./pages/StrategyGuide";
 
 import NotFound from "./pages/NotFound";
 import PublicJobDiscovery from "./pages/PublicJobDiscovery";
@@ -31,6 +32,13 @@ const queryClient = new QueryClient();
 
 import { ThemeProvider } from "@/components/theme-provider";
 
+import { usePageTitle } from "@/hooks/usePageTitle";
+
+const PageTitleHandler = () => {
+  usePageTitle();
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme" attribute="class">
@@ -38,6 +46,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <PageTitleHandler />
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={
@@ -139,6 +148,13 @@ const App = () => (
               <ProtectedRoute>
                 <Layout>
                   <ApplicationCopilot />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/strategy-guide" element={
+              <ProtectedRoute>
+                <Layout>
+                  <StrategyGuide />
                 </Layout>
               </ProtectedRoute>
             } />

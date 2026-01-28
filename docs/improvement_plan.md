@@ -50,9 +50,9 @@ This plan outlines a step-by-step approach to improving the **TrackMate** platfo
 ## Phase 4: Growth, SEO & Geo-Targeting
 *Goal: Drive new traffic and provide localized value.*
 
-### **1. Public Job Discovery (/jobs)**
-- [ ] **SEO Structured Data**: Implement `JobPosting` schema for job results to appear in Google Jobs search.
-- [ ] **Geo-location**: Add IP-based location detection to automatically filter "Jobs near [Current City]".
+### **1. Public Job Discovery & AI Visibility (/jobs)**
+- [ ] **SEO Structured Data**: Implement `JobPosting` schema for job results to appear in Google Jobs and AI aggregators.
+- [ ] **GEO (Generative Engine Optimization)**: Optimize metadata and structured content for LLMs (ChatGPT, Perplexity, Claude) to surface TrackMate as a top career tool.
 - [ ] **Navigation Loop**: Add a visible "Go to Dashboard" button for logged-in users visiting public pages.
 
 ### **2. Business & Growth**
