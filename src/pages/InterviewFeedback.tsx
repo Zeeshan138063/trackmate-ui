@@ -6,6 +6,8 @@ import { AddInterviewFeedbackDialog } from "@/components/AddInterviewFeedbackDia
 import { useInterviewFeedback } from "@/hooks/useInterviewFeedback";
 import { format } from "date-fns";
 import type { InterviewFeedback } from "@/types/interview";
+import { EmptyState } from "@/components/ui/EmptyState";
+
 
 const InterviewFeedbackPage = () => {
   const { feedbacks, loading, addFeedback, deleteFeedback } = useInterviewFeedback();
@@ -75,16 +77,17 @@ const InterviewFeedbackPage = () => {
       </div>
 
       {feedbacks.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Users className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No interview feedback yet</h3>
-            <p className="text-muted-foreground text-center mb-4">
-              Start tracking your interview experiences to improve your performance
-            </p>
-            <AddInterviewFeedbackDialog onSubmit={addFeedback} />
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Users}
+          title="No interview feedback yet"
+          description="Start tracking your interview experiences to improve your performance and land your dream job."
+          trigger={(
+            <AddInterviewFeedbackDialog
+              onSubmit={addFeedback}
+              trigger={<Button size="sm">Add Your First Feedback</Button>}
+            />
+          )}
+        />
       ) : (
         <div className="grid gap-6">
           {feedbacks.map((feedback) => (
@@ -111,8 +114,8 @@ const InterviewFeedbackPage = () => {
                       <Button variant="ghost" size="sm">
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="sm"
                         onClick={() => deleteFeedback(feedback.id)}
                       >

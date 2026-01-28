@@ -7,6 +7,7 @@ import { JobApplicationsChart } from "@/components/JobApplicationsChart";
 import { JobSearchPipeline } from "@/components/JobSearchPipeline";
 import { DatesCalendar } from "@/components/DatesCalendar";
 import { PrioritiesSection } from "@/components/PrioritiesSection";
+import { RecentActivity } from "@/components/RecentActivity";
 import { useJobs } from "@/hooks/useJobs";
 import { useNavigate } from "react-router-dom";
 import { Briefcase, Users, FileText, MessageSquare } from "lucide-react";
@@ -76,10 +77,19 @@ export default function Index() {
         <CareerGoalSection />
 
         {/* Dashboard Stats Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <JobApplicationsChart appliedCount={stats.applied} />
-          <JobSearchPipeline stats={stats} totalJobs={jobs.length} />
-          <DatesCalendar jobs={jobs} onUpdateJob={updateJob} />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-1">
+            <JobApplicationsChart appliedCount={stats.applied} />
+          </div>
+          <div className="lg:col-span-1">
+            <JobSearchPipeline stats={stats} totalJobs={jobs.length} />
+          </div>
+          <div className="lg:col-span-1">
+            <RecentActivity />
+          </div>
+          <div className="lg:col-span-1">
+            <DatesCalendar jobs={jobs} onUpdateJob={updateJob} />
+          </div>
         </div>
 
         {/* Priorities Section */}

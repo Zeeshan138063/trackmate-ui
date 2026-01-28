@@ -12,7 +12,7 @@ export const useInterviewFeedback = () => {
 
   const fetchFeedbacks = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -22,7 +22,7 @@ export const useInterviewFeedback = () => {
         .order("interview_date", { ascending: false });
 
       if (error) throw error;
-      
+
       // Transform the data to match our TypeScript interface
       const transformedData = (data || []).map(item => ({
         ...item,
@@ -37,7 +37,7 @@ export const useInterviewFeedback = () => {
         interviewers: Array.isArray(item.interviewers) ? item.interviewers as any[] : [],
         questions_answers: Array.isArray(item.questions_answers) ? item.questions_answers as any[] : [],
       })) as InterviewFeedback[];
-      
+
       setFeedbacks(transformedData);
     } catch (error) {
       console.error("Error fetching interview feedback:", error);
@@ -161,6 +161,8 @@ export const useInterviewFeedback = () => {
   useEffect(() => {
     if (user) {
       fetchFeedbacks();
+    } else {
+      setLoading(false);
     }
   }, [user]);
 
