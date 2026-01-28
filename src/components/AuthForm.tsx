@@ -9,11 +9,17 @@ import { Loader2, Send, Sparkles, Linkedin, Github } from "lucide-react";
 
 interface AuthFormProps {
   onSuccess: () => void;
+  initialMode?: 'signin' | 'signup' | 'reset_password';
 }
 
-export function AuthForm({ onSuccess }: AuthFormProps) {
+export function AuthForm({ onSuccess, initialMode = 'signin' }: AuthFormProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false); // Toggle state
+  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot_password' | 'reset_password'>(
+    initialMode === 'reset_password' ? 'reset_password' : (initialMode === 'signup' ? 'signup' : 'signin')
+  );
+  const isSignUp = mode === 'signup';
+  const isForgotPassword = mode === 'forgot_password';
+  const isResetPassword = mode === 'reset_password';
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { toast } = useToast();
@@ -23,7 +29,23 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
     setIsLoading(true);
 
     try {
-      if (isSignUp) {
+      if (isResetPassword) {
+        // Reset Password Logic
+        const { error } = await supabase.auth.updateUser({
+          password: password,
+        });
+        if (error) throw error;
+        toast({ title: "Success", description: "Password updated successfully." });
+        setMode('signin');
+      } else if (isForgotPassword) {
+        // Forgot Password Logic
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth`,
+        });
+        if (error) throw error;
+        toast({ title: "Check your email", description: "Password reset link sent." });
+        setMode('signin');
+      } else if (isSignUp) {
         // Sign Up Logic
         const { error } = await supabase.auth.signUp({
           email,
@@ -90,10 +112,10 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
 
           <div className="space-y-1">
             <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight drop-shadow-lg">
-              AutoJob Pilot
+              TrackMate
             </h1>
             <p className="text-slate-300 text-lg font-light">
-              Stop Searching. Start Interviewing.
+              {isResetPassword ? "Secure your account" : "Stop Searching. Start Interviewing."}
             </p>
           </div>
         </div>
@@ -101,33 +123,56 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
         {/* Form Section */}
         <form onSubmit={handleAuth} className="w-full space-y-4">
           <div className="space-y-4">
-            <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="h-12 bg-white border-0 text-slate-900 placeholder:text-slate-400 rounded-lg shadow-lg focus-visible:ring-2 focus-visible:ring-emerald-400"
-            />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className="h-12 bg-white border-0 text-slate-900 placeholder:text-slate-400 rounded-lg shadow-lg focus-visible:ring-2 focus-visible:ring-emerald-400"
-            />
+            {!isResetPassword && (
+              <Input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="h-12 bg-white border-0 text-slate-900 placeholder:text-slate-400 rounded-lg shadow-lg focus-visible:ring-2 focus-visible:ring-emerald-400"
+              />
+            )}
+            {!isForgotPassword && (
+              <Input
+                type="password"
+                placeholder={isResetPassword ? "New Password" : "Password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="h-12 bg-white border-0 text-slate-900 placeholder:text-slate-400 rounded-lg shadow-lg focus-visible:ring-2 focus-visible:ring-emerald-400"
+              />
+            )}
           </div>
 
           <div className="flex items-center justify-between text-xs text-slate-300 px-1">
             {/* Simple toggle for UI purposes */}
-            <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="hover:text-white transition-colors hover:underline">
+            <button
+              type="button"
+              onClick={() => setMode(isSignUp ? 'signin' : 'signup')}
+              className="hover:text-white transition-colors hover:underline"
+            >
               {isSignUp ? "Already have an account?" : "Create an account"}
             </button>
-            <button type="button" className="hover:text-white transition-colors hover:underline">
-              Forgot Password?
-            </button>
+            {!isResetPassword && (
+              <button
+                type="button"
+                onClick={() => setMode(isForgotPassword ? 'signin' : 'forgot_password')}
+                className="hover:text-white transition-colors hover:underline"
+              >
+                {isForgotPassword ? "Back to Sign In" : "Forgot Password?"}
+              </button>
+            )}
+            {isResetPassword && (
+              <button
+                type="button"
+                onClick={() => setMode('signin')}
+                className="hover:text-white transition-colors hover:underline"
+              >
+                Cancel
+              </button>
+            )}
           </div>
 
           <Button
@@ -137,7 +182,7 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
           >
             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
               <span className="flex items-center gap-2">
-                {isSignUp ? "Create Account" : "Launch Auto-Pilot"} <Sparkles className="w-4 h-4" />
+                {isResetPassword ? "Update Password" : (isForgotPassword ? "Send Reset Link" : (isSignUp ? "Create Account" : "Launch Auto-Pilot"))} <Sparkles className="w-4 h-4" />
               </span>
             )}
           </Button>
