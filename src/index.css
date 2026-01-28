@@ -92,7 +92,13 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Prevent blinking cursor from appearing on non-editable elements (mitigates Caret Browsing) */
+  *:not(input):not(textarea):not([contenteditable="true"]) {
+    caret-color: transparent;
+  }
 }
+
 
 @media print {
   @page {
