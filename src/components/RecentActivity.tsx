@@ -15,8 +15,8 @@ export function RecentActivity({ jobs }: RecentActivityProps) {
 
     const allActivities = jobs
         .map(job => {
-            // Prioritize createdAt for accurate "time ago", fall back to dateApplied or dateSaved
-            const date = job.createdAt ? new Date(job.createdAt) : new Date(job.dateApplied || job.dateSaved);
+            // Prioritize updatedAt for the most recent "activity", then createdAt, fall back to dateApplied or dateSaved
+            const date = job.updatedAt ? new Date(job.updatedAt) : (job.createdAt ? new Date(job.createdAt) : new Date(job.dateApplied || job.dateSaved));
             const type = job.dateApplied ? "Applied" : "Bookmarked";
             return {
                 id: job.id,

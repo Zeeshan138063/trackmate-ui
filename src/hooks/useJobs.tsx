@@ -48,6 +48,7 @@ export function useJobs() {
         checklist: job.checklist || {},
         notes: job.notes || undefined,
         createdAt: job.created_at,
+        updatedAt: job.updated_at,
       })) || [];
 
       setJobs(transformedJobs);
@@ -115,6 +116,7 @@ export function useJobs() {
         checklist: (data as any).checklist || {},
         notes: (data as any).notes || undefined,
         createdAt: (data as any).created_at,
+        updatedAt: (data as any).updated_at,
       };
 
       setJobs(prev => [transformedJob, ...prev]);
@@ -137,7 +139,7 @@ export function useJobs() {
     if (!user) return;
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('jobs')
         .update({
           position: updatedJob.position,
@@ -157,14 +159,38 @@ export function useJobs() {
           notes: updatedJob.notes,
         })
         .eq('id', updatedJob.id)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .select()
+        .single();
 
       if (error) {
         throw error;
       }
 
+      const transformedJob: Job = {
+        id: (data as any).id,
+        position: (data as any).position,
+        company: (data as any).company,
+        jobUrl: (data as any).job_url || undefined,
+        minSalary: (data as any).min_salary || undefined,
+        maxSalary: (data as any).max_salary || undefined,
+        location: (data as any).location || undefined,
+        description: (data as any).description || undefined,
+        status: (data as any).status as Job["status"],
+        datePosted: (data as any).date_posted || undefined,
+        dateSaved: (data as any).date_saved,
+        deadline: (data as any).deadline || undefined,
+        dateApplied: (data as any).date_applied || undefined,
+        followUp: (data as any).follow_up || undefined,
+        excitement: (data as any).excitement,
+        checklist: (data as any).checklist || {},
+        notes: (data as any).notes || undefined,
+        createdAt: (data as any).created_at,
+        updatedAt: (data as any).updated_at,
+      };
+
       setJobs(prev => prev.map(job =>
-        job.id === updatedJob.id ? updatedJob : job
+        job.id === updatedJob.id ? transformedJob : job
       ));
 
       toast({
