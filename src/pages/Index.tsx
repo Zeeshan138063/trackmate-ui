@@ -1,25 +1,26 @@
-
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CareerGoalSection } from "@/components/CareerGoalSection";
 import { JobApplicationsChart } from "@/components/JobApplicationsChart";
 import { JobSearchPipeline } from "@/components/JobSearchPipeline";
-import { DatesCalendar } from "@/components/DatesCalendar";
-import { PrioritiesSection } from "@/components/PrioritiesSection";
 import { RecentActivity } from "@/components/RecentActivity";
 import { WeeklySummary } from "@/components/WeeklySummary";
+import { DatesCalendar } from "@/components/DatesCalendar";
+import { PrioritiesSection } from "@/components/PrioritiesSection";
 import { useJobs } from "@/hooks/useJobs";
+import { useContacts } from "@/hooks/useContacts";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Briefcase, Users, FileText, MessageSquare } from "lucide-react";
 
 export default function Index() {
   const navigate = useNavigate();
-  const { jobs, loading, updateJob } = useJobs();
+  const { jobs, loading: jobsLoading, updateJob } = useJobs();
+  const { contacts, loading: contactsLoading } = useContacts();
 
-  // Calculate stats for dashboard
-  const calculateStats = () => {
-    const stats = {
+  // Calculate stats for dashboard with useMemo for stability
+  const stats = useMemo(() => {
+    const counts = {
       bookmarked: 0,
       applying: 0,
       applied: 0,
@@ -28,45 +29,45 @@ export default function Index() {
       accepted: 0,
     };
 
+    const now = new Date();
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    let weeklyJobsSaved = 0;
+    let totalExcitement = 0;
+
     jobs.forEach((job) => {
-      switch (job.status.toLowerCase()) {
-        case 'bookmarked':
-          stats.bookmarked++;
-          break;
-        case 'applying':
-          stats.applying++;
-          break;
-        case 'applied':
-          stats.applied++;
-          break;
-        case 'interviewing':
-          stats.interviewing++;
-          break;
-        case 'negotiating':
-          stats.negotiating++;
-          break;
-        case 'accepted':
-          stats.accepted++;
-          break;
+      // General stats
+      const statusKey = job.status.toLowerCase() as keyof typeof counts;
+      if (statusKey in counts) counts[statusKey]++;
+
+      // Weekly stats: prioritize createdAt, fallback to dateSaved
+      const createdDate = job.createdAt ? new Date(job.createdAt) : new Date(job.dateSaved);
+      if (createdDate > oneWeekAgo) {
+        weeklyJobsSaved++;
       }
+      totalExcitement += job.excitement;
     });
 
-    return stats;
-  };
+    const newConnections = contacts.filter(c => {
+      const created = (c as any).created_at ? new Date((c as any).created_at) : null;
+      return created && created > oneWeekAgo;
+    }).length;
 
-  const stats = calculateStats();
+    return {
+      ...counts,
+      weeklyJobsSaved,
+      newConnections,
+      avgExcitement: jobs.length > 0 ? totalExcitement / jobs.length : 0,
+      applyVelocity: jobs.length > 0 ? Math.round((counts.applied / jobs.length) * 100) : 0
+    };
+  }, [jobs, contacts]);
+
+  const loading = jobsLoading || contactsLoading;
 
   if (loading) {
     return (
-      <div className="min-h-screen">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-2 text-muted-foreground">Loading dashboard...</p>
-            </div>
-          </div>
-        </div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -77,33 +78,28 @@ export default function Index() {
         {/* Career Goal Section */}
         <CareerGoalSection />
 
-        {/* Dashboard Stats Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-1">
-            <JobApplicationsChart appliedCount={stats.applied} />
-          </div>
-          <div className="lg:col-span-1">
-            <JobSearchPipeline stats={stats} totalJobs={jobs.length} />
-          </div>
-          <div className="lg:col-span-1">
-            <RecentActivity />
-          </div>
-          <div className="lg:col-span-1">
-            <DatesCalendar jobs={jobs} onUpdateJob={updateJob} />
-          </div>
+        {/* Primary Stats Row - 3 Columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <JobApplicationsChart appliedCount={stats.applied} />
+          <JobSearchPipeline stats={stats} totalJobs={jobs.length} />
+          <DatesCalendar jobs={jobs} onUpdateJob={updateJob} />
         </div>
 
-        {/* Weekly Insights & Priority Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
-            <WeeklySummary />
-          </div>
-          <div className="lg:col-span-2">
-            <PrioritiesSection />
-          </div>
+        {/* Insights Row - 2 Columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <WeeklySummary
+            jobsSaved={stats.weeklyJobsSaved}
+            newConnections={stats.newConnections}
+            avgExcitement={stats.avgExcitement}
+            applyVelocity={stats.applyVelocity}
+          />
+          <RecentActivity jobs={jobs} />
         </div>
 
-        {/* Original Welcome Section */}
+        {/* Priorities Section */}
+        <PrioritiesSection />
+
+        {/* Welcome Section */}
         <div className="text-center py-12">
           <h1 className="text-4xl font-bold tracking-tight mb-4">
             Welcome to Job Tracker
@@ -112,7 +108,6 @@ export default function Index() {
             Organize your job search, track applications, and land your dream job with our comprehensive job tracking platform.
           </p>
 
-          {/* Feature Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 max-w-4xl mx-auto">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/trackers")}>
               <CardHeader>

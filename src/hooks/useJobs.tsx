@@ -47,6 +47,7 @@ export function useJobs() {
         excitement: job.excitement,
         checklist: job.checklist || {},
         notes: job.notes || undefined,
+        createdAt: job.created_at,
       })) || [];
 
       setJobs(transformedJobs);
@@ -99,20 +100,21 @@ export function useJobs() {
         id: (data as any).id,
         position: (data as any).position,
         company: (data as any).company,
-        jobUrl: data.job_url || undefined,
-        minSalary: data.min_salary || undefined,
-        maxSalary: data.max_salary || undefined,
-        location: data.location || undefined,
-        description: data.description || undefined,
-        status: data.status as Job["status"],
-        datePosted: data.date_posted || undefined,
-        dateSaved: data.date_saved,
-        deadline: data.deadline || undefined,
-        dateApplied: data.date_applied || undefined,
-        followUp: data.follow_up || undefined,
-        excitement: data.excitement,
-        checklist: data.checklist || {},
-        notes: data.notes || undefined,
+        jobUrl: (data as any).job_url || undefined,
+        minSalary: (data as any).min_salary || undefined,
+        maxSalary: (data as any).max_salary || undefined,
+        location: (data as any).location || undefined,
+        description: (data as any).description || undefined,
+        status: (data as any).status as Job["status"],
+        datePosted: (data as any).date_posted || undefined,
+        dateSaved: (data as any).date_saved,
+        deadline: (data as any).deadline || undefined,
+        dateApplied: (data as any).date_applied || undefined,
+        followUp: (data as any).follow_up || undefined,
+        excitement: (data as any).excitement,
+        checklist: (data as any).checklist || {},
+        notes: (data as any).notes || undefined,
+        createdAt: (data as any).created_at,
       };
 
       setJobs(prev => [transformedJob, ...prev]);

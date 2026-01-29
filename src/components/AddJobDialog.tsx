@@ -68,7 +68,7 @@ export function AddJobDialog({ onAddJob, initialData, open: controlledOpen, onOp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const newJob: Omit<Job, "id"> = {
       position: formData.position,
       jobUrl: formData.jobUrl || undefined,
@@ -79,9 +79,9 @@ export function AddJobDialog({ onAddJob, initialData, open: controlledOpen, onOp
       maxSalary: formData.maxSalary ? parseInt(formData.maxSalary) : undefined,
       status: formData.status,
       datePosted: formData.datePosted || undefined,
-      dateSaved: new Date().toISOString().split('T')[0],
+      dateSaved: new Date().toISOString(),
       deadline: formData.deadline || undefined,
-      dateApplied: formData.status === "Applied" ? new Date().toISOString().split('T')[0] : undefined,
+      dateApplied: formData.status === "Applied" ? new Date().toISOString() : undefined,
       excitement: formData.excitement,
     };
 
@@ -114,7 +114,7 @@ export function AddJobDialog({ onAddJob, initialData, open: controlledOpen, onOp
         <DialogHeader>
           <DialogTitle>Add a New Job Post</DialogTitle>
         </DialogHeader>
-        
+
         {showExtensionBanner && (
           <div className="bg-muted border rounded-lg p-3 mb-4 relative">
             <Button

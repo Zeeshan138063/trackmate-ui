@@ -15,14 +15,14 @@ export function PrioritiesSection() {
 
   const handleAddPriority = async () => {
     if (!newPriority.title.trim()) return;
-    
+
     const priority: Omit<Priority, 'id'> = {
       title: newPriority.title,
       description: newPriority.description,
       completed: false,
       important: newPriority.important
     };
-    
+
     await addPriority(priority);
     setNewPriority({ title: '', description: '', important: false });
     setIsAddingPriority(false);
@@ -57,11 +57,13 @@ export function PrioritiesSection() {
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+    <Card className="border-none shadow-xl bg-gradient-to-br from-card to-muted/30">
+      <CardHeader className="flex flex-row items-center justify-between pb-3">
         <div className="flex items-center space-x-2">
-          <Star className="h-5 w-5 text-primary" />
-          <CardTitle>Priorities</CardTitle>
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Star className="h-4 w-4 text-primary" />
+          </div>
+          <CardTitle className="text-sm font-bold uppercase tracking-widest">Target Priorities</CardTitle>
         </div>
         <Dialog open={isAddingPriority} onOpenChange={setIsAddingPriority}>
           <DialogTrigger asChild>
@@ -120,9 +122,8 @@ export function PrioritiesSection() {
             sortedPriorities.map((priority) => (
               <div
                 key={priority.id}
-                className={`flex items-start space-x-3 p-3 rounded-lg border ${
-                  priority.completed ? 'bg-muted/50' : 'bg-background'
-                }`}
+                className={`flex items-start space-x-3 p-3 rounded-lg border ${priority.completed ? 'bg-muted/50' : 'bg-background'
+                  }`}
               >
                 <button
                   onClick={() => handleToggleComplete(priority.id, priority.completed)}
@@ -134,7 +135,7 @@ export function PrioritiesSection() {
                     <Circle className="h-5 w-5 text-muted-foreground hover:text-foreground" />
                   )}
                 </button>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2">
                     <h4 className={`font-medium ${priority.completed ? 'line-through text-muted-foreground' : ''}`}>
@@ -153,7 +154,7 @@ export function PrioritiesSection() {
                     </p>
                   )}
                 </div>
-                
+
                 <div className="flex items-center space-x-1">
                   <button
                     onClick={() => handleToggleImportant(priority.id, priority.important)}
