@@ -19,6 +19,7 @@ export interface Job {
   notes?: string;
   attachedResume?: string; // Legacy: JSON snapshot
   resumeS3Key?: string; // New: S3 Key
+  createdAt?: string;
 }
 
 export type JobChecklist = Record<string, boolean>;

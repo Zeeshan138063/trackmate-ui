@@ -77,11 +77,13 @@ export function DatesCalendar({ jobs, onUpdateJob }: DatesCalendarProps) {
 
   return (
     <>
-      <Card className="h-full flex flex-col overflow-hidden">
-        <CardHeader className="pb-2 flex-none">
+      <Card className="h-full flex flex-col overflow-hidden border-none shadow-xl bg-gradient-to-br from-card to-muted/30">
+        <CardHeader className="pb-3 flex-none">
           <div className="flex items-center space-x-2">
-            <CalendarDays className="h-5 w-5 text-primary" />
-            <CardTitle>Dates</CardTitle>
+            <div className="p-2 rounded-lg bg-primary/10">
+              <CalendarDays className="h-4 w-4 text-primary" />
+            </div>
+            <CardTitle className="text-sm font-bold uppercase tracking-widest">Dates & Deadlines</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="flex-1 flex flex-col min-h-0">
