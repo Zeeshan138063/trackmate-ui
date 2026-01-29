@@ -38,9 +38,9 @@ const navigationItems = [
   { title: "Meeting Hub", url: "/meeting-hub", icon: Calendar },
   { title: "Resume Builder", url: "/resume", icon: FileText },
   { title: "Trackers", url: "/trackers", icon: Target },
-  { title: "Interview Practice", url: "/interview", icon: MessageSquare },
+  /* { title: "Interview Practice", url: "/interview", icon: MessageSquare },
   { title: "Interview Feedback", url: "/interview-feedback", icon: MessageSquare },
-  { title: "Work Styles", url: "/work-styles", icon: Briefcase },
+  { title: "Work Styles", url: "/work-styles", icon: Briefcase }, */
   { title: "Job Search", url: "/job-search", icon: Search },
   { title: "Application Copilot", url: "/application-copilot", icon: Bot },
   { title: "Dream Companies", url: "/dream-companies", icon: Building },
