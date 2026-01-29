@@ -14,7 +14,7 @@ export function CareerGoalSection() {
   // Use existing goal or default values
   const currentGoal = goals[0] || {
     targetTitle: "Set your target role",
-    targetDate: "-",
+    targetDate: "",
     salaryMin: 0,
     salaryMax: 0
   };
@@ -52,6 +52,21 @@ export function CareerGoalSection() {
       currency: 'USD',
       maximumFractionDigits: 0
     }).format(amount);
+  };
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr || dateStr === "-") return "-";
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr;
+      return date.toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch {
+      return dateStr;
+    }
   };
 
   if (loading) {
@@ -95,6 +110,7 @@ export function CareerGoalSection() {
                 <Label htmlFor="targetDate">Target Date</Label>
                 <Input
                   id="targetDate"
+                  type="date"
                   value={editForm.targetDate}
                   onChange={(e) => setEditForm({ ...editForm, targetDate: e.target.value })}
                 />
@@ -139,7 +155,7 @@ export function CareerGoalSection() {
           </div>
           <div>
             <div className="font-medium text-muted-foreground">Target Date</div>
-            <div className="font-semibold">{currentGoal.targetDate}</div>
+            <div className="font-semibold">{formatDate(currentGoal.targetDate)}</div>
           </div>
           <div>
             <div className="font-medium text-muted-foreground">Target Salary Range</div>

@@ -164,7 +164,7 @@ export function DatesCalendar({ jobs, onUpdateJob }: DatesCalendarProps) {
                       <span className="h-px flex-1 bg-border/50"></span>
                     </h4>
 
-                    <div className="overflow-y-auto flex-1 pr-1 space-y-2 min-h-[100px] max-h-[300px]">
+                    <div className="overflow-y-auto flex-1 pr-1 space-y-2 min-h-[60px] max-h-[145px]">
                       {selectedDateJobs.length > 0 ? (
                         selectedDateJobs.map((job) => (
                           <div

@@ -1,5 +1,3 @@
-
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CareerGoalSection } from "@/components/CareerGoalSection";
@@ -9,8 +7,6 @@ import { RecentActivity } from "@/components/RecentActivity";
 import { WeeklySummary } from "@/components/WeeklySummary";
 import { DatesCalendar } from "@/components/DatesCalendar";
 import { PrioritiesSection } from "@/components/PrioritiesSection";
-import { RecentActivity } from "@/components/RecentActivity";
-import { WeeklySummary } from "@/components/WeeklySummary";
 import { useJobs } from "@/hooks/useJobs";
 import { useContacts } from "@/hooks/useContacts";
 import { useState, useMemo, useEffect } from "react";
@@ -82,33 +78,28 @@ export default function Index() {
         {/* Career Goal Section */}
         <CareerGoalSection />
 
-        {/* Dashboard Stats Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-1">
-            <JobApplicationsChart appliedCount={stats.applied} />
-          </div>
-          <div className="lg:col-span-1">
-            <JobSearchPipeline stats={stats} totalJobs={jobs.length} />
-          </div>
-          <div className="lg:col-span-1">
-            <RecentActivity />
-          </div>
-          <div className="lg:col-span-1">
-            <DatesCalendar jobs={jobs} onUpdateJob={updateJob} />
-          </div>
+        {/* Primary Stats Row - 3 Columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <JobApplicationsChart appliedCount={stats.applied} />
+          <JobSearchPipeline stats={stats} totalJobs={jobs.length} />
+          <DatesCalendar jobs={jobs} onUpdateJob={updateJob} />
         </div>
 
-        {/* Weekly Insights & Priority Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
-            <WeeklySummary />
-          </div>
-          <div className="lg:col-span-2">
-            <PrioritiesSection />
-          </div>
+        {/* Insights Row - 2 Columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <WeeklySummary
+            jobsSaved={stats.weeklyJobsSaved}
+            newConnections={stats.newConnections}
+            avgExcitement={stats.avgExcitement}
+            applyVelocity={stats.applyVelocity}
+          />
+          <RecentActivity jobs={jobs} />
         </div>
 
-        {/* Original Welcome Section */}
+        {/* Priorities Section */}
+        <PrioritiesSection />
+
+        {/* Welcome Section */}
         <div className="text-center py-12">
           <h1 className="text-4xl font-bold tracking-tight mb-4">
             Welcome to Job Tracker
@@ -117,7 +108,6 @@ export default function Index() {
             Organize your job search, track applications, and land your dream job with our comprehensive job tracking platform.
           </p>
 
-          {/* Feature Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 max-w-4xl mx-auto">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/trackers")}>
               <CardHeader>

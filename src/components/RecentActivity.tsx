@@ -1,14 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { History, Briefcase, ChevronRight, Activity } from "lucide-react";
 import { Job } from "@/types/job";
 import { formatDistanceToNow } from "date-fns";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { History, Briefcase, ChevronRight, Activity, ChevronLeft } from "lucide-react";
 
 interface RecentActivityProps {
     jobs: Job[];
 }
 
 export function RecentActivity({ jobs }: RecentActivityProps) {
-    const activities = jobs
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 2;
+
+    const allActivities = jobs
         .map(job => {
             // Prioritize createdAt for accurate "time ago", fall back to dateApplied or dateSaved
             const date = job.createdAt ? new Date(job.createdAt) : new Date(job.dateApplied || job.dateSaved);
@@ -22,12 +27,17 @@ export function RecentActivity({ jobs }: RecentActivityProps) {
                 date,
             };
         })
-        .sort((a, b) => b.date.getTime() - a.date.getTime())
-        .slice(0, 4);
+        .sort((a, b) => b.date.getTime() - a.date.getTime());
+
+    const totalPages = Math.ceil(allActivities.length / itemsPerPage);
+    const activities = allActivities.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     return (
         <Card className="border-none shadow-xl bg-gradient-to-br from-card to-muted/30">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-3 border-b border-border/10">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                         <div className="p-2 rounded-lg bg-primary/10">
@@ -35,11 +45,38 @@ export function RecentActivity({ jobs }: RecentActivityProps) {
                         </div>
                         <CardTitle className="text-sm font-bold uppercase tracking-widest">Recent Activity</CardTitle>
                     </div>
-                    <Activity className="h-4 w-4 text-muted-foreground/30 animate-pulse" />
+                    <div className="flex items-center gap-2">
+                        <Activity className="h-4 w-4 text-muted-foreground/30 animate-pulse mr-2" />
+                        {totalPages > 1 && (
+                            <div className="flex items-center gap-1">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 rounded-md hover:bg-primary/20"
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                >
+                                    <ChevronLeft className="h-3 w-3" />
+                                </Button>
+                                <span className="text-[10px] font-bold tabular-nums text-muted-foreground w-8 text-center">
+                                    {currentPage}/{totalPages}
+                                </span>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 rounded-md hover:bg-primary/20"
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage === totalPages}
+                                >
+                                    <ChevronRight className="h-3 w-3" />
+                                </Button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </CardHeader>
-            <CardContent className="px-5">
-                <div className="space-y-4">
+            <CardContent className="px-5 pt-4">
+                <div className="space-y-4 min-h-[160px]">
                     {activities.length > 0 ? (
                         activities.map((activity) => (
                             <div key={activity.id} className="group flex items-center justify-between p-2 rounded-xl hover:bg-primary/5 transition-all duration-300 cursor-pointer">
@@ -81,82 +118,6 @@ export function RecentActivity({ jobs }: RecentActivityProps) {
                         </div>
                     )}
                 </div>
-            </CardContent>
-        </Card>
-    );
-}
-
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { History, Briefcase, MessageSquare, UserPlus } from "lucide-react";
-import { useJobs } from "@/hooks/useJobs";
-import { useInterviewFeedback } from "@/hooks/useInterviewFeedback";
-import { formatDistanceToNow } from "date-fns";
-import { useNavigate } from "react-router-dom";
-
-export function RecentActivity() {
-    const { jobs } = useJobs();
-    const { feedbacks } = useInterviewFeedback();
-    const navigate = useNavigate();
-
-    const activities = [
-        ...jobs.map(job => ({
-            id: job.id,
-            type: 'job',
-            title: `${job.company} - ${job.position}`,
-            description: `Status updated to ${job.status}`,
-            date: new Date(job.dateSaved),
-            icon: Briefcase,
-            color: 'text-blue-500',
-            link: '/trackers'
-        })),
-        ...feedbacks.map(fb => ({
-            id: fb.id,
-            type: 'feedback',
-            title: fb.company,
-            description: `Added interview feedback for ${fb.position}`,
-            date: new Date(fb.created_at),
-            icon: MessageSquare,
-            color: 'text-teal-500',
-            link: '/interview-feedback'
-        }))
-    ].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 5);
-
-    return (
-        <Card className="col-span-1 h-full">
-            <CardHeader>
-                <div className="flex items-center space-x-2">
-                    <History className="h-5 w-5 text-primary" />
-                    <CardTitle>Recent Activity</CardTitle>
-                </div>
-            </CardHeader>
-            <CardContent>
-                {activities.length > 0 ? (
-                    <div className="space-y-6">
-                        {activities.map((activity, idx) => (
-                            <div
-                                key={`${activity.type}-${activity.id}-${idx}`}
-                                className="flex items-start space-x-4 cursor-pointer hover:bg-muted/50 p-2 rounded-lg transition-colors"
-                                onClick={() => navigate(activity.link)}
-                            >
-                                <div className={`mt-1 p-2 rounded-full bg-muted ${activity.color}`}>
-                                    <activity.icon className="h-4 w-4" />
-                                </div>
-                                <div className="flex-1 space-y-1">
-                                    <p className="text-sm font-medium leading-none">{activity.title}</p>
-                                    <p className="text-xs text-muted-foreground">{activity.description}</p>
-                                    <p className="text-[10px] text-muted-foreground/60">
-                                        {formatDistanceToNow(activity.date, { addSuffix: true })}
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-12 text-muted-foreground">
-                        <p className="text-sm">No recent activity found.</p>
-                    </div>
-                )}
             </CardContent>
         </Card>
     );
