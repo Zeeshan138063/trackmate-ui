@@ -682,8 +682,7 @@ async function saveJobDirectly(jobData) {
         date_posted: jobData.date_posted,
         deadline: jobData.deadline,
         status: jobData.status,
-        excitement: jobData.excitement,
-        screenshot_url: jobData.screenshot_url
+        excitement: jobData.excitement
       })
     });
 
