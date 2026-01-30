@@ -180,6 +180,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ success: false, error: 'No data ID provided' });
     return true;
   }
+
+  // Handle portal-to-extension logout
+  if (request.action === 'portalLogout') {
+    const projectRef = "jdplobgtxzncwxhordah";
+    const storageKey = `sb-${projectRef}-auth-token`;
+    chrome.storage.local.remove([storageKey], () => {
+      console.log("TrackMate Extension: Logged out via Portal.");
+      sendResponse({ success: true });
+    });
+    return true;
+  }
 });
 
 // Capture screenshot of current tab

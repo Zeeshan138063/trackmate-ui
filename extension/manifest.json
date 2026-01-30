@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TrackMate Job Capture",
-  "version": "1.4.8",
+  "version": "1.5.1",
   "description": "Capture job details and screenshots from job posting pages",
   "permissions": [
     "activeTab",
@@ -53,7 +53,8 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "popup.html"
+        "popup.html",
+        "supabase-js.js"
       ],
       "matches": [
         "<all_urls>"
