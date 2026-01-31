@@ -68,7 +68,7 @@ export function ATSTemplate({ data, className }: ATSTemplateProps) {
                                 <span>{exp.startDate} — {exp.endDate || "Present"}</span>
                             </div>
                             <div className="gap-0.5">
-                                {exp.description.split('\n').map((line, idx) => {
+                                {String(exp.description || '').split(/\r?\n/).map((line, idx) => {
                                     const trimmed = line.trim();
                                     if (!trimmed) return null;
                                     const isBullet = trimmed.startsWith('•') || trimmed.startsWith('-');
@@ -108,7 +108,7 @@ export function ATSTemplate({ data, className }: ATSTemplateProps) {
                                 {Array.isArray(proj.technologies) ? proj.technologies.join(', ') : proj.technologies}
                             </div>
 
-                            <p className="text-sm leading-snug text-gray-800">{proj.description}</p>
+                            <p className="text-sm leading-snug text-gray-800">{proj.description || ''}</p>
                         </div>
                     ))}
                 </section>
@@ -144,7 +144,7 @@ export function ATSTemplate({ data, className }: ATSTemplateProps) {
                                 <span>{vol.startDate} — {vol.endDate || "Present"}</span>
                             </div>
                             <div className="italic mb-1">{vol.role}</div>
-                            <p>{vol.description}</p>
+                            <p>{vol.description || ''}</p>
                         </div>
                     ))}
                 </section>

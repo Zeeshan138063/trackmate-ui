@@ -115,6 +115,7 @@ export default function ResumeBuilder() {
                       <SelectContent>
                         <SelectItem value="ats">ATS Classic</SelectItem>
                         <SelectItem value="europass">Europass</SelectItem>
+                        <SelectItem value="modern">Modern (Reactive)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

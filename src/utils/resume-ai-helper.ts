@@ -38,14 +38,16 @@ export const ResumeAIHelper = {
       
       INSTRUCTIONS:
       -   **Summary**: Rewrite it to pitch the candidate for THIS specific role.
-      -   **Experience**: Keep the same company/role structure, but you may reorder or rewrite the bullet points (description). Focus on what matters for this JD.
+      -   **Experience**: Keep the same company/role structure, but you may reorder or rewrite the description. Focus on what matters for this JD.
+          -   **CRITICAL**: Capture the FULL description for each role. This includes any introductory summary paragraphs AND the bulleted achievements. 
+          -   Use a newline (\\n) character to separate distinct points, regardless of whether they are paragraphs or bullets.
       -   **Skills**: Filter the list to prioritize skills mentioned in the JD.
       -   **Projects**: Select the top 3-5 projects from the Master Profile that demonstrate required skills.
           -   **STRICT REQUIREMENT**: You MUST use actual projects from the Master Profile. Do NOT invent, hallucinate, or create new projects from scratch.
           -   You may rephrase the description to highlight relevant technologies, but the project identity must remain the same.
       -   **CRITICAL FIELDS**: For every project, you MUST populate the "name", "technologies" AND "description" fields.
           -   "technologies": If not explicitly listed, infer reasonable technologies based on the project description and common stack usage.
-          -   "description": Must be detailed, bulleted (concatenated as string), and explain *how* the technologies were used to solve a problem.
+          -   "description": Must be detailed, and use a newline (\\n) to separate distinct points or accomplishments.
       -   **PLAIN TEXT ONLY**: Do NOT use markdown syntax (like **bold**, *italic*) within the JSON string values. The output must be pure plain text.
       -   Do NOT invent false facts. Only reframe existing experience.
       
@@ -113,14 +115,18 @@ export const ResumeAIHelper = {
       ${resumeText.substring(0, 15000)}
       
       INSTRUCTIONS:
-      -   **Contact**: Extract name, email, phone, location, and links (LinkedIn, GitHub, etc.).
+      -   **Contact**: Extract name, email, phone, location, and links (LinkedIn, GitHub, and Portfolio). 
+          -   **CRITICAL**: Look for URLs in the text, especially in a block tagged "[Links found: ...]". Map them to the correct fields (linkedin, github, portfolio). 
+          -   If a link is just "linkedin.com/in/...", it's a LinkedIn link. If it's "github.com/...", it's a GitHub link. 
       -   **Summary**: specific professional summary or objective, if present.
-      -   **Experience**: Extract all work experience. Infer "current" if no end date. split description into bullet points.
+      -   **Experience**: Extract all work experience including company, position, location, and dates.
+          -   **CRITICAL**: Capture the FULL description for each role. Do NOT skip introductory paragraphs or context that precedes the bullet points. 
+          -   Split the entire description into distinct lines and separate them using a newline (\\n) character in the final JSON string.
       -   **Education**: Extract school, degree, field/major, dates.
       -   **Skills**: Group skills into categories if possible, or put them all under "General".
       -   **Projects**: Extract any separate projects section. If none, leave empty array.
-          -   **IMPORTANT**: For projects, try to identify the 'name', 'technologies', and 'description'.
-      -   **Certifications/Awards/Volunteering/Publications**: Extract if present.
+          -   **IMPORTANT**: For projects, try to identify the 'name', 'technologies', and 'description'. Use newlines (\\n) for bulleted descriptions.
+      -   **Certifications/Awards/Volunteering/Publications**: Extract if present. Use newlines for descriptions where appropriate.
       
       OUTPUT FORMAT:
       Return a VALID JSON object matching the 'MasterProfile' interface structure EXACTLY.

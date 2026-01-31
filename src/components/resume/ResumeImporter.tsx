@@ -11,6 +11,7 @@ import { ResumeAIHelper } from "@/utils/resume-ai-helper";
 import { MasterProfile } from "@/types/resume";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { mapReactiveResumeToMasterProfile } from "@/utils/reactive-resume-mapper";
 
 interface ResumeImporterProps {
     onImport: (profile: MasterProfile) => void;
@@ -70,6 +71,51 @@ export function ResumeImporter({ onImport }: ResumeImporterProps) {
 
     const handleLinkedInImport = async () => {
         // No-op manually triggered import for now, as we guide users to extension
+    };
+
+    const handleReactiveImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsProcessing(true);
+        try {
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const json = JSON.parse(event.target?.result as string);
+
+                    // Simple validation: check for basics/metadata/sections
+                    if (!json.basics || !json.sections || !json.metadata) {
+                        throw new Error("Invalid Reactive Resume JSON format. Please ensure you exported from Reactive Resume.");
+                    }
+
+                    const profile = mapReactiveResumeToMasterProfile(json);
+                    onImport(profile);
+
+                    toast({
+                        title: "Import Successful",
+                        description: "Your Reactive Resume data has been imported.",
+                    });
+                    setIsOpen(false);
+                } catch (err: any) {
+                    toast({
+                        title: "Import Failed",
+                        description: err.message || "Failed to parse JSON file.",
+                        variant: "destructive",
+                    });
+                } finally {
+                    setIsProcessing(false);
+                }
+            };
+            reader.readAsText(file);
+        } catch (error: any) {
+            setIsProcessing(false);
+            toast({
+                title: "Error",
+                description: "Failed to read the file.",
+                variant: "destructive",
+            });
+        }
     };
 
     // Listen for extension data
@@ -154,9 +200,10 @@ export function ResumeImporter({ onImport }: ResumeImporterProps) {
                 </DialogHeader>
 
                 <Tabs defaultValue="file" value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
+                    <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="file">File Upload</TabsTrigger>
                         <TabsTrigger value="linkedin">LinkedIn</TabsTrigger>
+                        <TabsTrigger value="reactive">Reactive Resume</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="file" className="space-y-4 py-4">
@@ -213,6 +260,37 @@ export function ResumeImporter({ onImport }: ResumeImporterProps) {
                             <div className="text-xs text-slate-500 bg-white p-2 rounded border">
                                 <strong>Why?</strong> LinkedIn blocks direct URL importing. The extension securely captures the data from your browser session.
                             </div>
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="reactive" className="space-y-4 py-4">
+                        <div className="space-y-4">
+                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
+                                <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+                                <div className="text-sm text-amber-900">
+                                    <p className="font-semibold">Import from Reactive Resume</p>
+                                    <p className="mt-1">Upload the <strong>.json</strong> export from your Reactive Resume account (rxresu.me) to instantly populate your TrackMate profile.</p>
+                                </div>
+                            </div>
+
+                            <div className="grid w-full max-w-sm items-center gap-1.5">
+                                <Label htmlFor="reactive-json">Reactive Resume JSON Export</Label>
+                                <Input
+                                    id="reactive-json"
+                                    type="file"
+                                    accept=".json"
+                                    onChange={handleReactiveImport}
+                                    disabled={isProcessing}
+                                />
+                                <p className="text-[10px] text-muted-foreground">Go to Resumes -{">"} Export -{">"} JSON on rxresu.me</p>
+                            </div>
+
+                            {isProcessing && (
+                                <div className="flex items-center justify-center py-4 text-sm text-muted-foreground">
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Importing data...
+                                </div>
+                            )}
                         </div>
                     </TabsContent>
                 </Tabs>
