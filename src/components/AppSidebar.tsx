@@ -87,7 +87,7 @@ export function AppSidebar() {
               </div>
               {!collapsed && (
                 <span className="font-semibold text-lg whitespace-nowrap">
-                  CareerPilot <span className="text-[10px] font-mono font-black bg-[length:200%_auto] bg-gradient-to-r from-primary via-indigo-400 to-primary bg-clip-text text-transparent animate-shimmer ml-1 tracking-tighter">AI</span>
+                  CareerPilot <span className="text-[10px] font-mono font-black bg-[length:200%_auto] bg-gradient-to-r from-primary via-white to-primary bg-clip-text text-transparent animate-shimmer ml-1 tracking-tighter">AI</span>
                 </span>
               )}
             </Link>

@@ -107,7 +107,7 @@ export function AuthForm({ onSuccess, initialMode = 'signin' }: AuthFormProps) {
 
           <div className="space-y-1">
             <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight drop-shadow-lg flex items-center justify-center gap-3">
-              CareerPilot <span className="text-[11px] font-mono font-black bg-[length:200%_auto] bg-gradient-to-r from-indigo-500 via-white to-indigo-500 bg-clip-text text-transparent px-2 py-0.5 rounded-full border border-white/20 backdrop-blur-md align-middle mb-1 shadow-[0_0_15px_rgba(255,255,255,0.1)] animate-shimmer inline-flex items-center tracking-widest">AI</span>
+              CareerPilot <span className="text-[11px] font-mono font-black bg-[length:200%_auto] bg-gradient-to-r from-primary via-white to-primary bg-clip-text text-transparent animate-shimmer inline-block ml-1 tracking-tighter shadow-sm">AI</span>
             </h1>
             <p className="text-slate-300 text-lg font-light">
               {isResetPassword ? "Secure your account" : "Stop Searching. Start Interviewing."}

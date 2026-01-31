@@ -110,7 +110,7 @@ export default function Index() {
         {/* Welcome Section */}
         <div className="text-center py-12">
           <h1 className="text-4xl font-bold tracking-tight mb-4 flex items-center justify-center gap-3">
-            Welcome to CareerPilot <span className="text-sm font-mono font-black bg-[length:200%_auto] bg-gradient-to-r from-primary via-indigo-500 to-primary bg-clip-text text-transparent px-3 py-1 rounded-full border border-primary/20 flex items-center gap-1 animate-shimmer tracking-widest shadow-sm">AI <Sparkles className="h-3 w-3 text-primary" /></span>
+            Welcome to CareerPilot <span className="text-sm font-mono font-black bg-[length:200%_auto] bg-gradient-to-r from-primary via-white to-primary bg-clip-text text-transparent px-3 py-1 rounded-full border border-primary/20 flex items-center gap-1 animate-shimmer tracking-widest shadow-sm">AI <Sparkles className="h-3 w-3 text-primary" /></span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12">
             Your intelligent navigator for career growth. Organize your search, track applications, and land your dream job with AI-powered insights.
@@ -122,7 +122,7 @@ export default function Index() {
                 <CardTitle className="flex items-center">
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold text-lg">Application Tracker</h3>
-                    <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20 font-mono font-black animate-shimmer bg-[length:200%_auto] bg-gradient-to-r from-primary via-indigo-500 to-primary bg-clip-text text-transparent flex items-center gap-1 tracking-widest uppercase">
+                    <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20 font-mono font-black animate-shimmer bg-[length:200%_auto] bg-gradient-to-r from-primary via-white to-primary bg-clip-text text-transparent flex items-center gap-1 tracking-widest uppercase">
                       AI POWERED <Bot className="h-3 w-3 text-primary" />
                     </span>
                   </div>
