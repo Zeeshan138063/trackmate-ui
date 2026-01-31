@@ -68,6 +68,7 @@ export default function ResumeBuilder() {
                 )}
                 <ResumeImporter onImport={(importedData) => {
                   setLiveData(importedData);
+                  saveMasterProfile(importedData);
                   // Update version to force re-render of Editor with new data
                   setEditorVersion(v => v + 1);
                 }} />
