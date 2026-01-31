@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -102,17 +101,13 @@ export function AuthForm({ onSuccess, initialMode = 'signin' }: AuthFormProps) {
 
         {/* Header Section */}
         <div className="mb-8 space-y-4">
-          <p className="text-slate-200 text-sm font-medium tracking-widest uppercase">
-            Unlock Your Future.
+          <p className="text-slate-200 text-sm font-medium tracking-widest uppercase flex items-center justify-center gap-2">
+            Unlock Your Future <Sparkles className="h-3 w-3" />
           </p>
 
-          <div className="relative inline-block">
-            <Send className="w-10 h-10 text-white mx-auto mb-4 -rotate-12" />
-          </div>
-
           <div className="space-y-1">
-            <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight drop-shadow-lg">
-              TrackMate
+            <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight drop-shadow-lg flex items-center justify-center gap-3">
+              CareerPilot <span className="text-[11px] font-mono font-black bg-[length:200%_auto] bg-gradient-to-r from-indigo-500 via-white to-indigo-500 bg-clip-text text-transparent px-2 py-0.5 rounded-full border border-white/20 backdrop-blur-md align-middle mb-1 shadow-[0_0_15px_rgba(255,255,255,0.1)] animate-shimmer inline-flex items-center tracking-widest">AI</span>
             </h1>
             <p className="text-slate-300 text-lg font-light">
               {isResetPassword ? "Secure your account" : "Stop Searching. Start Interviewing."}
@@ -147,7 +142,6 @@ export function AuthForm({ onSuccess, initialMode = 'signin' }: AuthFormProps) {
           </div>
 
           <div className="flex items-center justify-between text-xs text-slate-300 px-1">
-            {/* Simple toggle for UI purposes */}
             <button
               type="button"
               onClick={() => setMode(isSignUp ? 'signin' : 'signup')}
@@ -182,7 +176,7 @@ export function AuthForm({ onSuccess, initialMode = 'signin' }: AuthFormProps) {
           >
             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
               <span className="flex items-center gap-2">
-                {isResetPassword ? "Update Password" : (isForgotPassword ? "Send Reset Link" : (isSignUp ? "Create Account" : "Launch Auto-Pilot"))} <Sparkles className="w-4 h-4" />
+                {isResetPassword ? "Update Password" : (isForgotPassword ? "Send Reset Link" : (isSignUp ? "Create Account" : "Launch CareerPilot AI"))} <Sparkles className="w-4 h-4" />
               </span>
             )}
           </Button>
@@ -240,7 +234,7 @@ export function AuthForm({ onSuccess, initialMode = 'signin' }: AuthFormProps) {
 
         {/* Footer */}
         <div className="mt-12 text-slate-400/60 text-[10px]">
-          © 2024 TrackMate. All rights reserved.
+          © {new Date().getFullYear()} CareerPilot AI. All rights reserved.
         </div>
       </div>
     </div>

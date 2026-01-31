@@ -27,24 +27,24 @@
 ### Step 3: Pin Extension (Optional)
 
 1. Click the puzzle piece icon (extensions) in your browser toolbar
-2. Find "TrackMate Job Capture"
+2. Find "CareerPilot AI Job Capture"
 3. Click the pin icon to keep it visible in your toolbar
 
-### Step 4: Configure TrackMate URL
+### Step 4: Configure CareerPilot AI URL
 
-1. Make sure your TrackMate UI is running (default: `http://localhost:5173`)
-2. Click the TrackMate extension icon
-3. Verify the TrackMate URL in the settings field
-4. Update if your TrackMate is running on a different URL/port
+1. Make sure your CareerPilot AI UI is running (default: `http://localhost:5173`)
+2. Click the CareerPilot AI extension icon
+3. Verify the CareerPilot AI URL in the settings field
+4. Update if your CareerPilot AI is running on a different URL/port
 
 ## Usage
 
 1. Navigate to any job posting page (LinkedIn, Indeed, etc.)
-2. Click the TrackMate extension icon
+2. Click the CareerPilot AI extension icon
 3. The extension will automatically extract job details
 4. Review the extracted data
 5. Click "📸 Capture Screenshot" if you want a screenshot
-6. Click "💾 Save to TrackMate" to add the job to your dashboard
+6. Click "💾 Save to CareerPilot AI" to add the job to your dashboard
 
 ## Troubleshooting
 
@@ -66,9 +66,9 @@
 - Try manually clicking "Extract Job Data"
 - Some sites may have changed their HTML structure
 
-### Can't send to TrackMate
+### Can't send to CareerPilot AI
 
-- Verify TrackMate is running
+- Verify CareerPilot AI is running
 - Check the URL in extension settings
 - Make sure the URL includes `/trackers` path
 
@@ -78,11 +78,11 @@
 2. Click the extension icon
 3. Verify job details are extracted
 4. Test screenshot capture
-5. Test sending to TrackMate
+5. Test sending to CareerPilot AI
 
 ## Uninstalling
 
 1. Go to `chrome://extensions/` or `edge://extensions/`
-2. Find "TrackMate Job Capture"
+2. Find "CareerPilot AI Job Capture"
 3. Click "Remove"
 

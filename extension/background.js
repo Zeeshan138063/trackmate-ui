@@ -50,13 +50,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
-  if (request.action === 'sendToTrackMate') {
-    // Send job data to TrackMate UI
+  if (request.action === 'sendToCareerPilot') {
+    // Send job data to CareerPilot UI
     const jobData = request.data;
-    const trackMateUrl = request.trackMateUrl || 'http://localhost:8080/trackers';
+    const careerPilotUrl = request.careerPilotUrl || 'http://localhost:8080/trackers';
 
     // Generate a unique ID for this job data
-    const jobDataId = 'trackmate_job_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    const jobDataId = 'careerpilot_job_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
     // Store full job data in extension storage (handles large descriptions/screenshots)
     chrome.storage.local.set({ [jobDataId]: jobData }, () => {
@@ -79,7 +79,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       });
 
       // Ensure total URL length is reasonable (max ~2000 chars to be safe)
-      const fullUrl = `${trackMateUrl}?${params.toString()}`;
+      const fullUrl = `${careerPilotUrl}?${params.toString()}`;
       if (fullUrl.length > 2000) {
         console.warn('URL too long, truncating further');
         // Further truncate if needed
@@ -90,7 +90,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
 
       chrome.tabs.create({
-        url: `${trackMateUrl}?${params.toString()}`
+        url: `${careerPilotUrl}?${params.toString()}`
       });
 
       // Clean up stored data after 1 hour (in case user doesn't save)
@@ -103,13 +103,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
-  if (request.action === 'sendContactToTrackMate') {
+  if (request.action === 'sendContactToCareerPilot') {
     const contactData = request.data;
     // Construct URL to Connections page
-    const baseUrl = request.trackMateUrl.replace(/\/trackers\/?$/, ''); // strip /trackers
+    const baseUrl = request.careerPilotUrl.replace(/\/trackers\/?$/, ''); // strip /trackers
     const connectionsUrl = `${baseUrl}/connections`; // assume /connections route
 
-    const dataId = 'trackmate_contact_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    const dataId = 'careerpilot_contact_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
     chrome.storage.local.set({ [dataId]: contactData }, () => {
       const params = new URLSearchParams({
@@ -132,14 +132,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
-  if (request.action === 'sendProfileToTrackMate') {
+  if (request.action === 'sendProfileToCareerPilot') {
     const profileData = request.data;
-    // TrackMate URL
-    const baseUrl = request.trackMateUrl || 'http://localhost:8080';
+    // CareerPilot URL
+    const baseUrl = request.careerPilotUrl || 'http://localhost:8080';
     // We'll target the Resume Builder page
     const resumeUrl = `${baseUrl.replace(/\/trackers\/?$/, '')}/resume`;
 
-    const dataId = 'trackmate_profile_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    const dataId = 'careerpilot_profile_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
     chrome.storage.local.set({ [dataId]: profileData }, () => {
       const params = new URLSearchParams({
@@ -162,7 +162,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
-  // Allow TrackMate page to fetch full job data by ID
+  // Allow CareerPilot page to fetch full job data by ID
   if (request.action === 'getJobData') {
     const dataId = request.dataId;
     if (dataId) {
@@ -186,7 +186,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     const projectRef = "jdplobgtxzncwxhordah";
     const storageKey = `sb-${projectRef}-auth-token`;
     chrome.storage.local.remove([storageKey], () => {
-      console.log("TrackMate Extension: Logged out via Portal.");
+      console.log("CareerPilot Extension: Logged out via Portal.");
       sendResponse({ success: true });
     });
     return true;

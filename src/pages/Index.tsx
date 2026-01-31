@@ -11,7 +11,15 @@ import { useJobs } from "@/hooks/useJobs";
 import { useContacts } from "@/hooks/useContacts";
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Briefcase, Users, FileText, MessageSquare } from "lucide-react";
+import {
+  ArrowUpRight,
+  TrendingUp,
+  Target,
+  Users,
+  Search,
+  Bot,
+  Sparkles, Briefcase, FileText, MessageSquare
+} from "lucide-react";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -101,19 +109,23 @@ export default function Index() {
 
         {/* Welcome Section */}
         <div className="text-center py-12">
-          <h1 className="text-4xl font-bold tracking-tight mb-4">
-            Welcome to Job Tracker
+          <h1 className="text-4xl font-bold tracking-tight mb-4 flex items-center justify-center gap-3">
+            Welcome to CareerPilot <span className="text-sm font-mono font-black bg-[length:200%_auto] bg-gradient-to-r from-primary via-indigo-500 to-primary bg-clip-text text-transparent px-3 py-1 rounded-full border border-primary/20 flex items-center gap-1 animate-shimmer tracking-widest shadow-sm">AI <Sparkles className="h-3 w-3 text-primary" /></span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12">
-            Organize your job search, track applications, and land your dream job with our comprehensive job tracking platform.
+            Your intelligent navigator for career growth. Organize your search, track applications, and land your dream job with AI-powered insights.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 max-w-4xl mx-auto">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/trackers")}>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Briefcase className="mr-2 h-5 w-5" />
-                  Job Tracker
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-lg">Application Tracker</h3>
+                    <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20 font-mono font-black animate-shimmer bg-[length:200%_auto] bg-gradient-to-r from-primary via-indigo-500 to-primary bg-clip-text text-transparent flex items-center gap-1 tracking-widest uppercase">
+                      AI POWERED <Bot className="h-3 w-3 text-primary" />
+                    </span>
+                  </div>
                 </CardTitle>
                 <CardDescription>
                   Keep track of all your job applications in one organized place

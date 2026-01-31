@@ -1,4 +1,4 @@
-// Popup script for TrackMate extension
+// Popup script for CareerPilot extension
 
 // --- Supabase Initialization ---
 const SUPABASE_URL = "https://jdplobgtxzncwxhordah.supabase.co";
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const captureBtn = document.getElementById('captureBtn');
   const saveBtn = document.getElementById('saveBtn');
   const openBtn = document.getElementById('openBtn');
-  const trackMateUrlInput = document.getElementById('trackMateUrl');
+  const careerPilotUrlInput = document.getElementById('careerPilotUrl');
   const modeSelect = document.getElementById('modeSelect');
 
   // Login UI elements
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (userProfile) userProfile.style.display = 'flex';
       if (userEmail) userEmail.textContent = session.user.email;
 
-      // Sync session to TrackMate tabs
+      // Sync session to CareerPilot tabs
       syncSessionToTabs(session);
     } else {
       if (loginView) loginView.style.display = 'block';
@@ -130,10 +130,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Load saved TrackMate URL
-  chrome.storage.local.get(['trackMateUrl'], (result) => {
-    if (result.trackMateUrl) {
-      trackMateUrlInput.value = result.trackMateUrl;
+  // Load saved CareerPilot URL
+  chrome.storage.local.get(['careerPilotUrl'], (result) => {
+    if (result.careerPilotUrl) {
+      careerPilotUrlInput.value = result.careerPilotUrl;
     }
   });
 
@@ -149,10 +149,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     statusEl.style.display = 'block';
   }
 
-  // Save TrackMate URL when changed
-  if (trackMateUrlInput) {
-    trackMateUrlInput.addEventListener('change', () => {
-      chrome.storage.local.set({ trackMateUrl: trackMateUrlInput.value });
+  // Save CareerPilot URL when changed
+  if (careerPilotUrlInput) {
+    careerPilotUrlInput.addEventListener('change', () => {
+      chrome.storage.local.set({ careerPilotUrl: careerPilotUrlInput.value });
     });
   }
 
@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Save to TrackMate
+  // Save to CareerPilot
   if (saveBtn) {
     saveBtn.addEventListener('click', async () => {
       if (!currentJobData) {
@@ -305,7 +305,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      setStatus('Saving to TrackMate...', 'info');
+      setStatus('Saving to CareerPilot...', 'info');
       saveBtn.disabled = true;
 
       try {
@@ -391,11 +391,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Open TrackMate
+  // Open CareerPilot
   if (openBtn) {
     openBtn.addEventListener('click', () => {
-      const trackMateUrl = trackMateUrlInput.value || 'http://localhost:5173/trackers';
-      chrome.tabs.create({ url: trackMateUrl });
+      const careerPilotUrl = careerPilotUrlInput.value || 'http://localhost:5173/trackers';
+      chrome.tabs.create({ url: careerPilotUrl });
     });
   }
 
@@ -406,12 +406,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       setStatus('Sending profile to Resume Builder...', 'info');
       importResumeBtn.disabled = true;
 
-      const trackMateUrl = trackMateUrlInput.value || 'http://localhost:8080/trackers';
+      const careerPilotUrl = careerPilotUrlInput.value || 'http://localhost:8080/trackers';
       chrome.runtime.sendMessage(
         {
-          action: 'sendProfileToTrackMate',
+          action: 'sendProfileToCareerPilot',
           data: currentJobData,
-          trackMateUrl: trackMateUrl
+          careerPilotUrl: careerPilotUrl
         },
         (response) => {
           if (response && response.success) {
@@ -523,8 +523,8 @@ function setStatus(message, type) {
 
 // --- Sync Functions ---
 async function syncSessionToTabs(session) {
-  const trackMateUrlInput = document.getElementById('trackMateUrl');
-  const baseUrl = (trackMateUrlInput && trackMateUrlInput.value) || 'http://localhost:5173';
+  const careerPilotUrlInput = document.getElementById('careerPilotUrl');
+  const baseUrl = (careerPilotUrlInput && careerPilotUrlInput.value) || 'http://localhost:5173';
   let origin;
   try {
     origin = new URL(baseUrl).origin;
@@ -544,13 +544,13 @@ async function syncSessionToTabs(session) {
           const current = localStorage.getItem(key);
           if (value) {
             if (current !== value) {
-              console.log("TrackMate: Syncing session from extension...");
+              console.log("CareerPilot: Syncing session from extension...");
               localStorage.setItem(key, value);
               window.location.reload();
             }
           } else {
             if (current) {
-              console.log("TrackMate: Clearing session via extension...");
+              console.log("CareerPilot: Clearing session via extension...");
               localStorage.removeItem(key);
               window.location.reload();
             }

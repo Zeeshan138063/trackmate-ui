@@ -5,13 +5,99 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Upload, Loader2, AlertTriangle, CheckCircle2, Link as LinkIcon, Linkedin } from "lucide-react";
+import { FileText, Upload, Loader2, AlertTriangle, CheckCircle2, Link as LinkIcon, Linkedin, CloudUpload, FileJson } from "lucide-react";
 import { extractTextFromFile } from "@/utils/file-parser";
 import { ResumeAIHelper } from "@/utils/resume-ai-helper";
 import { MasterProfile } from "@/types/resume";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { mapReactiveResumeToMasterProfile } from "@/utils/reactive-resume-mapper";
+import { cn } from "@/lib/utils";
+
+interface FileDropZoneProps {
+    onFileSelected: (file: File) => void;
+    accept: string;
+    label: string;
+    description: string;
+    icon: React.ReactNode;
+    isProcessing?: boolean;
+}
+
+function FileDropZone({ onFileSelected, accept, label, description, icon, isProcessing }: FileDropZoneProps) {
+    const [isDragging, setIsDragging] = useState(false);
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!isProcessing) setIsDragging(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+
+        if (isProcessing) return;
+
+        const file = e.dataTransfer.files?.[0];
+        if (file) {
+            onFileSelected(file);
+        }
+    };
+
+    return (
+        <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={cn(
+                "relative group flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-8 transition-all duration-300 ease-in-out cursor-pointer overflow-hidden",
+                isDragging
+                    ? "border-primary bg-primary/5 scale-[1.02] shadow-lg"
+                    : "border-muted-foreground/20 hover:border-primary/50 hover:bg-muted/50",
+                isProcessing && "opacity-50 cursor-not-allowed"
+            )}
+            onClick={() => {
+                if (!isProcessing) {
+                    document.getElementById(`file-input-${label.replace(/\s+/g, '-').toLowerCase()}`)?.click();
+                }
+            }}
+        >
+            <input
+                id={`file-input-${label.replace(/\s+/g, '-').toLowerCase()}`}
+                type="file"
+                accept={accept}
+                className="hidden"
+                onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) onFileSelected(file);
+                }}
+                disabled={isProcessing}
+            />
+
+            <div className={cn(
+                "p-4 rounded-full bg-primary/10 text-primary mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3",
+                isDragging && "scale-110 animate-bounce"
+            )}>
+                {icon}
+            </div>
+
+            <div className="text-center space-y-1">
+                <p className="font-semibold text-lg text-foreground">{label}</p>
+                <p className="text-sm text-muted-foreground">{description}</p>
+            </div>
+
+            {/* Subtle glassmorphism/gradient effect on hover */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+        </div>
+    );
+}
 
 interface ResumeImporterProps {
     onImport: (profile: MasterProfile) => void;
@@ -134,7 +220,7 @@ export function ResumeImporter({ onImport }: ResumeImporterProps) {
             setTimeout(() => {
                 // Request data from extension via bridge
                 window.postMessage({
-                    type: 'TRACKMATE_FETCH_JOB_DATA', // Reusing the generic fetch type
+                    type: 'CAREERPILOT_FETCH_JOB_DATA', // Reusing the generic fetch type
                     dataId: dataId
                 }, window.location.origin);
             }, 1000);
@@ -144,7 +230,7 @@ export function ResumeImporter({ onImport }: ResumeImporterProps) {
         const messageHandler = async (event: MessageEvent) => {
             if (event.origin !== window.location.origin) return;
 
-            if (event.data.type === 'TRACKMATE_JOB_DATA_RESPONSE' && event.data.data) { // Generic response type
+            if (event.data.type === 'CAREERPILOT_JOB_DATA_RESPONSE' && event.data.data) { // Generic response type
                 const profileData = event.data.data;
                 // Verify it's profile data (has name/headline or type='profile')
                 if (profileData.name || profileData.type === 'profile') {
@@ -207,21 +293,23 @@ export function ResumeImporter({ onImport }: ResumeImporterProps) {
                     </TabsList>
 
                     <TabsContent value="file" className="space-y-4 py-4">
-                        <div className="grid w-full max-w-sm items-center gap-1.5">
-                            <Label htmlFor="resume-file">Resume File (PDF/Word)</Label>
-                            <Input
-                                id="resume-file"
-                                type="file"
-                                accept=".pdf,.docx"
-                                onChange={handleFileChange}
-                            />
-                        </div>
+                        <FileDropZone
+                            onFileSelected={setFile}
+                            accept=".pdf,.docx"
+                            label="Resume File (PDF/Word)"
+                            description="Click or drag and drop your resume file here"
+                            icon={<CloudUpload className="h-8 w-8" />}
+                            isProcessing={isProcessing}
+                        />
 
                         {file && (
-                            <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 p-2 rounded border border-green-200">
-                                <FileText className="h-4 w-4" />
-                                <span className="truncate max-w-[200px]">{file.name}</span>
-                                <CheckCircle2 className="h-4 w-4 ml-auto" />
+                            <div className="flex items-center gap-3 text-sm text-green-700 bg-green-50/50 p-3 rounded-lg border border-green-100 animate-in fade-in slide-in-from-top-2">
+                                <FileText className="h-5 w-5 text-green-600" />
+                                <div className="flex flex-col overflow-hidden">
+                                    <span className="font-medium truncate">{file.name}</span>
+                                    <span className="text-[10px] opacity-70">{(file.size / 1024).toFixed(1)} KB</span>
+                                </div>
+                                <CheckCircle2 className="h-5 w-5 ml-auto text-green-600" />
                             </div>
                         )}
 
@@ -255,7 +343,7 @@ export function ResumeImporter({ onImport }: ResumeImporterProps) {
                             </div>
                             <h3 className="font-semibold text-lg mb-2">Use the Browser Extension</h3>
                             <p className="text-sm text-muted-foreground mb-4">
-                                To import a LinkedIn profile, please navigate to the profile page on LinkedIn, open the TrackMate Extension, and click <strong>"Import to Resume"</strong>.
+                                To import a LinkedIn profile, please navigate to the profile page on LinkedIn, open the CareerPilot AI Extension, and click <strong>"Import to Resume"</strong>.
                             </p>
                             <div className="text-xs text-slate-500 bg-white p-2 rounded border">
                                 <strong>Why?</strong> LinkedIn blocks direct URL importing. The extension securely captures the data from your browser session.
@@ -269,21 +357,23 @@ export function ResumeImporter({ onImport }: ResumeImporterProps) {
                                 <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
                                 <div className="text-sm text-amber-900">
                                     <p className="font-semibold">Import from Reactive Resume</p>
-                                    <p className="mt-1">Upload the <strong>.json</strong> export from your Reactive Resume account (rxresu.me) to instantly populate your TrackMate profile.</p>
+                                    <p className="mt-1">Upload the <strong>.json</strong> export from your Reactive Resume account (rxresu.me) to instantly populate your CareerPilot AI profile.</p>
                                 </div>
                             </div>
 
-                            <div className="grid w-full max-w-sm items-center gap-1.5">
-                                <Label htmlFor="reactive-json">Reactive Resume JSON Export</Label>
-                                <Input
-                                    id="reactive-json"
-                                    type="file"
-                                    accept=".json"
-                                    onChange={handleReactiveImport}
-                                    disabled={isProcessing}
-                                />
-                                <p className="text-[10px] text-muted-foreground">Go to Resumes -{">"} Export -{">"} JSON on rxresu.me</p>
-                            </div>
+                            <FileDropZone
+                                onFileSelected={(file) => {
+                                    // Wrap in event-like object for consistency or handle directly
+                                    const event = { target: { files: [file] } } as any;
+                                    handleReactiveImport(event);
+                                }}
+                                accept=".json"
+                                label="Reactive Resume JSON"
+                                description="Upload the .json export from rxresu.me"
+                                icon={<FileJson className="h-8 w-8" />}
+                                isProcessing={isProcessing}
+                            />
+                            <p className="text-[10px] text-muted-foreground text-center">Go to Resumes -{">"} Export -{">"} JSON on rxresu.me</p>
 
                             {isProcessing && (
                                 <div className="flex items-center justify-center py-4 text-sm text-muted-foreground">

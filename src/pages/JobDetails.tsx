@@ -94,7 +94,7 @@ export default function JobDetails() {
         "@context": "https://schema.org/",
         "@type": "JobPosting",
         "title": job.title,
-        "description": job.description || `Apply for ${job.title} at ${job.company} in ${job.location}. Full job details and application tracking available on TrackMate.`,
+        "description": job.description || `Apply for ${job.title} at ${job.company} in ${job.location}. Full job details and application tracking available on CareerPilot AI.`,
         "datePosted": job.posted_at,
         "validThrough": new Date(new Date(job.posted_at).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days fallback
         "employmentType": "FULL_TIME",
@@ -127,7 +127,7 @@ export default function JobDetails() {
 
     const handleShare = (platform: 'linkedin' | 'twitter' | 'copy') => {
         const url = window.location.href;
-        const text = `Check out this ${job?.title} position at ${job?.company} on TrackMate!`;
+        const text = `Check out this ${job?.title} position at ${job?.company} on CareerPilot AI!`;
 
         if (platform === 'linkedin') {
             const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;

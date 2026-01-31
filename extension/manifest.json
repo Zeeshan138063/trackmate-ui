@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "TrackMate Job Capture",
+  "name": "CareerPilot AI Job Capture",
   "version": "1.5.1",
   "description": "Capture job details and screenshots from job posting pages",
   "permissions": [
@@ -45,7 +45,7 @@
         "https://*/*"
       ],
       "js": [
-        "trackmate-bridge.js"
+        "careerpilot-bridge.js"
       ],
       "run_at": "document_start"
     }

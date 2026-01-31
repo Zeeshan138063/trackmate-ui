@@ -1,13 +1,13 @@
-# TrackMate Browser Extension
+# CareerPilot AI Browser Extension
 
-A browser extension to capture job details and screenshots from job posting pages and automatically add them to your TrackMate UI application.
+A browser extension to capture job details and screenshots from job posting pages and automatically add them to your CareerPilot AI UI application.
 
 ## Features
 
 - 🎯 **Auto-detect job details** from popular job sites (LinkedIn, Indeed, Glassdoor, Lever, Greenhouse)
 - 📸 **Capture screenshots** of job posting pages
-- 💾 **Save job data** with screenshots to TrackMate
-- 🚀 **One-click import** to your TrackMate dashboard
+- 💾 **Save job data** with screenshots to CareerPilot AI
+- 🚀 **One-click import** to your CareerPilot AI dashboard
 - 🔧 **Generic extraction** for any job site
 
 ## Supported Job Sites
@@ -41,16 +41,16 @@ A browser extension to capture job details and screenshots from job posting page
 ### Basic Usage
 
 1. Navigate to any job posting page (LinkedIn, Indeed, etc.)
-2. Click the TrackMate extension icon in your browser toolbar
+2. Click the CareerPilot AI extension icon in your browser toolbar
 3. The extension will automatically extract job details
 4. Click "📋 Extract Job Data" to manually extract if needed
 5. Click "📸 Capture Screenshot" to capture a screenshot of the page
-6. Click "💾 Save to TrackMate" to send the job to your TrackMate UI
+6. Click "💾 Save to CareerPilot AI" to send the job to your CareerPilot AI UI
 
 ### Configuration
 
 1. Open the extension popup
-2. Enter your TrackMate URL in the settings (default: `http://localhost:5173/trackers`)
+2. Enter your CareerPilot AI URL in the settings (default: `http://localhost:5173/trackers`)
 3. The URL is saved automatically
 
 ## Extension Structure
@@ -79,13 +79,13 @@ extension/
 2. **Background Script** (`background.js`):
    - Handles screenshot capture
    - Manages storage of job data
-   - Opens TrackMate with job data
+   - Opens CareerPilot AI with job data
 
 3. **Popup** (`popup.html` + `popup.js`):
    - User interface for the extension
    - Shows extracted job data
    - Allows manual extraction and screenshot capture
-   - Sends data to TrackMate
+   - Sends data to CareerPilot AI
 
 ## Job Data Extraction
 
@@ -99,20 +99,20 @@ The extension extracts the following fields:
 - **Job URL** (current page URL)
 - **Screenshot** (optional)
 
-## Integration with TrackMate UI
+## Integration with CareerPilot AI UI
 
-When you click "Save to TrackMate", the extension:
+When you click "Save to CareerPilot AI", the extension:
 
-1. Opens your TrackMate UI in a new tab
+1. Opens your CareerPilot AI UI in a new tab
 2. Passes job data as URL parameters
-3. TrackMate automatically opens the "Add Job" dialog with pre-filled data
+3. CareerPilot AI automatically opens the "Add Job" dialog with pre-filled data
 4. You can review and save the job
 
 ### User Authentication & Job Association
 
 **Important:** All jobs captured by the extension are automatically associated with your logged-in user account:
 
-- ✅ You must be **logged into TrackMate** before using the extension
+- ✅ You must be **logged into CareerPilot AI** before using the extension
 - ✅ Jobs are automatically linked to your user account via `user_id`
 - ✅ Each user's jobs are completely isolated from others
 - ✅ The extension verifies authentication before processing data
@@ -158,7 +158,7 @@ if (hostname.includes('newsite.com')) {
 3. Open the extension popup
 4. Verify that job data is extracted correctly
 5. Test screenshot capture
-6. Test sending data to TrackMate
+6. Test sending data to CareerPilot AI
 
 ## Troubleshooting
 
@@ -175,10 +175,10 @@ if (hostname.includes('newsite.com')) {
 - Try refreshing the page and capturing again
 - Check browser console for errors
 
-### Data not sending to TrackMate
+### Data not sending to CareerPilot AI
 
-- Verify your TrackMate URL is correct in settings
-- Make sure TrackMate is running and accessible
+- Verify your CareerPilot AI URL is correct in settings
+- Make sure CareerPilot AI is running and accessible
 - Check that the URL format is correct (should include `/trackers`)
 
 ## Permissions
@@ -187,14 +187,14 @@ The extension requires the following permissions:
 
 - **activeTab**: To access the current tab and extract job data
 - **storage**: To save job data locally
-- **tabs**: To open TrackMate in a new tab
+- **tabs**: To open CareerPilot AI in a new tab
 - **scripting**: To inject content scripts
 
 ## License
 
-Part of the TrackMate UI project.
+Part of the CareerPilot AI UI project.
 
 ## Support
 
-For issues or questions, please check the main TrackMate UI repository.
+For issues or questions, please check the main CareerPilot AI UI repository.
 

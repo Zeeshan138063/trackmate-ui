@@ -29,7 +29,7 @@ const strategies = [
         title: "Phase 3: Application Optimization",
         description: "Quality over quantity. Use AI to tailor every application.",
         steps: [
-            "Use TrackMate Copilot for resume tailoring.",
+            "Use CareerPilot AI Copilot for resume tailoring.",
             "Write unique cover letters for Top 10 roles.",
             "Submit applications within 48 hours of posting.",
         ],
@@ -41,7 +41,7 @@ const strategies = [
         description: "Practice makes perfect. Review your feedback loops.",
         steps: [
             "Record mock interviews for tricky questions.",
-            "Review past interview feedback in TrackMate.",
+            "Review past interview feedback in CareerPilot AI.",
             "Prepare 3 STAR-method stories per role.",
         ],
         icon: CheckCircle2,

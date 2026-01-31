@@ -345,7 +345,7 @@ export default function Trackers() {
       // the user should be authenticated. But double-check anyway.
       if (!isAuthenticated || !user) {
         console.warn('User not authenticated when processing extension data', { isAuthenticated, user, authLoading });
-        toast.error('Please log in to TrackMate first, then use the extension to add jobs. Redirecting to login...', {
+        toast.error('Please log in to CareerPilot first, then use the extension to add jobs. Redirecting to login...', {
           duration: 4000
         });
         // Redirect to auth page with redirect back to trackers
@@ -367,7 +367,7 @@ export default function Trackers() {
         // Send request immediately and then every 500ms
         const sendRequest = () => {
           window.postMessage({
-            type: 'TRACKMATE_FETCH_JOB_DATA',
+            type: 'CAREERPILOT_FETCH_JOB_DATA',
             dataId: dataId
           }, window.location.origin);
         };
@@ -380,7 +380,7 @@ export default function Trackers() {
 
         // Listen for response
         const messageHandler = (event: MessageEvent) => {
-          if (event.data.type === 'TRACKMATE_JOB_DATA_RESPONSE' && event.origin === window.location.origin) {
+          if (event.data.type === 'CAREERPILOT_JOB_DATA_RESPONSE' && event.origin === window.location.origin) {
             window.removeEventListener('message', messageHandler);
             clearInterval(retryInterval);
             clearTimeout(fallbackTimeoutId); // stop fallback from running

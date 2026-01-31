@@ -31,7 +31,7 @@ export default function Connections() {
         if (action === 'addContact' && dataId) {
             // Request data from extension via bridge
             window.postMessage({
-                type: 'TRACKMATE_FETCH_JOB_DATA', // Reuse existing message type or add new one
+                type: 'CAREERPILOT_FETCH_JOB_DATA', // Reuse existing message type or add new one
                 dataId: dataId
             }, window.location.origin);
 
@@ -39,7 +39,7 @@ export default function Connections() {
             const handleMessage = (event: MessageEvent) => {
                 if (event.origin !== window.location.origin) return;
 
-                if (event.data.type === 'TRACKMATE_JOB_DATA_RESPONSE') {
+                if (event.data.type === 'CAREERPILOT_JOB_DATA_RESPONSE') {
                     if (event.data.success && event.data.data) {
                         const importedData = event.data.data;
 

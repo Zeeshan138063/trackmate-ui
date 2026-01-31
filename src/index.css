@@ -158,3 +158,16 @@
     min-height: auto !important;
   }
 }
+
+@layer utilities {
+  .animate-shimmer {
+    background-size: 200% auto;
+    animation: shimmer 4s linear infinite;
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: 200% center;
+  }
+}

@@ -1,4 +1,4 @@
-# User Association Flow: Extension → TrackMate → Database
+# User Association Flow: Extension → CareerPilot AI → Database
 
 ## Complete Flow Diagram
 
@@ -17,9 +17,9 @@
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ 3. USER CLICKS "💾 Save to TrackMate"                          │
+│ 3. USER CLICKS "💾 Save to CareerPilot AI"                          │
 │    - Extension sends job data via URL parameters                │
-│    - Opens TrackMate in new tab                                 │
+│    - Opens CareerPilot AI in new tab                                 │
 └────────────────────────────┬────────────────────────────────────┘
                              │
                              ▼
@@ -134,10 +134,10 @@ The user association happens **automatically** at multiple levels:
 
 ## Testing the Flow
 
-1. **Log into TrackMate** (required first step)
+1. **Log into CareerPilot AI** (required first step)
 2. **Navigate to a job posting** (LinkedIn, Indeed, etc.)
 3. **Click extension icon** → Extract job data
-4. **Click "Save to TrackMate"** → Opens TrackMate
+4. **Click "Save to CareerPilot AI"** → Opens CareerPilot AI
 5. **Review and save** → Job is saved with your user_id
 6. **Verify**: Job appears in your tracker and is linked to your account
 
@@ -145,7 +145,7 @@ The user association happens **automatically** at multiple levels:
 
 ### "Please log in" error
 - **Cause**: Not authenticated when extension sends data
-- **Solution**: Log into TrackMate first, then use extension
+- **Solution**: Log into CareerPilot AI first, then use extension
 
 ### Job not appearing
 - **Cause**: May not have saved, or user_id mismatch
@@ -162,5 +162,5 @@ The user association happens **automatically** at multiple levels:
 ✅ **Data isolation** - Each user only sees their own jobs  
 ✅ **Extension integration** - Seamlessly works with authentication  
 
-The extension simply captures job data; TrackMate handles all user association automatically!
+The extension simply captures job data; CareerPilot AI handles all user association automatically!
 

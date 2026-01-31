@@ -164,7 +164,7 @@ ${matchResult.explanation}
 
       const loadAttachedResume = async () => {
         // 1. Check local storage draft first
-        const draftKey = `trackmate_resume_draft_${job.id}`;
+        const draftKey = `careerpilot_resume_draft_${job.id}`;
         const draft = localStorage.getItem(draftKey);
 
         if (draft) {
@@ -261,7 +261,7 @@ ${matchResult.explanation}
   // Auto-save tailored resume to localStorage
   useEffect(() => {
     if (job?.id && tailoredResume) {
-      const draftKey = `trackmate_resume_draft_${job.id}`;
+      const draftKey = `careerpilot_resume_draft_${job.id}`;
       localStorage.setItem(draftKey, JSON.stringify(tailoredResume));
     }
   }, [tailoredResume, job?.id]);

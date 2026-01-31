@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import {
   Home,
   FileText,
@@ -15,7 +15,8 @@ import {
   TrendingUp,
   Building,
   Bot,
-  Calendar
+  Calendar,
+  Sparkles
 } from "lucide-react";
 
 import {
@@ -77,19 +78,26 @@ export function AppSidebar() {
   return (
     <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
       <SidebarContent className="flex flex-col h-full">
-        {/* Header */}
         <div className="p-4 border-b">
           <div className="flex items-center justify-between">
-            {!collapsed && (
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-sm">T</span>
-                </div>
-                <span className="font-semibold text-lg">TrackMate</span>
+            <Link to="/" className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity">
+              <div className="relative w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
+                <span className="text-primary-foreground font-bold text-xs relative z-10">CP</span>
+                <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-yellow-400 animate-pulse" />
               </div>
-            )}
-            <SidebarTrigger />
+              {!collapsed && (
+                <span className="font-semibold text-lg whitespace-nowrap">
+                  CareerPilot <span className="text-[10px] font-mono font-black bg-[length:200%_auto] bg-gradient-to-r from-primary via-indigo-400 to-primary bg-clip-text text-transparent animate-shimmer ml-1 tracking-tighter">AI</span>
+                </span>
+              )}
+            </Link>
+            {!collapsed && <SidebarTrigger />}
           </div>
+          {collapsed && (
+            <div className="flex justify-center mt-4">
+              <SidebarTrigger />
+            </div>
+          )}
         </div>
 
         {/* Main Navigation */}

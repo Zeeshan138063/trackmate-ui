@@ -1,9 +1,9 @@
 {
-  "name": "trackmate-ui",
+  "name": "careerpilot-ui",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "author": "TrackMate",
+  "author": "CareerPilot AI",
   "engines": {
     "node": "20.x"
   },

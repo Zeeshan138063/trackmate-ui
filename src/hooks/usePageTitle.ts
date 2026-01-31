@@ -24,7 +24,7 @@ export const usePageTitle = () => {
 
     useEffect(() => {
         const path = location.pathname;
-        const title = pageTitles[path] || 'TrackMate';
-        document.title = `${title} | TrackMate`;
+        const title = pageTitles[path] || 'CareerPilot AI';
+        document.title = `${title} | CareerPilot AI`;
     }, [location]);
 };

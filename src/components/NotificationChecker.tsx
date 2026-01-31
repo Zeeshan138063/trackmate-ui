@@ -8,7 +8,7 @@ export function NotificationChecker() {
     const { jobs } = useJobs();
     const { user } = useAuth();
     const { toast } = useToast();
-     
+
     useEffect(() => {
         if (!user || jobs.length === 0) return;
 
@@ -16,7 +16,7 @@ export function NotificationChecker() {
             // Use local date (YYYY-MM-DD) to match the user's timezone, not UTC
             const today = new Date();
             const todayStr = today.toLocaleDateString('en-CA');
-            const storageKey = `trackmate_notified_${todayStr}`;
+            const storageKey = `careerpilot_notified_${todayStr}`;
 
             // Prevent redundant notifications for the same day
             if (localStorage.getItem(storageKey)) {
