@@ -1,9 +1,7 @@
-import * as pdfjsLib from 'pdfjs-dist';
+import { pdfjsLib, initPdfWorker } from './pdf-init';
 
-// Use Vite's ?url import to get the correct path to the worker file from node_modules
-import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+initPdfWorker();
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 export const extractTextFromPDF = async (file: File): Promise<string> => {
     try {

@@ -1,10 +1,10 @@
 
-import * as pdfjsLib from 'pdfjs-dist';
-import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
+import { pdfjsLib, initPdfWorker } from './pdf-init';
 import mammoth from 'mammoth';
 
 // Initialize PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+initPdfWorker();
+
 
 export async function extractTextFromFile(file: File): Promise<string> {
     const fileType = file.type;
