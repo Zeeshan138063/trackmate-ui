@@ -7,12 +7,13 @@ import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
 // 1. Initial configuration check
 if (typeof window !== 'undefined' && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
     // Preference 1: Local worker (resolved by Vite)
-    // Preference 2: CDN fallback (guaranteed fallback if local fails)
+    // Preference 2: CDN fallback (guaranteed fallback if local fails or is blocked)
     const cdnUrl = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
     pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl || cdnUrl;
 
-    console.log('[PDF.js] Worker initialized at module level:', pdfjsLib.GlobalWorkerOptions.workerSrc);
+    console.log('[PDF.js] Worker initialized:', pdfjsLib.GlobalWorkerOptions.workerSrc);
 }
+
 
 /**
  * Initializes the PDF.js library with the correct worker source.
