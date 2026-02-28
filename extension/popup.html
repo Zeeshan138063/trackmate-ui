@@ -1,467 +1,349 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CareerPilot Job Capture</title>
+  <title>CareerPilot AI</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       width: 400px;
       min-height: 500px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #f9fafb;
+      font-size: 14px;
+      color: #111827;
     }
 
+    /* ── Header ── */
     .header {
       background: linear-gradient(135deg, #10b981 0%, #059669 100%);
       color: white;
-      padding: 20px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-left h1 { font-size: 18px; font-weight: 700; }
+    .header-left p  { font-size: 11px; opacity: 0.85; margin-top: 2px; }
+    .header-right   { font-size: 11px; opacity: 0.75; }
+
+    /* ── ATS Banner ── */
+    #atsBanner {
+      display: none;
+      background: #fef3c7;
+      color: #92400e;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      border-bottom: 1px solid #fde68a;
       text-align: center;
     }
 
-    .header h1 {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 5px;
-    }
+    /* ── Content ── */
+    .content { padding: 16px 20px; }
 
-    .header p {
-      font-size: 12px;
-      opacity: 0.9;
-    }
-
-    .content {
-      padding: 20px;
-    }
-
-    .status {
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .status.success {
-      background: #d1fae5;
-      color: #065f46;
-    }
-
-    .status.error {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    .status.info {
-      background: #dbeafe;
-      color: #1e40af;
-    }
-
-    .job-data {
-      background: white;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 15px;
-      border: 1px solid #e5e7eb;
-    }
-
-    .job-data h3 {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 10px;
-      color: #111827;
-    }
-
-    .field {
-      margin-bottom: 10px;
-    }
-
-    .field label {
-      display: block;
-      font-size: 12px;
-      font-weight: 500;
-      color: #6b7280;
-      margin-bottom: 4px;
-    }
-
-    .field .value {
-      font-size: 14px;
-      color: #111827;
-      word-break: break-word;
-    }
-
-    .field .value.empty {
-      color: #9ca3af;
-      font-style: italic;
-    }
-
-    .actions {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .btn-primary {
-      background: #10b981;
-      color: white;
-    }
-
-    .btn-primary:hover:not(:disabled) {
-      background: #059669;
-    }
-
-    .btn-secondary {
-      background: #f3f4f6;
-      color: #374151;
-      border: 1px solid #e5e7eb;
-    }
-
-    .btn-secondary:hover:not(:disabled) {
-      background: #e5e7eb;
-    }
-
-    .btn-danger {
-      background: #ef4444;
-      color: white;
-    }
-
-    .btn-danger:hover:not(:disabled) {
-      background: #dc2626;
-    }
-
-    .screenshot-preview {
-      margin-top: 15px;
-      border-radius: 8px;
-      overflow: hidden;
-      border: 1px solid #e5e7eb;
-      max-height: 200px;
-      display: none;
-    }
-
-    .screenshot-preview img {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-
-    .loading {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid #ffffff;
-      border-radius: 50%;
-      border-top-color: transparent;
-      animation: spin 0.6s linear infinite;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    .settings {
-      margin-top: 15px;
-      padding-top: 15px;
-      border-top: 1px solid #e5e7eb;
-    }
-
-    /* Input styles */
-    .input-field {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      font-size: 14px;
-      color: #111827;
-      font-family: inherit;
-      transition: border-color 0.2s;
-    }
-
-    .input-field:focus {
-      outline: none;
-      border-color: #10b981;
-      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
-    }
-
-    textarea.input-field {
-      min-height: 80px;
-      resize: vertical;
-    }
-
-    /* Login View Styles */
-    .login-container {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      padding: 0 10px;
-    }
-
+    /* ── User Profile bar ── */
     .user-profile {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px;
       background: #f3f4f6;
       border-radius: 8px;
-      margin-bottom: 15px;
-      font-size: 13px;
+      padding: 8px 12px;
+      margin-bottom: 14px;
+      font-size: 12px;
     }
+    .user-info { display: flex; align-items: center; gap: 8px; color: #374151; font-weight: 500; }
+    .logout-link { color: #ef4444; cursor: pointer; font-size: 12px; }
+    .logout-link:hover { text-decoration: underline; }
 
-    .user-info {
-      display: flex;
+    /* ── Login ── */
+    .login-container { display: flex; flex-direction: column; gap: 12px; }
+    .login-container .hint { text-align: center; font-size: 12px; color: #6b7280; }
+    .login-container .hint a { color: #10b981; text-decoration: none; }
+
+    /* ── Status ── */
+    .status {
+      display: none;
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 13px;
       align-items: center;
       gap: 8px;
     }
+    .status.success { background: #d1fae5; color: #065f46; }
+    .status.error   { background: #fee2e2; color: #991b1b; }
+    .status.info    { background: #dbeafe; color: #1e40af; }
 
-    .logout-link {
-      color: #ef4444;
-      text-decoration: none;
-      font-weight: 500;
+    /* ── Data Cards ── */
+    .data-card {
+      background: white;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 14px;
+      border: 1px solid #e5e7eb;
+    }
+    .data-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: #374151; }
+
+    /* ── Fields ── */
+    .field { margin-bottom: 10px; }
+    .field label { display: block; font-size: 11px; font-weight: 600; color: #6b7280; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .input-field {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #111827;
+      font-family: inherit;
+      transition: border-color 0.15s;
+      background: #fff;
+    }
+    .input-field:focus { outline: none; border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,.15); }
+    textarea.input-field { min-height: 72px; resize: vertical; }
+
+    .field-row { display: flex; gap: 10px; }
+    .field-row .field { flex: 1; }
+
+    /* ── Buttons ── */
+    .actions { display: flex; flex-direction: column; gap: 8px; }
+
+    button {
+      width: 100%;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    button:active:not(:disabled) { transform: scale(0.98); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .btn-primary   { background: #10b981; color: white; }
+    .btn-primary:hover:not(:disabled)   { background: #059669; }
+    .btn-secondary { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+    .btn-secondary:hover:not(:disabled) { background: #e5e7eb; }
+    .btn-autofill  { background: #f59e0b; color: white; }
+    .btn-autofill:hover:not(:disabled)  { background: #d97706; }
+    .btn-import    { background: #2563eb; color: white; }
+    .btn-import:hover:not(:disabled)    { background: #1d4ed8; }
+
+    /* ── Screenshot ── */
+    #screenshotPreview {
+      display: none;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+      max-height: 160px;
+      margin-bottom: 12px;
+    }
+    #screenshotPreview img { width: 100%; display: block; }
+
+    /* ── Contact photo ── */
+    #contactPhoto {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #e5e7eb;
+      background: #f3f4f6;
+      display: none;
+      margin: 0 auto 12px;
     }
 
-    .logout-link:hover {
-      text-decoration: underline;
+    /* ── Mode selector + settings ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid #e5e7eb;
+      gap: 10px;
     }
+    .toolbar label { font-size: 11px; color: #6b7280; white-space: nowrap; }
+    .toolbar select { flex: 1; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px; }
+
+    .settings { margin-top: 12px; }
+    .settings label { font-size: 11px; color: #6b7280; display: block; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; }
+    .settings .note {
+      margin-top: 8px;
+      padding: 7px 10px;
+      background: #fef3c7;
+      border-radius: 6px;
+      font-size: 11px;
+      color: #92400e;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+    .badge-latest { background: #d1fae5; color: #059669; padding: 2px 7px; border-radius: 4px; font-weight: 700; font-size: 10px; }
+
+    /* ── Spinner ── */
+    .loading {
+      display: inline-block;
+      width: 13px; height: 13px;
+      border: 2px solid currentColor;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin .5s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
-
 <body>
+
+  <!-- Header -->
   <div class="header">
-    <h1>🎯 CareerPilot AI</h1>
-    <p>Capture Job / Contact (v1.3)</p>
+    <div class="header-left">
+      <h1>🎯 CareerPilot AI</h1>
+      <p id="headerSubtitle">Capture Job Details</p>
+    </div>
+    <div class="header-right" id="appVersion">v--</div>
   </div>
 
+  <!-- ATS Autofill Banner (shown when ATS form detected) -->
+  <div id="atsBanner"></div>
+
   <div class="content">
-    <!-- User Profile Section (shown when logged in) -->
-    <div id="userProfile" class="user-profile" style="display: none;">
+
+    <!-- ── User Profile bar ── -->
+    <div id="userProfile" class="user-profile" style="display:none">
       <div class="user-info">
         <span>👤</span>
         <span id="userEmail">user@example.com</span>
       </div>
-      <a id="logoutBtn" class="logout-link">Logout</a>
+      <span id="logoutBtn" class="logout-link">Logout</span>
     </div>
 
-    <!-- Login View -->
-    <div id="loginView" class="login-container" style="display: none;">
-      <div style="text-align: center; margin-bottom: 10px;">
-        <p style="color: #4b5563; font-size: 14px;">Log in to your CareerPilot account</p>
-      </div>
+    <!-- ── Login View ── -->
+    <div id="loginView" class="login-container" style="display:none">
+      <p style="text-align:center;color:#4b5563;font-size:13px;margin-bottom:4px;">
+        Log in to save jobs to CareerPilot
+      </p>
       <div class="field">
         <label>Email</label>
-        <input type="email" id="loginEmail" class="input-field" placeholder="email@example.com">
+        <input type="email" id="loginEmail" class="input-field" placeholder="you@example.com" autocomplete="email">
       </div>
       <div class="field">
         <label>Password</label>
-        <input type="password" id="loginPassword" class="input-field" placeholder="••••••••">
+        <input type="password" id="loginPassword" class="input-field" placeholder="••••••••" autocomplete="current-password">
       </div>
-      <button id="loginSubmitBtn" class="btn-primary">
-        <span>Log In</span>
-      </button>
-      <div style="text-align: center; font-size: 12px; color: #6b7280; margin-top: 5px;">
-        Don't have an account? <a href="http://localhost:5173/auth" target="_blank" style="color: #10b981;">Sign up</a>
-      </div>
+      <button id="loginSubmitBtn" class="btn-primary"><span>Log In</span></button>
+      <p class="hint">No account? <a href="http://localhost:5173/auth" target="_blank">Sign up here</a></p>
     </div>
 
-    <!-- Main App View -->
-    <div id="appView" style="display: none;">
-      <div id="status" class="status info" style="display: none;">
-        <span id="statusText">Loading...</span>
+    <!-- ── App View ── -->
+    <div id="appView" style="display:none">
+
+      <!-- Status bar -->
+      <div id="status" class="status">
+        <span id="statusText"></span>
       </div>
 
-      <div id="jobData" class="job-data" style="display: none;">
-        <h3>Extracted Job Details</h3>
-        <div class="field">
-          <label>Job Title</label>
-          <input type="text" id="position" class="input-field" placeholder="Job Title">
+      <!-- ── JOB DATA ── -->
+      <div id="jobData" class="data-card" style="display:none">
+        <h3>📋 Job Details</h3>
+        <div class="field"><label>Job Title</label><input type="text" id="position" class="input-field" placeholder="e.g. Senior Software Engineer"></div>
+        <div class="field"><label>Company</label><input type="text" id="company" class="input-field" placeholder="e.g. Google"></div>
+        <div class="field"><label>Location</label><input type="text" id="location" class="input-field" placeholder="e.g. Lahore, Pakistan or Remote"></div>
+        <div class="field-row">
+          <div class="field"><label>Min Salary</label><input type="number" id="minSalary" class="input-field" placeholder="0"></div>
+          <div class="field"><label>Max Salary</label><input type="number" id="maxSalary" class="input-field" placeholder="0"></div>
         </div>
-        <div class="field">
-          <label>Company</label>
-          <input type="text" id="company" class="input-field" placeholder="Company Name">
+        <div class="field-row">
+          <div class="field"><label>Date Posted</label><input type="text" id="datePosted" class="input-field" placeholder="YYYY-MM-DD"></div>
+          <div class="field"><label>Deadline</label><input type="text" id="deadline" class="input-field" placeholder="YYYY-MM-DD"></div>
         </div>
-        <div class="field">
-          <label>Location</label>
-          <input type="text" id="location" class="input-field" placeholder="Location">
-        </div>
-        <div style="display: flex; gap: 10px;">
-          <div class="field" style="flex: 1;">
-            <label>Min Salary</label>
-            <input type="number" id="minSalary" class="input-field" placeholder="0">
-          </div>
-          <div class="field" style="flex: 1;">
-            <label>Max Salary</label>
-            <input type="number" id="maxSalary" class="input-field" placeholder="0">
-          </div>
-        </div>
-        <div class="field">
-          <label>Date Posted</label>
-          <input type="text" id="datePosted" class="input-field" placeholder="YYYY-MM-DD or Text">
-        </div>
-        <div class="field">
-          <label>Deadline</label>
-          <input type="text" id="deadline" class="input-field" placeholder="YYYY-MM-DD or Text">
-        </div>
-        <div class="field">
-          <label>Description</label>
-          <textarea id="description" class="input-field" placeholder="Job Description"></textarea>
-        </div>
+        <div class="field"><label>Description</label><textarea id="description" class="input-field" placeholder="Job description…"></textarea></div>
       </div>
 
-      <!-- Contact Data Section -->
-      <div id="contactData" class="job-data" style="display: none;">
-        <h3>Extracted Contact Details</h3>
-        <div style="text-align: center; margin-bottom: 15px;">
-          <img id="contactPhoto" src=""
-            style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb; background: #f3f4f6;">
-        </div>
-        <div class="field">
-          <label>Name</label>
-          <input type="text" id="contactName" class="input-field" placeholder="Full Name">
-        </div>
-        <div class="field">
-          <label>Position</label>
-          <input type="text" id="contactPosition" class="input-field" placeholder="Job Position">
-        </div>
-        <div class="field">
-          <label>Profile URL</label>
-          <input type="text" id="contactLinkedin" class="input-field" placeholder="https://linkedin.com/in/...">
-        </div>
-        <div class="field">
-          <label>Company</label>
-          <input type="text" id="contactCompany" class="input-field" placeholder="Company">
-        </div>
-        <div class="field">
-          <label>Location</label>
-          <input type="text" id="contactLocation" class="input-field" placeholder="Location">
-        </div>
-        <div class="field">
-          <label>Relationship</label>
-          <input type="text" id="contactRelationship" class="input-field" placeholder="e.g. Recruiter, Colleague">
-        </div>
-        <div class="field">
-          <label>Notes (About)</label>
-          <textarea id="contactNotes" class="input-field" placeholder="About / Notes"></textarea>
-        </div>
+      <!-- ── CONTACT DATA ── -->
+      <div id="contactData" class="data-card" style="display:none">
+        <h3>👤 Contact Details</h3>
+        <div style="text-align:center"><img id="contactPhoto" src="" alt="Profile Photo"></div>
+        <div class="field"><label>Full Name</label><input type="text" id="contactName" class="input-field" placeholder="Full Name"></div>
+        <div class="field"><label>Position / Role</label><input type="text" id="contactPosition" class="input-field" placeholder="e.g. Engineering Manager"></div>
+        <div class="field"><label>Company</label><input type="text" id="contactCompany" class="input-field" placeholder="Company Name"></div>
+        <div class="field"><label>Location</label><input type="text" id="contactLocation" class="input-field" placeholder="City, Country"></div>
+        <div class="field"><label>LinkedIn URL</label><input type="text" id="contactLinkedin" class="input-field" placeholder="https://linkedin.com/in/…"></div>
+        <div class="field"><label>Relationship</label><input type="text" id="contactRelationship" class="input-field" placeholder="e.g. Recruiter, Hiring Manager, Colleague"></div>
+        <div class="field"><label>Notes / About</label><textarea id="contactNotes" class="input-field" placeholder="Notes about this person…"></textarea></div>
       </div>
 
-      <!-- Company Data Section -->
-      <div id="companyData" class="job-data" style="display: none;">
-        <h3>Extracted Company Details</h3>
-        <div class="field">
-          <label>Company Name</label>
-          <input type="text" id="companyName" class="input-field" placeholder="Company Name">
+      <!-- ── COMPANY DATA ── -->
+      <div id="companyData" class="data-card" style="display:none">
+        <h3>🏢 Company Details</h3>
+        <div class="field"><label>Company Name</label><input type="text" id="companyName" class="input-field" placeholder="e.g. Stripe"></div>
+        <div class="field-row">
+          <div class="field"><label>Industry</label><input type="text" id="companyIndustry" class="input-field" placeholder="e.g. Fintech"></div>
+          <div class="field"><label>Size</label><input type="text" id="companySize" class="input-field" placeholder="e.g. 1001-5000"></div>
         </div>
-        <div class="field">
-          <label>Industry</label>
-          <input type="text" id="companyIndustry" class="input-field" placeholder="Industry">
-        </div>
-        <div class="field">
-          <label>Size</label>
-          <input type="text" id="companySize" class="input-field" placeholder="Company Size">
-        </div>
-        <div class="field">
-          <label>Location (Headquarters)</label>
-          <input type="text" id="companyLocation" class="input-field" placeholder="Headquarters">
-        </div>
-        <div class="field">
-          <label>Website</label>
-          <input type="text" id="companyWebsite" class="input-field" placeholder="https://...">
-        </div>
-        <div class="field">
-          <label>LinkedIn URL</label>
-          <input type="text" id="companyLinkedin" class="input-field" placeholder="https://linkedin.com/company/...">
-        </div>
-        <div class="field">
-          <label>About</label>
-          <textarea id="companyAbout" class="input-field" placeholder="About the company"></textarea>
-        </div>
+        <div class="field"><label>Headquarters</label><input type="text" id="companyLocation" class="input-field" placeholder="City, Country"></div>
+        <div class="field"><label>Website</label><input type="text" id="companyWebsite" class="input-field" placeholder="https://…"></div>
+        <div class="field"><label>LinkedIn URL</label><input type="text" id="companyLinkedin" class="input-field" placeholder="https://linkedin.com/company/…"></div>
+        <div class="field"><label>About</label><textarea id="companyAbout" class="input-field" placeholder="About the company…"></textarea></div>
       </div>
 
-      <div class="screenshot-preview" id="screenshotPreview">
-        <img id="screenshotImg" src="" alt="Screenshot">
-      </div>
+      <!-- Screenshot preview -->
+      <div id="screenshotPreview"><img id="screenshotImg" src="" alt="Screenshot"></div>
 
+      <!-- ── Actions ── -->
       <div class="actions">
-        <button id="extractBtn" class="btn-primary">
-          <span>📋 Extract Job Data</span>
-        </button>
-        <button id="captureBtn" class="btn-secondary">
-          <span>📸 Capture Screenshot</span>
-        </button>
-        <button id="saveBtn" class="btn-primary" style="display: none;">
-          <span>💾 Save Contact</span>
-        </button>
-        <button id="importResumeBtn" class="btn-secondary" style="display: none; background: #2563eb; color: white;">
-          <span>📄 Import to Resume</span>
-        </button>
-        <button id="openBtn" class="btn-secondary" style="display: none;">
-          <span>🚀 Open CareerPilot AI</span>
-        </button>
+        <button id="extractBtn"     class="btn-primary">  <span>📋 Extract Job Data</span></button>
+        <button id="autofillBtn"    class="btn-autofill" style="display:none"><span>⚡ Autofill This Form</span></button>
+        <button id="captureBtn"     class="btn-secondary"><span>📸 Capture Screenshot</span></button>
+        <button id="saveBtn"        class="btn-primary"  style="display:none"><span>💾 Save Job</span></button>
+        <button id="importResumeBtn" class="btn-import"  style="display:none"><span>📄 Import to Resume Builder</span></button>
+        <button id="openBtn"        class="btn-secondary" style="display:none"><span>🚀 Open CareerPilot</span></button>
       </div>
 
-      <div class="mode-selector"
-        style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
-        <label style="font-size: 12px; color: #6b7280;">Detection Mode:</label>
-        <select id="modeSelect" class="input-field" style="width: auto; padding: 4px 8px; font-size: 12px;">
+      <!-- Mode selector -->
+      <div class="toolbar">
+        <label>Detection Mode</label>
+        <select id="modeSelect">
           <option value="auto">🤖 Auto-Detect</option>
-          <option value="job">💼 Job</option>
-          <option value="company">🏢 Company</option>
-          <option value="profile">👤 Contact</option>
+          <option value="job">💼 Job Posting</option>
+          <option value="company">🏢 Company Page</option>
+          <option value="profile">👤 LinkedIn Profile</option>
         </select>
       </div>
 
+      <!-- Settings -->
       <div class="settings">
-        <label>CareerPilot AI URL:</label>
-        <input type="text" id="careerPilotUrl" placeholder="http://localhost:8080/trackers"
-          value="http://localhost:8080/trackers">
-        <div
-          style="margin-top: 10px; padding: 8px; background: #fef3c7; border-radius: 6px; font-size: 11px; color: #92400e;">
-          ⚠️ <strong>Note:</strong> Make sure you're logged into CareerPilot before saving.
-        </div>
+        <label>CareerPilot URL</label>
+        <input type="text" id="careerPilotUrl" class="input-field" placeholder="http://localhost:8080/trackers" value="http://localhost:8080/trackers">
+        <div class="note">⚠️ Must be logged in to CareerPilot before saving.</div>
       </div>
 
-      <div id="versionFooter"
-        style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 11px; color: #6b7280; display: flex; justify-content: space-between; align-items: center;">
-        <span id="appVersion" style="font-weight: 500;">v--</span>
-        <div id="updateStatus"
-          style="font-weight: 600; color: #059669; font-size: 10px; background: #d1fae5; padding: 2px 6px; border-radius: 4px; display: none;">
-          ✨ Latest Fixes Active
-        </div>
+      <!-- Footer -->
+      <div class="footer">
+        <span id="appVersion">v--</span>
+        <span class="badge-latest">✨ v2.0 Active</span>
       </div>
-    </div>
 
-    <script src="supabase-js.js"></script>
-    <script src="popup.js"></script>
+    </div><!-- /appView -->
+
+  </div><!-- /content -->
+
+  <script src="supabase-js.js"></script>
+  <script src="popup.js"></script>
 </body>
-
 </html>

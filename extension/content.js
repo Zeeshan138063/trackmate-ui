@@ -1,1067 +1,842 @@
-// Content script to extract job details from various job sites
+// ================================================================
+// CareerPilot AI - Content Script v2.0
+// Responsibilities:
+//   1. Detect which site/ATS we're on
+//   2. Extract job / profile / company data
+//   3. Autofill ATS application forms with profile data
+// ================================================================
 
-class JobExtractor {
-  constructor() {
-    this.jobData = null;
-    this.listeners = [];
+'use strict';
+
+// ────────────────────────────────────────────────────────────────
+// SECTION 1: ATS DETECTOR
+// ────────────────────────────────────────────────────────────────
+const ATSDetector = (() => {
+
+  // Priority order: URL > DOM fingerprint > script tags
+  function detect() {
+    const { hostname, href } = window.location;
+    const scripts = Array.from(document.scripts).map(s => s.src);
+
+    // ── URL-based (fastest & most reliable) ──
+    if (hostname.includes('myworkdayjobs.com')) return 'workday';
+    if (hostname.includes('greenhouse.io'))     return 'greenhouse';
+    if (hostname.includes('lever.co'))          return 'lever';
+    if (hostname.includes('icims.com'))         return 'icims';
+    if (hostname.includes('smartrecruiters.com')) return 'smartrecruiters';
+    if (hostname.includes('workable.com'))      return 'workable';
+    if (hostname.includes('taleo.net'))         return 'taleo';
+    if (hostname.includes('rozee.pk') && href.toLowerCase().includes('apply')) return 'rozee';
+    if (hostname.includes('naukri.com') && href.toLowerCase().includes('apply')) return 'naukri';
+
+    // ── DOM fingerprinting for companies using custom domains ──
+    // e.g. amazon.jobs or careers.google.com which run Workday underneath
+    if (document.querySelector('[data-automation-id="legalNameSection_firstName"], [data-automation-id="email"]')) return 'workday';
+    if (document.querySelector('form#application_form, input[name="job_application[first_name]"]')) return 'greenhouse';
+    if (document.querySelector('[data-lever-key], input[name="cards[name][first_name]"]')) return 'lever';
+    if (document.querySelector('[id*="icims_content"]')) return 'icims';
+    if (document.querySelector('[data-qa="src-page"], [data-qa="firstName"]')) return 'smartrecruiters';
+    if (document.querySelector('[data-ui="firstname"]')) return 'workable';
+    if (document.querySelector('#ftlJobReqDetailPage, #taleoContent')) return 'taleo';
+
+    // ── Script-tag sniffing ──
+    if (scripts.some(s => s.includes('greenhouse.io')))      return 'greenhouse';
+    if (scripts.some(s => s.includes('lever.co')))           return 'lever';
+    if (scripts.some(s => s.includes('smartrecruiters.com'))) return 'smartrecruiters';
+    if (scripts.some(s => s.includes('workable.com')))       return 'workable';
+    if (scripts.some(s => s.includes('workday.com')))        return 'workday';
+
+    // ── Generic: any page that looks like an application form ──
+    const hasEmailInput = !!document.querySelector('input[type="email"], input[name*="email" i], input[id*="email" i]');
+    const hasApplyInUrl  = /apply|application|careers/i.test(window.location.pathname);
+    if (hasEmailInput && hasApplyInUrl) return 'generic';
+
+    return null;
   }
 
-  // Clean HTML to markdown-like text
-  cleanHtmlToMarkdown(element) {
-    if (!element) return '';
+  function isApplyPage() {
+    return detect() !== null;
+  }
 
-    // Clone to avoid modifying the actual page
-    const clone = element.cloneNode(true);
+  return { detect, isApplyPage };
+})();
 
-    // Remove comments
-    const removeComments = (node) => {
-      for (let i = 0; i < node.childNodes.length; i++) {
-        const child = node.childNodes[i];
-        if (child.nodeType === 8) { // Comment node
-          node.removeChild(child);
-          i--;
-        } else if (child.nodeType === 1) {
-          removeComments(child);
+
+// ────────────────────────────────────────────────────────────────
+// SECTION 2: ATS AUTOFILLER
+// ────────────────────────────────────────────────────────────────
+class ATSAutofiller {
+  /**
+   * @param {Object} profile - User profile from CareerPilot
+   * @param {string} profile.firstName
+   * @param {string} profile.lastName
+   * @param {string} profile.email
+   * @param {string} profile.phone
+   * @param {string} profile.location   - Full location string (e.g. "Lahore, Pakistan")
+   * @param {string} profile.city       - Just the city
+   * @param {string} profile.linkedinUrl
+   * @param {string} profile.githubUrl
+   * @param {string} profile.portfolioUrl
+   * @param {string} [profile.resumePdfUrl] - URL to pre-generated tailored resume PDF
+   * @param {string} [profile.coverLetterText]
+   */
+  constructor(profile) {
+    this.p   = profile;
+    this.ats = ATSDetector.detect();
+  }
+
+  async fill() {
+    if (!this.ats) {
+      return { success: false, reason: 'No ATS/application form detected on this page.' };
+    }
+
+    console.log(`[CareerPilot] Autofilling ${this.ats} form...`);
+
+    try {
+      switch (this.ats) {
+        case 'workday':         await this._fillWorkday();         break;
+        case 'greenhouse':      await this._fillGreenhouse();      break;
+        case 'lever':           await this._fillLever();           break;
+        case 'icims':           await this._fillICIMS();           break;
+        case 'smartrecruiters': await this._fillSmartRecruiters(); break;
+        case 'workable':        await this._fillWorkable();        break;
+        case 'taleo':           await this._fillTaleo();           break;
+        case 'rozee':           await this._fillRozee();           break;
+        case 'naukri':          await this._fillNaukri();          break;
+        default:                await this._fillGeneric();         break;
+      }
+      return { success: true, ats: this.ats };
+    } catch (err) {
+      console.warn('[CareerPilot] Autofill primary strategy failed, falling back to generic:', err);
+      try {
+        await this._fillGeneric();
+        return { success: true, ats: 'generic-fallback' };
+      } catch (e) {
+        return { success: false, ats: this.ats, error: e.message };
+      }
+    }
+  }
+
+  // ── Workday (Amazon, Microsoft, Nike, etc.) ──
+  async _fillWorkday() {
+    const p = this.p;
+    await this._set('[data-automation-id="legalNameSection_firstName"]',   p.firstName);
+    await this._set('[data-automation-id="legalNameSection_lastName"]',    p.lastName);
+    await this._set('[data-automation-id="email"]',                        p.email);
+    await this._set('[data-automation-id="phone"]',                        p.phone);
+    await this._set('[data-automation-id="addressSection_city"]',          p.city || p.location);
+    await this._set('input[data-automation-id*="linkedin" i]',             p.linkedinUrl);
+    await this._set('input[data-automation-id*="github" i]',               p.githubUrl);
+    await this._set('input[data-automation-id*="website" i]',              p.portfolioUrl);
+    if (p.resumePdfUrl) await this._uploadFile('[data-automation-id="file-upload-input-ref"]', p.resumePdfUrl, `${p.firstName}_${p.lastName}_Resume.pdf`);
+    await this._fillGeneric(); // catch any missed fields
+  }
+
+  // ── Greenhouse (Airbnb, Figma, Stripe, etc.) ──
+  async _fillGreenhouse() {
+    const p = this.p;
+    await this._set('input#first_name, input[name="job_application[first_name]"]',       p.firstName);
+    await this._set('input#last_name,  input[name="job_application[last_name]"]',        p.lastName);
+    await this._set('input#email,      input[name="job_application[email]"]',            p.email);
+    await this._set('input#phone,      input[name="job_application[phone]"]',            p.phone);
+    await this._set('input[name="job_application[location]"]',                            p.location);
+    await this._set('input[name*="linkedin" i], input[id*="linkedin" i]',                p.linkedinUrl);
+    await this._set('input[name*="github" i],   input[id*="github" i]',                  p.githubUrl);
+    await this._set('input[name*="website" i],  input[id*="portfolio" i]',               p.portfolioUrl);
+    if (p.resumePdfUrl) await this._uploadFile('#resume_upload input[type="file"], input[name="job_application[resume]"]', p.resumePdfUrl, `${p.firstName}_Resume.pdf`);
+    if (p.coverLetterText) await this._set('textarea[name*="cover_letter" i], textarea[id*="cover_letter" i]', p.coverLetterText);
+  }
+
+  // ── Lever (Netflix, GitHub, etc.) ──
+  async _fillLever() {
+    const p = this.p;
+    await this._set('input[name="cards[name][first_name]"], input[name*="first" i]',     p.firstName);
+    await this._set('input[name="cards[name][last_name]"],  input[name*="last" i]',      p.lastName);
+    await this._set('input[name="cards[basic][email]"],     input[type="email"]',        p.email);
+    await this._set('input[name="cards[basic][phone]"],     input[type="tel"]',          p.phone);
+    await this._set('input[name*="location" i], input[name*="city" i]',                  p.location);
+    await this._set('input[name*="linkedin" i]',                                          p.linkedinUrl);
+    await this._set('input[name*="github" i]',                                            p.githubUrl);
+    await this._set('input[name*="website" i], input[name*="portfolio" i]',              p.portfolioUrl);
+    if (p.resumePdfUrl) await this._uploadFile('input[name*="resume" i], .application-upload input[type="file"]', p.resumePdfUrl, `${p.firstName}_Resume.pdf`);
+    if (p.coverLetterText) await this._set('textarea[name*="cover" i]', p.coverLetterText);
+  }
+
+  // ── iCIMS ──
+  async _fillICIMS() {
+    const p = this.p;
+    await this._set('input[id*="firstName" i], input[name*="firstName" i]', p.firstName);
+    await this._set('input[id*="lastName" i],  input[name*="lastName" i]',  p.lastName);
+    await this._set('input[id*="email" i],     input[name*="email" i]',     p.email);
+    await this._set('input[id*="phone" i],     input[name*="phone" i]',     p.phone);
+    await this._fillGeneric();
+  }
+
+  // ── SmartRecruiters ──
+  async _fillSmartRecruiters() {
+    const p = this.p;
+    await this._set('input[name="firstName"],     input[data-qa="firstName"]',     p.firstName);
+    await this._set('input[name="lastName"],      input[data-qa="lastName"]',      p.lastName);
+    await this._set('input[name="email"],         input[data-qa="email"]',         p.email);
+    await this._set('input[name="phoneNumber"],   input[data-qa="phone"]',         p.phone);
+    await this._set('input[name*="location" i]',                                    p.location);
+    await this._fillGeneric();
+  }
+
+  // ── Workable ──
+  async _fillWorkable() {
+    const p = this.p;
+    await this._set('input[name="firstname"], input[data-ui="firstname"]', p.firstName);
+    await this._set('input[name="lastname"],  input[data-ui="lastname"]',  p.lastName);
+    await this._set('input[name="email"],     input[data-ui="email"]',     p.email);
+    await this._set('input[name="phone"],     input[data-ui="phone"]',     p.phone);
+    await this._set('input[name*="linkedin" i]',                            p.linkedinUrl);
+    await this._fillGeneric();
+  }
+
+  // ── Taleo (Oracle) ──
+  async _fillTaleo() {
+    const p = this.p;
+    await this._set('input[id*="firstName" i], input[name*="firstName" i]', p.firstName);
+    await this._set('input[id*="lastName" i],  input[name*="lastName" i]',  p.lastName);
+    await this._set('input[id*="email" i]',                                   p.email);
+    await this._set('input[id*="phone" i]',                                   p.phone);
+    await this._fillGeneric();
+  }
+
+  // ── Rozee.pk ──
+  async _fillRozee() {
+    const p = this.p;
+    await this._set('input[name="first_name"], input[id*="first_name" i]',  p.firstName);
+    await this._set('input[name="last_name"],  input[id*="last_name" i]',   p.lastName);
+    await this._set('input[name="email"],      input[type="email"]',         p.email);
+    await this._set('input[name="mobile"],     input[name="phone"]',         p.phone);
+    await this._set('input[name*="city" i],    input[name*="location" i]',   p.city || p.location);
+    await this._fillGeneric();
+  }
+
+  // ── Naukri ──
+  async _fillNaukri() {
+    const p = this.p;
+    await this._set('input[placeholder*="First Name" i], input[name*="firstName" i]', p.firstName);
+    await this._set('input[placeholder*="Last Name" i],  input[name*="lastName" i]',  p.lastName);
+    await this._set('input[type="email"]',                                              p.email);
+    await this._set('input[type="tel"]',                                                p.phone);
+    await this._fillGeneric();
+  }
+
+  // ── GENERIC SEMANTIC FALLBACK ──
+  // Works on ~85% of any form via identifier matching
+  async _fillGeneric() {
+    const p = this.p;
+    const mappings = [
+      { keys: ['firstname', 'first_name', 'fname', 'given_name', 'givenname'],                          value: p.firstName },
+      { keys: ['lastname',  'last_name',  'lname', 'family_name', 'familyname', 'surname'],             value: p.lastName  },
+      { keys: ['fullname',  'full_name',  'name',  'yourname', 'applicantname'],                        value: `${p.firstName} ${p.lastName}`.trim() },
+      { keys: ['email',     'e-mail',     'emailaddress', 'email_address', 'youremail'],                value: p.email     },
+      { keys: ['phone',     'mobile',     'telephone', 'tel', 'phonenumber', 'phone_number', 'cell'],   value: p.phone     },
+      { keys: ['city',      'location',   'currentlocation', 'currentcity', 'address'],                 value: p.city || p.location },
+      { keys: ['linkedin',  'linkedinurl', 'linkedin_url', 'linkedinprofile'],                          value: p.linkedinUrl  },
+      { keys: ['github',    'githuburl',  'github_url',  'githubprofile'],                              value: p.githubUrl    },
+      { keys: ['portfolio', 'website',    'personalsite', 'portfoliourl', 'personalwebsite'],           value: p.portfolioUrl },
+    ];
+
+    const inputs = document.querySelectorAll(
+      'input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]), textarea'
+    );
+
+    for (const input of inputs) {
+      if (input.value) continue; // Don't overwrite already-filled fields
+
+      const identifiers = [
+        input.name,
+        input.id,
+        input.placeholder,
+        input.getAttribute('aria-label'),
+        input.getAttribute('data-testid'),
+        input.getAttribute('autocomplete'),
+        input.getAttribute('data-qa'),
+        this._getLabelText(input),
+      ]
+        .filter(Boolean)
+        .map(s => s.toLowerCase().replace(/[\s\-_]/g, ''));
+
+      for (const mapping of mappings) {
+        if (!mapping.value) continue;
+        const matched = mapping.keys.some(k => identifiers.some(id => id.includes(k)));
+        if (matched) {
+          await this._setDirect(input, mapping.value);
+          break;
         }
       }
-    };
-    removeComments(clone);
+    }
+  }
 
-    // List items
-    const lis = clone.querySelectorAll('li');
-    lis.forEach(li => {
-      li.textContent = `• ${li.textContent.trim()}\n`;
+  // ── HELPERS ──
+
+  _getLabelText(input) {
+    if (input.id) {
+      const label = document.querySelector(`label[for="${CSS.escape(input.id)}"]`);
+      if (label) return label.textContent;
+    }
+    return input.closest('label')?.textContent || '';
+  }
+
+  async _set(selectorGroup, value) {
+    if (!value) return;
+    for (const selector of selectorGroup.split(',').map(s => s.trim())) {
+      const el = document.querySelector(selector);
+      if (el && !el.value) {
+        await this._setDirect(el, value);
+        return;
+      }
+    }
+  }
+
+  async _setDirect(el, value) {
+    if (!el || !value) return;
+    el.focus();
+
+    // React/Vue/Angular compatibility: trigger synthetic setter so frameworks
+    // detect the change and update their internal state.
+    const proto = el.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+    const nativeSetter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+    if (nativeSetter) {
+      nativeSetter.call(el, value);
+    } else {
+      el.value = value;
+    }
+
+    ['input', 'change', 'keyup'].forEach(evtType => {
+      el.dispatchEvent(new Event(evtType, { bubbles: true, cancelable: true }));
     });
 
-    // Paragraphs and Divs (for block spacing)
-    const blocks = clone.querySelectorAll('p, div, h1, h2, h3, h4, h5, h6');
-    blocks.forEach(b => {
+    el.blur();
+    await this._sleep(60);
+  }
+
+  async _uploadFile(selectorGroup, pdfUrl, fileName) {
+    let input = null;
+    for (const selector of selectorGroup.split(',').map(s => s.trim())) {
+      input = document.querySelector(selector);
+      if (input) break;
+    }
+    if (!input) return;
+
+    try {
+      const response = await fetch(pdfUrl);
+      if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
+      const blob = await response.blob();
+      const file = new File([blob], fileName, { type: 'application/pdf' });
+      const dt   = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    } catch (err) {
+      console.warn('[CareerPilot] Resume upload failed:', err.message);
+    }
+  }
+
+  _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+}
+
+
+// ────────────────────────────────────────────────────────────────
+// SECTION 3: JOB / PROFILE / COMPANY EXTRACTOR
+// ────────────────────────────────────────────────────────────────
+class JobExtractor {
+  constructor() { this._cache = null; }
+
+  // ── Clean HTML element to readable plain text ──
+  _clean(el) {
+    if (!el) return '';
+    const clone = el.cloneNode(true);
+    clone.querySelectorAll('script, style, button, noscript').forEach(n => n.remove());
+    clone.querySelectorAll('li').forEach(li => { li.textContent = `• ${li.textContent.trim()}\n`; });
+    clone.querySelectorAll('p, div, h1, h2, h3, h4, h5, h6').forEach(b => {
       b.textContent = `${b.textContent.trim()}\n\n`;
     });
-
-    // Bold/Strong
-    const bolds = clone.querySelectorAll('strong, b');
-    bolds.forEach(b => {
-      b.textContent = `**${b.textContent.trim()}**`;
-    });
-
-    // Br
-    clone.querySelectorAll('br').forEach(br => br.replaceWith(document.createTextNode('\n')));
-
+    clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
     return clone.textContent.replace(/\n{3,}/g, '\n\n').trim();
   }
 
-  // Extract job data - tries multiple methods in order of quality
-  extractJobData() {
-    const url = window.location.href;
-    const hostname = window.location.hostname;
-    const path = window.location.pathname;
-
-    // Check if it's a LinkedIn Profile
-    if (hostname.includes('linkedin.com') && path.includes('/in/')) {
-      return {
-        type: 'profile',
-        ...this.extractProfileData()
-      };
-    }
-
-    // Check if it's a LinkedIn Company Page
-    if (hostname.includes('linkedin.com') && path.includes('/company/')) {
-      return {
-        type: 'company',
-        ...this.extractCompanyPageData()
-      };
-    }
-
-    // Default to Job Extraction
-    // First, try JSON-LD (Schema.org/JobPosting) - highest quality
-    const jsonLdData = this.extractFromJsonLd();
-    if (jsonLdData && jsonLdData.position) {
-      return jsonLdData;
-    }
-
-    // Then try meta tags (OpenGraph/Twitter)
-    const metaData = this.extractFromMetaTags();
-    if (metaData && metaData.position) {
-      // Merge with site-specific extraction
-      const siteData = this.extractFromSite(hostname);
-      // Smart merge: only overwrite if siteData returns non-empty values
-      const merged = { ...metaData };
-      if (siteData) {
-        for (const [key, value] of Object.entries(siteData)) {
-          if (value && value !== '' && value !== null) {
-            merged[key] = value;
-          }
+  // ── Try a list of CSS selectors, return first truthy result ──
+  _pick(selectors, transform = el => el.textContent.trim()) {
+    for (const sel of (Array.isArray(selectors) ? selectors : [selectors])) {
+      try {
+        const el = document.querySelector(sel);
+        if (el) {
+          const result = transform(el);
+          if (result) return result;
         }
-      }
-      return merged;
+      } catch (e) { /* bad selector — skip */ }
     }
-
-    // Finally, use site-specific DOM extraction
-    return this.extractFromSite(hostname);
+    return '';
   }
 
-  // Extract from JSON-LD (Schema.org/JobPosting) - best quality
-  extractFromJsonLd() {
-    const data = {
-      position: '',
-      company: '',
-      location: '',
-      description: '',
-      jobUrl: window.location.href,
-      minSalary: null,
-      maxSalary: null,
-      datePosted: null,
-      deadline: null,
-    };
+  _parseSalary(str) {
+    if (!str) return null;
+    const cleaned = str.replace(/[,$\s]/g, '').toLowerCase();
+    const num = parseFloat(cleaned);
+    if (isNaN(num)) return null;
+    return cleaned.includes('k') ? Math.round(num * 1000) : Math.round(num);
+  }
 
-    const jsonLdScripts = document.querySelectorAll('script[type="application/ld+json"]');
-    for (const script of jsonLdScripts) {
-      try {
-        const jsonData = JSON.parse(script.textContent);
-        const job = Array.isArray(jsonData)
-          ? jsonData.find(item => item['@type'] === 'JobPosting')
-          : (jsonData['@type'] === 'JobPosting' ? jsonData : null);
-
-        if (job) {
-          data.position = job.title || '';
-          data.company = job.hiringOrganization?.name || '';
-          data.location = job.jobLocation?.address?.addressLocality ||
-            job.jobLocation?.address?.addressRegion ||
-            job.jobLocation?.address?.addressCountry || '';
-          data.description = job.description || '';
-          data.minSalary = job.baseSalary?.value?.minValue || null;
-          data.maxSalary = job.baseSalary?.value?.maxValue || null;
-          data.datePosted = job.datePosted || null;
-          data.deadline = job.validThrough || null;
-
-          // Clean HTML from description if present
-          if (data.description && data.description.includes('<')) {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = data.description;
-            data.description = this.cleanHtmlToMarkdown(tempDiv);
-          }
-
-          return data;
-        }
-      } catch (e) {
-        console.error('Error parsing JSON-LD', e);
+  _extractSalaryFromText(text) {
+    const patterns = [
+      /\$?([\d,]+(?:\.\d+)?k?)\s*[-–to]+\s*\$?([\d,]+(?:\.\d+)?k?)/i,
+      /salary[:\s]+\$?([\d,]+k?)\s*[-–]\s*\$?([\d,]+k?)/i,
+    ];
+    for (const pat of patterns) {
+      const m = text.match(pat);
+      if (m) {
+        const min = this._parseSalary(m[1]);
+        const max = this._parseSalary(m[2]);
+        if (min && max) return { min, max };
       }
     }
     return null;
   }
 
-  // Extract from meta tags (OpenGraph/Twitter)
-  extractFromMetaTags() {
-    const data = {
-      position: '',
-      company: '',
-      location: '',
-      description: '',
+  _base() {
+    return {
+      position: '', company: '', location: '', description: '',
       jobUrl: window.location.href,
-      minSalary: null,
-      maxSalary: null,
-      datePosted: null,
-      deadline: null,
+      minSalary: null, maxSalary: null, datePosted: null, deadline: null,
     };
+  }
 
-    data.position = document.querySelector('meta[property="og:title"]')?.content ||
-      document.querySelector('meta[name="twitter:title"]')?.content ||
-      document.title || '';
-    data.company = document.querySelector('meta[property="og:site_name"]')?.content || '';
-    data.description = document.querySelector('meta[property="og:description"]')?.content ||
-      document.querySelector('meta[name="description"]')?.content || '';
+  // ── Main entry point ──
+  extractJobData() {
+    const { hostname, pathname } = window.location;
 
+    // LinkedIn profile page
+    if (hostname.includes('linkedin.com') && pathname.includes('/in/'))
+      return { type: 'profile', ...this._linkedInProfile() };
+
+    // LinkedIn company / school page
+    if (hostname.includes('linkedin.com') && (pathname.includes('/company/') || pathname.includes('/school/')))
+      return { type: 'company', ...this._linkedInCompany() };
+
+    // Try JSON-LD first (best quality, works on many sites)
+    const jsonLd = this._fromJsonLd();
+    if (jsonLd?.position) return jsonLd;
+
+    // Site-specific extractors
+    if (hostname.includes('linkedin.com'))      return this._linkedInJob();
+    if (hostname.includes('indeed.com'))        return this._indeed();
+    if (hostname.includes('glassdoor.com'))     return this._glassdoor();
+    if (hostname.includes('rozee.pk'))          return this._rozee();
+    if (hostname.includes('naukri.com'))        return this._naukri();
+    if (hostname.includes('lever.co'))          return this._lever();
+    if (hostname.includes('greenhouse.io'))     return this._greenhouse();
+    if (hostname.includes('myworkdayjobs.com')) return this._workday();
+
+    // Meta tags fallback
+    const meta = this._fromMetaTags();
+    if (meta?.position) return meta;
+
+    // Last resort: generic DOM heuristics
+    return this._generic();
+  }
+
+  getJobData(mode = 'auto') {
+    if (mode !== 'auto') this._cache = null;
+    if (mode === 'profile') return { type: 'profile', ...this._linkedInProfile() };
+    if (mode === 'company') return { type: 'company', ...this._linkedInCompany() };
+    if (!this._cache) this._cache = this.extractJobData();
+    return this._cache;
+  }
+
+  // ── JSON-LD (Schema.org/JobPosting) — works on most modern job boards ──
+  _fromJsonLd() {
+    const data = this._base();
+    for (const script of document.querySelectorAll('script[type="application/ld+json"]')) {
+      try {
+        const json = JSON.parse(script.textContent);
+        const arr  = Array.isArray(json) ? json : [json];
+        const job  = arr.find(item => item['@type'] === 'JobPosting');
+        if (!job) continue;
+
+        data.position    = job.title || '';
+        data.company     = job.hiringOrganization?.name || '';
+        data.location    = job.jobLocation?.address?.addressLocality
+          || job.jobLocation?.address?.addressRegion
+          || job.jobLocation?.address?.addressCountry || '';
+        data.datePosted  = job.datePosted || null;
+        data.deadline    = job.validThrough || null;
+        data.minSalary   = job.baseSalary?.value?.minValue || null;
+        data.maxSalary   = job.baseSalary?.value?.maxValue || null;
+
+        let desc = job.description || '';
+        if (desc.includes('<')) {
+          const d = document.createElement('div');
+          d.innerHTML = desc;
+          desc = this._clean(d);
+        }
+        data.description = desc;
+        return data;
+      } catch (_) { /* malformed JSON-LD — skip */ }
+    }
+    return null;
+  }
+
+  // ── OpenGraph / meta tags ──
+  _fromMetaTags() {
+    const data     = this._base();
+    data.position  = document.querySelector('meta[property="og:title"]')?.content || document.title || '';
+    data.company   = document.querySelector('meta[property="og:site_name"]')?.content || '';
+    data.description = document.querySelector('meta[property="og:description"]')?.content
+      || document.querySelector('meta[name="description"]')?.content || '';
     return data;
   }
 
-  // Extract from site-specific DOM
-  extractFromSite(hostname) {
-    let siteData = null;
+  // ── LinkedIn Job Posting ──
+  _linkedInJob() {
+    const data = this._base();
 
-    if (hostname.includes('linkedin.com')) {
-      siteData = this.extractLinkedIn();
-    } else if (hostname.includes('indeed.com')) {
-      siteData = this.extractIndeed();
-    } else if (hostname.includes('glassdoor.com')) {
-      siteData = this.extractGlassdoor();
-    } else if (hostname.includes('lever.co')) {
-      siteData = this.extractLever();
-    } else if (hostname.includes('greenhouse.io')) {
-      siteData = this.extractGreenhouse();
-    } else {
-      siteData = this.extractGeneric();
-    }
-
-    return siteData;
-  }
-
-  // Extract from LinkedIn
-  extractLinkedIn() {
-    const data = {
-      position: '',
-      company: '',
-      location: '',
-      description: '',
-      jobUrl: window.location.href,
-      minSalary: null,
-      maxSalary: null,
-      datePosted: null,
-      deadline: null,
-    };
-
-    // Job Title
-    const titleSelectors = [
+    data.position = this._pick([
       'h1.job-details-jobs-unified-top-card__job-title',
+      'h1.job-details-jobs-unified-top-card__job-title a',
       'h1[data-test-id="job-title"]',
-      '.jobs-details-top-card__job-title',
       'h1.top-card-layout__title',
-      '.top-card-layout__title',
-      '.job-details-jobs-unified-top-card__job-title',
-      'h1'
-    ];
-    for (const selector of titleSelectors) {
-      const element = document.querySelector(selector);
-      if (element) {
-        data.position = element.textContent.trim();
-        break;
-      }
-    }
+      'h1',
+    ]);
 
-    // Company Name
-    const companySelectors = [
+    data.company = this._pick([
       '.job-details-jobs-unified-top-card__company-name a',
-      'a[data-test-id="job-poster"]',
+      '.job-details-jobs-unified-top-card__company-name',
+      'a.topcard__org-name-link',
       '.jobs-details-top-card__company-name',
-      'a.topcard__org-name-link'
-    ];
-    for (const selector of companySelectors) {
-      const element = document.querySelector(selector);
-      if (element) {
-        data.company = element.textContent.trim();
-        break;
-      }
+    ]);
+
+    // Location line format: "Company · Location · X days ago"
+    const locEl = document.querySelector(
+      '.job-details-jobs-unified-top-card__primary-description-without-tagline, ' +
+      '.job-details-jobs-unified-top-card__primary-description'
+    );
+    if (locEl) {
+      const parts = locEl.textContent.split('·').map(s => s.trim());
+      data.location = parts.length >= 2 ? parts[1] : locEl.textContent.trim();
     }
 
-    // Location - improved parsing
-    const locationSelectors = [
-      '.job-details-jobs-unified-top-card__primary-description-without-tagline',
-      '.job-details-jobs-unified-top-card__primary-description',
-      '.jobs-details-top-card__bullet',
-      '.topcard__flavor--bullet'
-    ];
-    for (const selector of locationSelectors) {
-      const element = document.querySelector(selector);
-      if (element) {
-        const text = element.textContent.trim();
-        // Format often: "Company · Location · Posted x days ago"
-        const parts = text.split('·').map(s => s.trim());
-        if (parts.length >= 2) {
-          // Usually location is the second part
-          data.location = parts[1];
-        } else {
-          data.location = text;
-        }
-        break;
-      }
-    }
-
-    // Alternative: Try specific location element
-    if (!data.location) {
-      const locationEl = document.querySelector('.job-details-jobs-unified-top-card__primary-description span:first-child') ||
-        document.querySelector('.topcard-layout__first-sub-title span:last-child');
-      if (locationEl) {
-        data.location = locationEl.textContent.trim();
-      }
-    }
-
-    // Description - use cleanHtmlToMarkdown for better formatting
-    const descSelectors = [
+    data.description = this._pick([
       '.jobs-description__content',
       '.show-more-less-html__markup',
+      '#job-details',
       '.jobs-box__html-content',
-      '#job-details'
-    ];
-    for (const selector of descSelectors) {
-      const element = document.querySelector(selector);
-      if (element) {
-        data.description = this.cleanHtmlToMarkdown(element);
-        break;
-      }
-    }
+    ], el => this._clean(el));
 
-    // Salary - check job insights first, then page text
-    const insightEls = document.querySelectorAll('.job-details-jobs-unified-top-card__job-insight');
-    for (const el of insightEls) {
-      const text = el.textContent;
-      if (text.includes('$') && (text.includes('/yr') || text.includes('year') || text.includes('hr'))) {
-        const salaryMatch = text.match(/\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*-\s*\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)/);
-        if (salaryMatch) {
-          const min = this.parseSalary(salaryMatch[1]);
-          const max = this.parseSalary(salaryMatch[2]);
-          if (min && max) {
-            data.minSalary = min;
-            data.maxSalary = max;
-            break;
-          }
-        }
-      }
-    }
-
-    // Fallback: search entire page text
-    if (!data.minSalary && !data.maxSalary) {
-      const salaryText = document.body.textContent;
-      const salaryMatch = salaryText.match(/\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*-\s*\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)/);
-      if (salaryMatch) {
-        const min = this.parseSalary(salaryMatch[1]);
-        const max = this.parseSalary(salaryMatch[2]);
-        if (min && max) {
-          data.minSalary = min;
-          data.maxSalary = max;
-        }
-      }
+    // Salary from insight chips
+    for (const ins of document.querySelectorAll('.job-details-jobs-unified-top-card__job-insight')) {
+      const salary = this._extractSalaryFromText(ins.textContent);
+      if (salary) { data.minSalary = salary.min; data.maxSalary = salary.max; break; }
     }
 
     return data;
   }
 
-  // Extract from Indeed
-  extractIndeed() {
-    const data = {
-      position: '',
-      company: '',
-      location: '',
-      description: '',
-      jobUrl: window.location.href,
-      minSalary: null,
-      maxSalary: null,
-      datePosted: null,
-      deadline: null,
-    };
+  // ── Indeed ──
+  _indeed() {
+    const data = this._base();
+    data.position  = this._pick(['h2[data-testid="job-title"]', '.jobsearch-JobInfoHeader-title', 'h1']);
+    data.company   = this._pick(['[data-testid="inlineHeader-companyName"]', '.jobsearch-InlineCompanyRating', '[data-company-name]']);
+    data.location  = this._pick(['[data-testid="job-location"]', '[data-testid="inlineHeader-companyLocation"]']);
+    data.description = this._pick(['#jobDescriptionText', '.jobsearch-jobDescriptionText'], el => this._clean(el));
 
-    // Job Title
-    const titleEl = document.querySelector('h2[data-testid="job-title"]') ||
-      document.querySelector('.jobsearch-JobInfoHeader-title');
-    if (titleEl) {
-      data.position = titleEl.textContent.trim();
-    }
-
-    // Company
-    const companyEl = document.querySelector('[data-testid="inlineHeader-companyName"]') ||
-      document.querySelector('.jobsearch-InlineCompanyRating');
-    if (companyEl) {
-      data.company = companyEl.textContent.trim();
-    }
-
-    // Location
-    const locationEl = document.querySelector('[data-testid="job-location"]') ||
-      document.querySelector('.jobsearch-JobInfoHeader-subtitle');
-    if (locationEl) {
-      data.location = locationEl.textContent.trim();
-    }
-
-    // Description - use cleanHtmlToMarkdown
-    const descEl = document.querySelector('#jobDescriptionText') ||
-      document.querySelector('.jobsearch-jobDescriptionText');
-    if (descEl) {
-      data.description = this.cleanHtmlToMarkdown(descEl);
-    }
-
-    // Salary
-    const salaryEl = document.querySelector('[data-testid="attribute_snippet_testid"]');
+    const salaryEl = document.querySelector('[data-testid="attribute_snippet_testid"], [class*="salary" i]');
     if (salaryEl) {
-      const salaryText = salaryEl.textContent;
-      const match = salaryText.match(/\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*-\s*\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)/);
-      if (match) {
-        data.minSalary = this.parseSalary(match[1]);
-        data.maxSalary = this.parseSalary(match[2]);
-      }
+      const s = this._extractSalaryFromText(salaryEl.textContent);
+      if (s) { data.minSalary = s.min; data.maxSalary = s.max; }
     }
-
     return data;
   }
 
-  // Extract from Glassdoor
-  extractGlassdoor() {
-    const data = {
-      position: '',
-      company: '',
-      location: '',
-      description: '',
-      jobUrl: window.location.href,
-      minSalary: null,
-      maxSalary: null,
-      datePosted: null,
-      deadline: null,
-    };
+  // ── Glassdoor (uses hashed class names — use data-test where possible) ──
+  _glassdoor() {
+    const data = this._base();
+    data.position    = this._pick(['[data-test="job-title"]', 'h1[class*="title" i]', 'h1']);
+    data.company     = this._pick(['[data-test="employer-name"]', '[class*="employerName" i]', '[class*="employer" i]']);
+    data.location    = this._pick(['[data-test="location"]', '[class*="location" i]']);
+    data.description = this._pick(['[data-test="description"]', '[class*="jobDescription" i]', '[class*="desc" i]'], el => this._clean(el));
 
-    const titleEl = document.querySelector('.JobDetails_jobTitle__');
-    if (titleEl) data.position = titleEl.textContent.trim();
-
-    const companyEl = document.querySelector('.EmployerProfile_employerName__');
-    if (companyEl) data.company = companyEl.textContent.trim();
-
-    const locationEl = document.querySelector('.JobDetails_location__');
-    if (locationEl) data.location = locationEl.textContent.trim();
-
-    const descEl = document.querySelector('.JobDetails_jobDescription__');
-    if (descEl) data.description = this.cleanHtmlToMarkdown(descEl);
-
+    const salary = this._extractSalaryFromText(
+      document.querySelector('[data-test="salary-estimate"], [class*="salary" i]')?.textContent || ''
+    );
+    if (salary) { data.minSalary = salary.min; data.maxSalary = salary.max; }
     return data;
   }
 
-  // Extract from Lever
-  extractLever() {
-    const data = {
-      position: '',
-      company: '',
-      location: '',
-      description: '',
-      jobUrl: window.location.href,
-      minSalary: null,
-      maxSalary: null,
-      datePosted: null,
-      deadline: null,
-    };
+  // ── Rozee.pk ──
+  _rozee() {
+    const data = this._base();
+    data.position = this._pick([
+      'h1.job-title', 'h1[class*="title" i]', '.job-header h1',
+      '[class*="jobTitle" i]', 'h1',
+    ]);
+    data.company = this._pick([
+      '.company-name a', '.company-name', '[class*="companyName" i]',
+      '[class*="employer" i]',
+    ]);
+    data.location = this._pick([
+      '[class*="location" i]', '[class*="city" i]',
+      '[itemprop="jobLocation"]',
+    ], el => el.textContent.trim().replace(/^location:/i, '').trim());
 
-    const titleEl = document.querySelector('.posting-headline h2');
-    if (titleEl) data.position = titleEl.textContent.trim();
+    data.description = this._pick([
+      '[class*="job-description" i]', '[class*="jobDescription" i]',
+      '.description-wrapper', '#job-description',
+    ], el => this._clean(el));
 
-    const companyEl = document.querySelector('.posting-category');
-    if (companyEl) data.company = companyEl.textContent.trim();
+    const dateEl = document.querySelector('[class*="posted" i], [class*="date" i], time[datetime]');
+    if (dateEl) data.datePosted = dateEl.getAttribute('datetime') || dateEl.textContent.trim();
 
-    const descEl = document.querySelector('.section');
-    if (descEl) data.description = this.cleanHtmlToMarkdown(descEl);
-
+    const salary = this._extractSalaryFromText(
+      document.querySelector('[class*="salary" i], [itemprop="baseSalary"]')?.textContent || ''
+    );
+    if (salary) { data.minSalary = salary.min; data.maxSalary = salary.max; }
     return data;
   }
 
-  // Extract from Greenhouse
-  extractGreenhouse() {
-    const data = {
-      position: '',
-      company: '',
-      location: '',
-      description: '',
-      jobUrl: window.location.href,
-      minSalary: null,
-      maxSalary: null,
-      datePosted: null,
-      deadline: null,
-    };
-
-    const titleEl = document.querySelector('.app-title');
-    if (titleEl) data.position = titleEl.textContent.trim();
-
-    const locationEl = document.querySelector('.location');
-    if (locationEl) data.location = locationEl.textContent.trim();
-
-    const descEl = document.querySelector('#content');
-    if (descEl) data.description = this.cleanHtmlToMarkdown(descEl);
-
+  // ── Naukri ──
+  _naukri() {
+    const data = this._base();
+    data.position    = this._pick(['h1.jd-header-title', 'h1[class*="title" i]', 'h1']);
+    data.company     = this._pick(['.jd-header-comp-name a', '.comp-name', '[class*="comp-name" i]']);
+    data.location    = this._pick(['.loc span', '[class*="location" i]']);
+    data.description = this._pick(['.job-desc', '[class*="job-desc" i]', '#job_description'], el => this._clean(el));
+    const salary = this._extractSalaryFromText(document.querySelector('[class*="salary" i]')?.textContent || '');
+    if (salary) { data.minSalary = salary.min; data.maxSalary = salary.max; }
     return data;
   }
 
-  // Generic extraction for any job site
-  extractGeneric() {
-    const data = {
-      position: '',
-      company: '',
-      location: '',
-      description: '',
-      jobUrl: window.location.href,
-      minSalary: null,
-      maxSalary: null,
-      datePosted: null,
-      deadline: null,
-    };
+  // ── Lever ──
+  _lever() {
+    const data = this._base();
+    data.position    = this._pick(['.posting-headline h2', 'h2.posting-name', 'h2']);
+    data.company     = document.title.includes(' at ') ? document.title.split(' at ').pop().trim() : '';
+    data.location    = this._pick(['.sort-by-time.posting-category', '.posting-categories .location', '[class*="location" i]']);
+    data.description = this._pick(['.posting-description', '.section-wrapper'], el => this._clean(el));
+    return data;
+  }
 
-    // Try to find job title - more comprehensive selectors
-    const titleSelectors = [
-      'h1[class*="title"]',
-      'h1[class*="job"]',
-      'h1[class*="position"]',
-      'h1[class*="role"]',
-      'h2[class*="title"]',
-      'h2[class*="job"]',
-      'h1',
-      '[class*="job-title"]',
-      '[class*="position-title"]',
-      '[class*="role-title"]',
-      '[id*="job-title"]',
-      '[id*="position"]',
-      'h2',
-      '[data-testid*="title"]',
-      '[data-testid*="job"]'
+  // ── Greenhouse ──
+  _greenhouse() {
+    const data = this._base();
+    data.position    = this._pick(['.app-title', '#app_title', 'h1']);
+    data.company     = this._pick(['.company-name', '#company_name']);
+    data.location    = this._pick(['.location', '[class*="location" i]']);
+    data.description = this._pick(['#content', '.content', '#job_description'], el => this._clean(el));
+    return data;
+  }
+
+  // ── Workday ──
+  _workday() {
+    const data = this._base();
+    data.position    = this._pick(['[data-automation-id="jobPostingHeader"]', 'h2[data-automation-id*="title" i]', 'h1']);
+    data.company     = document.title.split(' - ').pop()?.trim() || '';
+    data.location    = this._pick(['[data-automation-id="locations"]', '[data-automation-id="location"]']);
+    data.description = this._pick(['[data-automation-id="jobPostingDescription"]'], el => this._clean(el));
+    return data;
+  }
+
+  // ── Generic (any unknown site) ──
+  _generic() {
+    const data = this._base();
+
+    const titleCandidates = [
+      'h1[class*="title" i]', 'h1[class*="job" i]', 'h1[class*="position" i]',
+      '[class*="job-title" i]', '[class*="position-title" i]',
+      '[data-testid*="title" i]', 'h1', 'h2[class*="title" i]',
     ];
-
-    for (const selector of titleSelectors) {
-      const elements = document.querySelectorAll(selector);
-      for (const el of elements) {
-        const text = el.textContent.trim();
-        // Filter out navigation, menu items, etc.
-        if (text &&
-          text.length > 2 && // Relaxed from 5
-          text.length < 200 && // Relaxed from 150
-          !text.toLowerCase().includes('menu') &&
-          !text.toLowerCase().includes('navigation') &&
-          !text.toLowerCase().includes('skip')) {
-          data.position = text;
+    for (const sel of titleCandidates) {
+      for (const el of document.querySelectorAll(sel)) {
+        const t = el.textContent.trim();
+        if (t.length > 3 && t.length < 200 && !/menu|navigation|skip|home|about|cookie/i.test(t)) {
+          data.position = t;
           break;
         }
       }
       if (data.position) break;
     }
 
-    // Try to find company name - improved selectors
-    const companySelectors = [
-      '[class*="company"]',
-      '[class*="employer"]',
-      '[class*="organization"]',
-      '[class*="org"]',
-      '[id*="company"]',
-      '[id*="employer"]',
-      '[data-testid*="company"]',
-      'strong',
-      'b',
-      '[class*="brand"]',
-      '[class*="logo"]'
+    data.company  = this._pick(['[class*="company" i]', '[class*="employer" i]', '[itemprop="name"]']);
+    data.location = this._pick(['[class*="location" i]', '[class*="city" i]', '[itemprop="addressLocality"]']);
+
+    const descCandidates = [
+      '[class*="job-description" i]', '[class*="jobDescription" i]',
+      '[class*="description" i]', 'main article', 'article', 'main', '[role="main"]',
     ];
-
-    for (const selector of companySelectors) {
-      const elements = document.querySelectorAll(selector);
-      for (const el of elements) {
-        const text = el.textContent.trim();
-        // Filter out common false positives
-        if (text &&
-          text.length > 2 &&
-          text.length < 100 &&
-          !text.toLowerCase().includes('company') &&
-          !text.toLowerCase().includes('about') &&
-          !text.toLowerCase().includes('menu')) {
-          // Check if it's likely a company name (not a label)
-          const parentText = el.parentElement?.textContent || '';
-          if (!parentText.toLowerCase().includes('company name') &&
-            !parentText.toLowerCase().includes('employer:')) {
-            data.company = text;
-            break;
-          }
-        }
-      }
-      if (data.company) break;
-    }
-
-    // Try to find location
-    const locationSelectors = [
-      '[class*="location"]',
-      '[class*="place"]',
-      '[class*="city"]',
-      '[id*="location"]',
-      '[data-testid*="location"]',
-      '[class*="address"]'
-    ];
-
-    for (const selector of locationSelectors) {
-      const el = document.querySelector(selector);
+    for (const sel of descCandidates) {
+      const el = document.querySelector(sel);
       if (el) {
-        const text = el.textContent.trim();
-        if (text && text.length > 2 && text.length < 100) {
-          data.location = text;
-          break;
-        }
+        const t = this._clean(el);
+        if (t.length > 100) { data.description = t.substring(0, 50000); break; }
       }
     }
 
-    // Description - get main content with better selectors and markdown conversion
-    const descSelectors = [
-      '[class*="description"]',
-      '[class*="details"]',
-      '[class*="content"]',
-      '[class*="about"]',
-      '[id*="description"]',
-      '[id*="details"]',
-      'main',
-      'article',
-      '[role="main"]',
-      '[class*="job-description"]',
-      '[class*="job-details"]'
-    ];
-
-    for (const selector of descSelectors) {
-      const el = document.querySelector(selector);
-      if (el) {
-        // Use cleanHtmlToMarkdown for better formatting
-        const text = this.cleanHtmlToMarkdown(el);
-        // Make sure it's substantial content
-        if (text && text.length > 50) {
-          // Remove common navigation/header text
-          const cleanText = text
-            .replace(/About the job/gi, '')
-            .replace(/Job description/gi, '')
-            .replace(/Description/gi, '')
-            .trim();
-          if (cleanText.length > 50) {
-            data.description = cleanText.substring(0, 50000);
-            break;
-          }
-        }
-      }
-    }
-
-    // Try to extract salary from page text
-    const pageText = document.body.textContent || '';
-    const salaryPatterns = [
-      /\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*-\s*\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)/,
-      /salary[:\s]+\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*-\s*\$?(\d{1,3}(?:,\d{3})*(?:k|K)?)/i,
-      /(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*-\s*(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*(?:per\s+year|annually|yearly)/i
-    ];
-
-    for (const pattern of salaryPatterns) {
-      const match = pageText.match(pattern);
-      if (match) {
-        const min = this.parseSalary(match[1]);
-        const max = this.parseSalary(match[2]);
-        if (min && max) {
-          data.minSalary = min;
-          data.maxSalary = max;
-          break;
-        }
-      }
-    }
+    const salary = this._extractSalaryFromText(document.body.textContent);
+    if (salary) { data.minSalary = salary.min; data.maxSalary = salary.max; }
 
     return data;
   }
 
-  // Parse salary string to number
-  parseSalary(salaryStr) {
-    if (!salaryStr) return null;
-    const cleaned = salaryStr.replace(/[,$]/g, '').toLowerCase();
-    const num = parseFloat(cleaned);
-    if (isNaN(num)) return null;
-    if (cleaned.includes('k')) {
-      return Math.round(num * 1000);
-    }
-    return Math.round(num);
-  }
+  // ── LinkedIn Profile ──
+  _linkedInProfile() {
+    const d = { name: '', headline: '', company: '', position: '', location: '', about: '', profileUrl: window.location.href, photoUrl: '' };
 
-  // Extract LinkedIn Profile Data
-  extractProfileData() {
-    const data = {
-      name: '',
-      headline: '',
-      company: '',
-      position: '',
-      location: '',
-      about: '',
-      profileUrl: window.location.href,
-      photoUrl: ''
-    };
+    d.name = this._pick(['h1.text-heading-xlarge', 'div.ph5 h1', 'h1.top-card-layout__title'], el => {
+      const t = el.textContent.trim();
+      return t.length < 60 ? t : '';
+    });
 
-    // Name - Improved selectors
-    const nameSelectors = [
-      '.pv-top-card--list li', // sometimes name is in list
-      'div.ph5 h1', // heavy focus on the main card container
-      'h1.text-heading-xlarge',
-      'h1.top-card-layout__title',
-      '.pv-text-details__left-panel h1'
-    ];
-    for (const selector of nameSelectors) {
-      const el = document.querySelector(selector);
-      if (el) {
-        // Ensure it's not a tiny hidden element or side module
-        const text = el.textContent.trim();
-        // Simple sanity check: Profile names are usually 2-3 words, not huge sentences
-        if (text && text.length < 50) {
-          data.name = text;
-          break;
-        }
-      }
-    }
-
-    // Headline
-    const headlineEl = document.querySelector('div.text-body-medium') ||
-      document.querySelector('div.top-card-layout__headline');
+    const headlineEl = document.querySelector('div.text-body-medium, .top-card-layout__headline');
     if (headlineEl) {
-      data.headline = headlineEl.textContent.trim();
-
-      // Parse Position and Company from Headline
-      if (data.headline.includes(' at ')) {
-        const parts = data.headline.split(' at ');
-        if (parts.length >= 2) {
-          data.position = parts[0].trim();
-          // company will be set later by specific selector, but fallback here
-        }
-      } else if (data.headline.includes('@')) {
-        // "Role @ Company" format
-        const parts = data.headline.split('@');
-        if (parts.length >= 2) {
-          data.position = parts[0].trim();
-          data.company = parts.slice(1).join('@').trim();
-        }
-      } else if (data.headline.includes('|')) {
-        // "Role | Company | Skills" format
-        const parts = data.headline.split('|').map(s => s.trim());
-        if (parts.length > 0) data.position = parts[0];
-      } else {
-        data.position = data.headline;
-      }
+      d.headline = headlineEl.textContent.trim();
+      if (d.headline.includes(' at '))      { const p = d.headline.split(' at ');  d.position = p[0].trim(); d.company = p.slice(1).join(' at ').trim(); }
+      else if (d.headline.includes('@'))    { const p = d.headline.split('@');     d.position = p[0].trim(); d.company = p.slice(1).join('@').trim(); }
+      else if (d.headline.includes('|'))    { d.position = d.headline.split('|')[0].trim(); }
+      else                                  { d.position = d.headline; }
     }
 
-    // Company - Try specific top card selectors first (often "Current Company")
-    const companySelectors = [
-      'button[aria-label*="Current company:"]',
-      'div[aria-label*="Current company"]',
-      '.pv-text-details__right-panel button',
-      '.pv-text-details__right-panel div',
-      'ul.pv-text-details__right-panel li button',
-      '.pv-text-details__right-panel__item-text' // New selector
-    ];
-
-    for (const selector of companySelectors) {
-      const el = document.querySelector(selector);
-      if (el) {
-        let text = el.textContent.trim();
-        // Clean up accessible text if needed
-        if (el.getAttribute('aria-label') && el.getAttribute('aria-label').includes('Current company:')) {
-          // Extracts "Current company: Google. Click to..."
-          const label = el.getAttribute('aria-label');
-          const match = label.match(/Current company:([^.]+)/);
-          if (match) text = match[1].trim();
-        }
-        if (text) {
-          // Remove duplicates sometimes found in text content like "Company Name\nCompany Name"
-          const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-          if (lines.length > 0) {
-            text = lines[0]; // Take first line
-          }
-
-          // Filter out generic "Company" label or bad extractions
-          if (text.toLowerCase() === 'company' || text.toLowerCase().includes('click to learn more')) {
-            continue;
-          }
-
-          data.company = text;
-          break;
-        }
-      }
+    // Current company from aria-label button
+    for (const sel of ['button[aria-label*="Current company" i]', '.pv-text-details__right-panel button']) {
+      const el = document.querySelector(sel);
+      if (!el) continue;
+      const label = el.getAttribute('aria-label') || '';
+      const match = label.match(/Current company[:\s]+([^.]+)/i);
+      if (match) { d.company = match[1].trim(); break; }
+      const text = el.textContent.split('\n')[0].trim();
+      if (text && text.toLowerCase() !== 'company') { d.company = text; break; }
     }
 
-    // Fallback: Check Experience Section for first item
-    if (!data.company) {
-      // Find experience section by ID or text
-      const headers = Array.from(document.querySelectorAll('h2, span'));
-      const expHeader = headers.find(h => h.textContent.trim().toLowerCase() === 'experience');
-      if (expHeader) {
-        const section = expHeader.closest('section');
-        if (section) {
-          // First list item in experience
-          const firstCompany = section.querySelector('.pvs-list__item--line-separated');
-          if (firstCompany) {
-            // Look for company name text (usually 2nd span in nested structure)
-            const spans = Array.from(firstCompany.querySelectorAll('span[aria-hidden="true"]'));
-            // Logic: 1st span = Role, 2nd span = Company, OR 1st span = Company (if role listed below)
-            // Heuristic: If we have multiple spans, check them.
-            if (spans.length >= 2) {
-              // Usually span[0] is role, span[1] is company details (e.g. "Google · Full-time")
-              const companyText = spans[1].textContent.split('·')[0].trim();
-              data.company = companyText;
-            } else if (spans.length === 1) {
-              data.company = spans[0].textContent.trim();
-            }
-          }
-        }
-      }
-    }
-
-    // If we still don't have company but parsed it from headline, use that as last resort
-    if (!data.company && data.headline.includes('@')) {
-      const parts = data.headline.split('@');
-      if (parts.length >= 2) data.company = parts.slice(1).join('@').trim();
-    }
-    if (!data.company && data.headline.includes(' at ')) {
-      const parts = data.headline.split(' at ');
-      if (parts.length >= 2) data.company = parts.slice(1).join(' at ').trim();
-    }
-
-
-    // Location
-    // Location - stricter selectors
-    const locationSelectors = [
+    // Location — avoid "contact info", "connections" false positives
+    d.location = this._pick([
       '.pv-text-details__left-panel span.text-body-small.inline',
-      'div.mt2 span.text-body-small', // common container for loc
       'span.text-body-small.inline.t-black--light.break-words',
-      'div.top-card-layout__entity-info'
-    ];
+    ], el => {
+      const t = el.textContent.trim();
+      return /contact info|connection|degree/i.test(t) ? '' : t;
+    });
 
-    for (const selector of locationSelectors) {
-      const el = document.querySelector(selector);
-      if (el) {
-        const text = el.textContent.trim();
-        const lowerText = text.toLowerCase();
-        if (text &&
-          !lowerText.includes('contact info') &&
-          !lowerText.includes('connections') &&
-          !lowerText.includes('connection') &&
-          !lowerText.includes('degree')) {
-          data.location = text;
-          break;
-        }
+    // About section
+    const headers = Array.from(document.querySelectorAll('h2 span[aria-hidden="true"]'));
+    const aboutHeader = headers.find(h => h.textContent.trim().toLowerCase() === 'about');
+    if (aboutHeader) {
+      const section = aboutHeader.closest('section') || aboutHeader.closest('.artdeco-card');
+      if (section) {
+        const textEl = section.querySelector('.inline-show-more-text, .pv-shared-text-with-see-more span[aria-hidden="true"]');
+        d.about = textEl ? this._clean(textEl) : this._clean(section);
+        d.about = d.about.replace(/…\s*see more/gi, '').trim();
       }
     }
 
-    // About - Improved traversal
-    if (!data.about) {
-      // Strategy 1: Find "About" header and look within its section
-      const allHeaders = Array.from(document.querySelectorAll('h2 span[aria-hidden="true"], h2, div#about, section#about'));
-      const aboutHeader = allHeaders.find(h => h.textContent.trim().toLowerCase() === 'about');
+    const img = document.querySelector('img.pv-top-card-profile-picture__image, img.profile-photo-edit__preview');
+    if (img) d.photoUrl = img.src;
 
-      if (aboutHeader) {
-        // Go up to the section container
-        const section = aboutHeader.closest('section') || aboutHeader.closest('div.artdeco-card');
-        if (section) {
-          // Look for text containers
-          const textSelects = [
-            '.inline-show-more-text',
-            '.pv-about-section__summary-text',
-            'div.display-flex.ph5',
-            '.pv-shared-text-with-see-more',
-            '[class*="about"] [class*="text"]'
-          ];
-
-          let textContainer = null;
-          for (const s of textSelects) {
-            textContainer = section.querySelector(s);
-            if (textContainer) break;
-          }
-
-          if (textContainer) {
-            // Get the text, ignoring the "see more" buttons
-            const visibleSpan = textContainer.querySelector('span[aria-hidden="true"]');
-
-            // Use cleanHtmlToMarkdown to preserve line breaks and formatting
-            if (visibleSpan) {
-              data.about = this.cleanHtmlToMarkdown(visibleSpan);
-            } else {
-              data.about = this.cleanHtmlToMarkdown(textContainer);
-            }
-          }
-
-          // Fallback: if no specific container found, try to grab text from the section body excluding the header
-          if (!data.about) {
-            const clone = section.cloneNode(true);
-            const headerInClone = clone.querySelector('h2');
-            if (headerInClone) headerInClone.remove();
-            data.about = this.cleanHtmlToMarkdown(clone);
-          }
-
-          // Clean up "…see more"
-          if (data.about) {
-            data.about = data.about.replace(/…\s*see more/gi, '').trim();
-          }
-        }
-      }
-    }
-
-    // Profile Photo
-    const imgEl = document.querySelector('img.pv-top-card-profile-picture__image') ||
-      document.querySelector('img.profile-photo-edit__preview');
-    if (imgEl) data.photoUrl = imgEl.src;
-
-    return data;
+    return d;
   }
 
-  // Extract LinkedIn Company Page Data
-  extractCompanyPageData() {
-    const data = {
-      name: '',
-      industry: '',
-      size: '',
-      location: '',
-      website: '',
-      linkedinUrl: window.location.href,
-      about: '',
-      logoUrl: '',
-      foundedYear: '',
-      employeeCount: ''
-    };
+  // ── LinkedIn Company Page ──
+  _linkedInCompany() {
+    const d = { name: '', industry: '', size: '', location: '', website: '', linkedinUrl: window.location.href, about: '', logoUrl: '', foundedYear: '', employeeCount: '' };
 
-    // Name
-    const nameSelectors = [
-      'h1.org-top-card-summary__title',
-      'h1.top-card-layout__title',
-      '.org-top-card-summary__title',
-      'h1'
-    ];
-    for (const selector of nameSelectors) {
-      const el = document.querySelector(selector);
-      if (el) {
-        data.name = el.textContent.trim();
-        break;
-      }
+    d.name = this._pick(['h1.org-top-card-summary__title', '.org-top-card-summary__title', 'h1']);
+
+    const logo = document.querySelector('img.org-top-card-primary-content__logo, .org-top-card-primary-content__logo-container img');
+    if (logo) d.logoUrl = logo.src;
+
+    // Definition list in About section (most reliable)
+    let currentDt = '';
+    for (const el of document.querySelectorAll('dl dt, dl dd')) {
+      if (el.tagName === 'DT') { currentDt = el.textContent.trim().toLowerCase(); continue; }
+      const t = el.textContent.trim();
+      if (currentDt.includes('industry'))     d.industry   = t;
+      if (currentDt.includes('website'))      d.website    = t;
+      if (currentDt.includes('company size')) d.size       = t;
+      if (currentDt.includes('headquarters')) d.location   = t;
+      if (currentDt.includes('founded'))      d.foundedYear = t;
     }
 
-    // Logo
-    const logoSelectors = [
-      'img.org-top-card-primary-content__logo',
-      '.org-top-card-primary-content__logo-container img',
-      'img.company-logo'
-    ];
-    for (const selector of logoSelectors) {
-      const el = document.querySelector(selector);
-      if (el && el.src) {
-        data.logoUrl = el.src;
-        break;
-      }
+    // Top card summary items
+    for (const item of document.querySelectorAll('.org-top-card-summary-info-list__info-item')) {
+      const t = item.textContent.trim();
+      if (!d.size     && /employee/i.test(t) && !/see all/i.test(t)) d.size     = t;
+      if (!d.industry && !/employee|follower|\d/i.test(t))           d.industry = t;
+      if (!d.location && t.includes(',') && !/employee|follower/i.test(t)) d.location = t;
     }
 
-    // Industry & Location (often in subtitle or summary)
-    // Format: "Internet Publishing · San Francisco, CA · 123 followers"
-    const summarySelectors = [
-      '.org-top-card-summary__info-item',
-      '.top-card-layout__first-sub-title',
-      'div.org-top-card-summary-info-list__info-item'
-    ];
-
-    // Fallback: search description lists in About section
-    const dlSelectors = document.querySelectorAll('dl.overflow-hidden dt, dl.overflow-hidden dd');
-    let currentTerm = '';
-    for (const el of dlSelectors) {
-      if (el.tagName === 'DT') {
-        currentTerm = el.textContent.trim().toLowerCase();
-      } else if (el.tagName === 'DD') {
-        const text = el.textContent.trim();
-        if (currentTerm.includes('industry')) data.industry = text;
-        if (currentTerm.includes('website')) data.website = text;
-        if (currentTerm.includes('company size')) data.size = text;
-        if (currentTerm.includes('headquarters')) data.location = text;
-        if (currentTerm.includes('founded')) data.foundedYear = text;
-      }
+    // Employee count from "See all X employees" link
+    const empLink = document.querySelector('a[href*="/search/results/people/"]');
+    if (empLink) {
+      const m = empLink.textContent.match(/[\d,]+/);
+      if (m) d.employeeCount = m[0].replace(/,/g, '');
     }
 
-    // Employee count from "See all X employees" link if available
-    const employeeLink = document.querySelector('a[href*="/search/results/people/"]');
-    if (employeeLink) {
-      const text = employeeLink.textContent.trim();
-      const match = text.match(/[\d,]+/);
-      if (match) {
-        data.employeeCount = match[0].replace(/,/g, '');
-      }
-    }
-
-    // Check top card info items for Size, Industry, Location (common on Home tab)
-    const topCardItems = document.querySelectorAll('.org-top-card-summary-info-list__info-item, .org-top-card-summary-info-list__info-item-link');
-    for (const item of topCardItems) {
-      const text = item.textContent.trim();
-      if (!text) continue;
-
-      // Size: "51-200 employees"
-      if (!data.size && text.toLowerCase().includes('employees') && !text.includes('See all')) {
-        data.size = text;
-      }
-
-      // Industry fallback
-      if (!data.industry &&
-        !text.toLowerCase().includes('employees') &&
-        !text.toLowerCase().includes('follower') &&
-        !text.match(/\d/) // No numbers usually
-      ) {
-        data.industry = text;
-      }
-
-      // Location fallback
-      if (!data.location && !text.toLowerCase().includes('employees') && !text.toLowerCase().includes('follower') && text.includes(',')) {
-        data.location = text;
-      }
-    }
-
-    // Website (link button)
-    if (!data.website) {
-      const linkBtn = document.querySelector('a[href^="http"].org-top-card-primary-actions__action') ||
-        document.querySelector('a.org-top-card-primary-actions__action');
-      if (linkBtn) data.website = linkBtn.href;
-    }
-
-    // About/Description
-    const aboutSelectors = [
+    d.about = this._pick([
       '.org-about-us-organization-description__text',
       'section.artdeco-card p',
-      '.break-words'
-    ];
-    for (const selector of aboutSelectors) {
-      const el = document.querySelector(selector);
-      if (el && el.textContent.length > 50) {
-        data.about = this.cleanHtmlToMarkdown(el);
-        break;
-      }
-    }
+      '.break-words',
+    ], el => el.textContent.length > 50 ? this._clean(el) : '');
 
-    return data;
-  }
-
-  // Get current job data with optional mode override
-  getJobData(mode = 'auto') {
-    if (mode === 'profile') {
-      return { type: 'profile', ...this.extractProfileData() };
-    }
-    if (mode === 'company') {
-      return { type: 'company', ...this.extractCompanyPageData() };
-    }
-    if (mode === 'job') {
-      // Force generic/job logic but we usually rely on auto detection for the specific parser (LinkedIn vs Indeed)
-      // We can just call extractJobData which defaults to job check if profile/company check fails
-      // or we can bypass profile checks.
-      // For now, let's just re-run main extraction but maybe we want to force skipping profile check?
-      // Actually standard extractJobData prioritizes profile/company if URL matches. 
-      // If user forces JOB on a profile page, we should try to find job data on the profile page (unlikely) or just return empty job data.
-      // Let's stick to standard flow but with a hint? 
-      // Simpler: Just run standard flow. If "job" is forced, popup.js handles the type override.
-      // But we can try to avoid returning 'profile' type if 'job' is requested.
-      const data = this.extractJobData();
-      if (data.type === 'profile' || data.type === 'company') {
-        // If we detected profile but user wants job, maybe search for job schema?
-        // This is edge case. Let's just return what we found and popup overrides type if needed for saving.
-        return data;
-      }
-      return data;
-    }
-
-    // Default auto
-    if (!this.jobData) {
-      this.jobData = this.extractJobData();
-    }
-    return this.jobData;
+    return d;
   }
 }
 
-// Initialize extractor
-const jobExtractor = new JobExtractor();
 
-// Listen for messages from popup/background
+// ────────────────────────────────────────────────────────────────
+// SECTION 4: RUNTIME — MESSAGE LISTENER + AUTO-DETECT
+// ────────────────────────────────────────────────────────────────
+const extractor = new JobExtractor();
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+
+  // ── Extract job / profile / company data ──
   if (request.action === 'extractJobData') {
-    const mode = request.mode || 'auto';
-    // Clear cache if mode is specific to ensure fresh extraction
-    if (mode !== 'auto') jobExtractor.jobData = null;
-
-    const jobData = jobExtractor.getJobData(mode);
-    sendResponse({ success: true, data: jobData });
+    if (request.mode !== 'auto') extractor._cache = null;
+    const data = extractor.getJobData(request.mode || 'auto');
+    sendResponse({ success: true, data });
     return true;
   }
 
-  if (request.action === 'captureScreenshot') {
-    // Screenshot will be handled by background script
-    sendResponse({ success: true });
+  // ── Detect ATS on current page ──
+  if (request.action === 'detectATS') {
+    sendResponse({
+      success: true,
+      ats: ATSDetector.detect(),
+      isApplyPage: ATSDetector.isApplyPage(),
+    });
     return true;
   }
+
+  // ── Autofill ATS form ──
+  if (request.action === 'autofill') {
+    const filler = new ATSAutofiller(request.profile);
+    filler.fill().then(result => sendResponse(result));
+    return true; // Keep channel open — async
+  }
+
+  return false;
 });
 
-// Auto-extract when page loads
+// On page load: auto-detect what this page is and notify background
 window.addEventListener('load', () => {
   setTimeout(() => {
-    const jobData = jobExtractor.getJobData('auto');
-    chrome.runtime.sendMessage({
-      action: 'jobDataExtracted',
-      data: jobData
-    });
-  }, 2000);
+    const ats         = ATSDetector.detect();
+    const isApplyPage = ATSDetector.isApplyPage();
+
+    if (isApplyPage) {
+      // This is an ATS form — notify background to show autofill badge
+      chrome.runtime.sendMessage({
+        action: 'atsDetected',
+        ats,
+        isApplyPage,
+        url: window.location.href,
+      });
+    } else {
+      // It's a job listing / profile — extract and cache
+      const data = extractor.getJobData('auto');
+      chrome.runtime.sendMessage({ action: 'jobDataExtracted', data });
+    }
+  }, 1500);
 });

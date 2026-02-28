@@ -1,39 +1,128 @@
-// Background service worker for screenshot capture and data handling
+// ================================================================
+// CareerPilot AI - Background Service Worker v2.0
+// ================================================================
 
-let capturedScreenshots = {};
+'use strict';
 
-// Listen for messages from content script and popup
+const SUPABASE_PROJECT_REF = 'jdplobgtxzncwxhordah';
+const AUTH_STORAGE_KEY     = `sb-${SUPABASE_PROJECT_REF}-auth-token`;
+const DATA_TTL_MS          = 60 * 60 * 1000; // 1 hour
+
+// ────────────────────────────────────────────────────────────────
+// Helper: generate unique data ID
+// ────────────────────────────────────────────────────────────────
+function uid(prefix = 'cp') {
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+// ────────────────────────────────────────────────────────────────
+// Helper: strip /trackers from base URL
+// ────────────────────────────────────────────────────────────────
+function baseUrl(url) {
+  return (url || 'http://localhost:8080').replace(/\/trackers\/?$/, '');
+}
+
+// ────────────────────────────────────────────────────────────────
+// Helper: store data + auto-cleanup after TTL
+// ────────────────────────────────────────────────────────────────
+function storeTemp(id, data) {
+  return new Promise(resolve => {
+    chrome.storage.local.set({ [id]: data }, () => {
+      setTimeout(() => chrome.storage.local.remove([id]), DATA_TTL_MS);
+      resolve();
+    });
+  });
+}
+
+// ────────────────────────────────────────────────────────────────
+// Helper: build URL-safe params (never include description/screenshot)
+// ────────────────────────────────────────────────────────────────
+function buildSafeParams(dataId, overrides = {}) {
+  const params = new URLSearchParams({ dataId, ...overrides });
+  return params;
+}
+
+// ────────────────────────────────────────────────────────────────
+// Screenshot capture
+// ────────────────────────────────────────────────────────────────
+async function captureScreenshot(tabId) {
+  const tab = await chrome.tabs.get(tabId);
+  if (!tab) throw new Error('Tab not found');
+  return chrome.tabs.captureVisibleTab(tab.windowId, { format: 'jpeg', quality: 80 });
+}
+
+// ────────────────────────────────────────────────────────────────
+// Badge management
+// ────────────────────────────────────────────────────────────────
+const Badge = {
+  set(tabId, text, color = '#10b981') {
+    chrome.action.setBadgeText({ text, tabId });
+    chrome.action.setBadgeBackgroundColor({ color, tabId });
+  },
+  clear(tabId) {
+    chrome.action.setBadgeText({ text: '', tabId });
+  },
+};
+
+// ────────────────────────────────────────────────────────────────
+// Tab URL → badge
+// ────────────────────────────────────────────────────────────────
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status !== 'complete' || !tab.url) return;
+
+  const url = tab.url;
+
+  if (/linkedin\.com\/in\//.test(url))                              Badge.set(tabId, 'PROF', '#3b82f6');
+  else if (/linkedin\.com\/(company|school)\//.test(url))          Badge.set(tabId, 'CO',   '#8b5cf6');
+  else if (/linkedin\.com\/jobs\/|indeed\.com\/|glassdoor\.com\/|rozee\.pk\/|naukri\.com\//.test(url))
+                                                                    Badge.set(tabId, 'JOB',  '#10b981');
+  else if (/lever\.co\/|greenhouse\.io\/|myworkdayjobs\.com\/|icims\.com\/|workable\.com\//.test(url))
+                                                                    Badge.set(tabId, 'FILL', '#f59e0b');
+  else                                                              Badge.clear(tabId);
+});
+
+// ────────────────────────────────────────────────────────────────
+// When content script detects ATS — update badge
+// ────────────────────────────────────────────────────────────────
+// (handled inside message listener below)
+
+// ────────────────────────────────────────────────────────────────
+// Main message listener
+// ────────────────────────────────────────────────────────────────
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'captureScreenshot') {
-    // Use tabId from request, or fallback to sender.tab.id
-    const tabId = request.tabId || sender.tab?.id;
 
-    if (!tabId) {
-      sendResponse({ success: false, error: 'No tab ID available' });
-      return true;
-    }
+  // ── Screenshot ──
+  if (request.action === 'captureScreenshot') {
+    const tabId = request.tabId || sender.tab?.id;
+    if (!tabId) { sendResponse({ success: false, error: 'No tab ID' }); return true; }
 
     captureScreenshot(tabId)
-      .then(screenshot => {
-        sendResponse({ success: true, screenshot });
-      })
-      .catch(error => {
-        console.error('Screenshot error:', error);
-        sendResponse({ success: false, error: error.message });
-      });
-    return true; // Keep channel open for async response
+      .then(screenshot => sendResponse({ success: true, screenshot }))
+      .catch(err       => sendResponse({ success: false, error: err.message }));
+    return true;
   }
 
+  // ── ATS detected by content script ──
+  if (request.action === 'atsDetected') {
+    const tabId = sender.tab?.id;
+    if (tabId) Badge.set(tabId, 'FILL', '#f59e0b');
+    return false;
+  }
+
+  // ── Job data extracted (cache notification) ──
+  if (request.action === 'jobDataExtracted') {
+    return false; // no response needed — just for popup to know it's ready
+  }
+
+  // ── Save job to local storage ──
   if (request.action === 'saveJobData') {
-    // Save job data with screenshot to storage
     const jobData = {
       ...request.data,
-      screenshot: request.screenshot,
+      screenshot: request.screenshot || null,
       capturedAt: new Date().toISOString(),
-      url: request.url || sender.tab?.url
+      url: request.url || sender.tab?.url,
     };
-
-    chrome.storage.local.get(['savedJobs'], (result) => {
+    chrome.storage.local.get(['savedJobs'], result => {
       const jobs = result.savedJobs || [];
       jobs.push(jobData);
       chrome.storage.local.set({ savedJobs: jobs }, () => {
@@ -43,202 +132,99 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
+  // ── Get saved jobs ──
   if (request.action === 'getSavedJobs') {
-    chrome.storage.local.get(['savedJobs'], (result) => {
+    chrome.storage.local.get(['savedJobs'], result => {
       sendResponse({ success: true, jobs: result.savedJobs || [] });
     });
     return true;
   }
 
+  // ── Send job to CareerPilot Trackers page ──
   if (request.action === 'sendToCareerPilot') {
-    // Send job data to CareerPilot UI
-    const jobData = request.data;
-    const careerPilotUrl = request.careerPilotUrl || 'http://localhost:8080/trackers';
+    const data  = request.data;
+    const cpUrl = `${baseUrl(request.careerPilotUrl)}/trackers`;
+    const id    = uid('cp_job');
 
-    // Generate a unique ID for this job data
-    const jobDataId = 'careerpilot_job_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-
-    // Store full job data in extension storage (handles large descriptions/screenshots)
-    chrome.storage.local.set({ [jobDataId]: jobData }, () => {
-      // Only pass essential, small fields via URL to avoid 431 error
-      // Truncate all fields to ensure URL stays under limit
-      const params = new URLSearchParams({
-        action: 'addJob',
-        dataId: jobDataId, // Reference to stored data
-        position: (jobData.position || '').substring(0, 100), // Truncate for URL safety
-        company: (jobData.company || '').substring(0, 100),
-        jobUrl: (jobData.jobUrl || '').substring(0, 200), // Truncate URL if too long
-        location: (jobData.location || '').substring(0, 100),
-        minSalary: jobData.minSalary ? String(jobData.minSalary) : '',
-        maxSalary: jobData.maxSalary ? String(jobData.maxSalary) : '',
-        datePosted: (jobData.datePosted || '').substring(0, 50),
-        deadline: (jobData.deadline || '').substring(0, 50),
-        status: jobData.status || 'Bookmarked',
-        excitement: jobData.excitement ? String(jobData.excitement) : '3'
-        // Description and screenshot are in storage, not URL - NEVER include them
+    storeTemp(id, data).then(() => {
+      const params = buildSafeParams(id, {
+        action:    'addJob',
+        position:  (data.position  || '').substring(0, 100),
+        company:   (data.company   || '').substring(0, 100),
+        jobUrl:    (data.jobUrl    || '').substring(0, 200),
+        location:  (data.location  || '').substring(0, 100),
+        minSalary: data.minSalary ? String(data.minSalary) : '',
+        maxSalary: data.maxSalary ? String(data.maxSalary) : '',
+        datePosted: (data.datePosted || '').substring(0, 50),
+        deadline:   (data.deadline   || '').substring(0, 50),
+        status:     data.status     || 'Bookmarked',
+        excitement: data.excitement ? String(data.excitement) : '3',
       });
-
-      // Ensure total URL length is reasonable (max ~2000 chars to be safe)
-      const fullUrl = `${careerPilotUrl}?${params.toString()}`;
-      if (fullUrl.length > 2000) {
-        console.warn('URL too long, truncating further');
-        // Further truncate if needed
-        params.set('position', (jobData.position || '').substring(0, 50));
-        params.set('company', (jobData.company || '').substring(0, 50));
-        params.set('jobUrl', (jobData.jobUrl || '').substring(0, 100));
-        params.set('location', (jobData.location || '').substring(0, 50));
-      }
-
-      chrome.tabs.create({
-        url: `${careerPilotUrl}?${params.toString()}`
-      });
-
-      // Clean up stored data after 1 hour (in case user doesn't save)
-      setTimeout(() => {
-        chrome.storage.local.remove([jobDataId]);
-      }, 3600000); // 1 hour
-    });
-
-    sendResponse({ success: true });
-    return true;
-  }
-
-  if (request.action === 'sendContactToCareerPilot') {
-    const contactData = request.data;
-    // Construct URL to Connections page
-    const baseUrl = request.careerPilotUrl.replace(/\/trackers\/?$/, ''); // strip /trackers
-    const connectionsUrl = `${baseUrl}/connections`; // assume /connections route
-
-    const dataId = 'careerpilot_contact_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-
-    chrome.storage.local.set({ [dataId]: contactData }, () => {
-      const params = new URLSearchParams({
-        action: 'addContact',
-        dataId: dataId,
-        name: (contactData.name || '').substring(0, 100),
-        company: (contactData.company || '').substring(0, 100)
-      });
-
-      chrome.tabs.create({
-        url: `${connectionsUrl}?${params.toString()}`
-      });
-
-      setTimeout(() => {
-        chrome.storage.local.remove([dataId]);
-      }, 3600000);
-    });
-
-    sendResponse({ success: true });
-    return true;
-  }
-
-  if (request.action === 'sendProfileToCareerPilot') {
-    const profileData = request.data;
-    // CareerPilot URL
-    const baseUrl = request.careerPilotUrl || 'http://localhost:8080';
-    // We'll target the Resume Builder page
-    const resumeUrl = `${baseUrl.replace(/\/trackers\/?$/, '')}/resume`;
-
-    const dataId = 'careerpilot_profile_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-
-    chrome.storage.local.set({ [dataId]: profileData }, () => {
-      const params = new URLSearchParams({
-        action: 'importProfile',
-        dataId: dataId,
-        source: 'linkedin_extension'
-      });
-
-      chrome.tabs.create({
-        url: `${resumeUrl}?${params.toString()}`
-      });
-
-      // Cleanup
-      setTimeout(() => {
-        chrome.storage.local.remove([dataId]);
-      }, 3600000);
-    });
-
-    sendResponse({ success: true });
-    return true;
-  }
-
-  // Allow CareerPilot page to fetch full job data by ID
-  if (request.action === 'getJobData') {
-    const dataId = request.dataId;
-    if (dataId) {
-      chrome.storage.local.get([dataId], (result) => {
-        if (result[dataId]) {
-          sendResponse({ success: true, data: result[dataId] });
-          // Optionally clean up after fetching
-          chrome.storage.local.remove([dataId]);
-        } else {
-          sendResponse({ success: false, error: 'Job data not found' });
-        }
-      });
-      return true;
-    }
-    sendResponse({ success: false, error: 'No data ID provided' });
-    return true;
-  }
-
-  // Handle portal-to-extension logout
-  if (request.action === 'portalLogout') {
-    const projectRef = "jdplobgtxzncwxhordah";
-    const storageKey = `sb-${projectRef}-auth-token`;
-    chrome.storage.local.remove([storageKey], () => {
-      console.log("CareerPilot Extension: Logged out via Portal.");
+      chrome.tabs.create({ url: `${cpUrl}?${params}` });
       sendResponse({ success: true });
     });
     return true;
   }
-});
 
-// Capture screenshot of current tab
-async function captureScreenshot(tabId) {
-  try {
-    // Get the window ID for the tab
-    const tab = await chrome.tabs.get(tabId);
-    if (!tab) {
-      throw new Error('Tab not found');
-    }
+  // ── Send contact/profile to CareerPilot Connections page ──
+  if (request.action === 'sendContactToCareerPilot') {
+    const data  = request.data;
+    const cpUrl = `${baseUrl(request.careerPilotUrl)}/connections`;
+    const id    = uid('cp_contact');
 
-    const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, {
-      format: 'png',
-      quality: 100
+    storeTemp(id, data).then(() => {
+      const params = buildSafeParams(id, {
+        action:  'addContact',
+        name:    (data.name    || '').substring(0, 100),
+        company: (data.company || '').substring(0, 100),
+      });
+      chrome.tabs.create({ url: `${cpUrl}?${params}` });
+      sendResponse({ success: true });
     });
-    return dataUrl;
-  } catch (error) {
-    console.error('Screenshot capture failed:', error);
-    throw error;
+    return true;
   }
-}
 
-// Listen for tab updates to detect job pages
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab.url) {
-    // Check for Job Sites
-    const jobSites = [
-      'linkedin.com/jobs',
-      'indeed.com/viewjob',
-      'glassdoor.com/Job',
-      'lever.co',
-      'greenhouse.io'
-    ];
+  // ── Send profile to CareerPilot Resume Builder ──
+  if (request.action === 'sendProfileToCareerPilot') {
+    const data  = request.data;
+    const cpUrl = `${baseUrl(request.careerPilotUrl)}/resume`;
+    const id    = uid('cp_profile');
 
-    // Check for Profile Sites
-    const profileSites = [
-      'linkedin.com/in/'
-    ];
-
-    if (jobSites.some(site => tab.url.includes(site))) {
-      chrome.action.setBadgeText({ text: 'JOB', tabId });
-      chrome.action.setBadgeBackgroundColor({ color: '#10b981' });
-    } else if (profileSites.some(site => tab.url.includes(site))) {
-      chrome.action.setBadgeText({ text: 'USER', tabId });
-      chrome.action.setBadgeBackgroundColor({ color: '#3b82f6' }); // Blue for people
-    } else {
-      chrome.action.setBadgeText({ text: '', tabId });
-    }
+    storeTemp(id, data).then(() => {
+      const params = buildSafeParams(id, {
+        action: 'importProfile',
+        source: 'linkedin_extension',
+      });
+      chrome.tabs.create({ url: `${cpUrl}?${params}` });
+      sendResponse({ success: true });
+    });
+    return true;
   }
+
+  // ── CareerPilot page fetches full data by ID ──
+  if (request.action === 'getJobData') {
+    const id = request.dataId;
+    if (!id) { sendResponse({ success: false, error: 'No dataId' }); return true; }
+
+    chrome.storage.local.get([id], result => {
+      if (result[id]) {
+        sendResponse({ success: true, data: result[id] });
+        chrome.storage.local.remove([id]); // clean up after fetch
+      } else {
+        sendResponse({ success: false, error: 'Data not found or expired' });
+      }
+    });
+    return true;
+  }
+
+  // ── Portal logout → clear extension session ──
+  if (request.action === 'portalLogout') {
+    chrome.storage.local.remove([AUTH_STORAGE_KEY], () => {
+      console.log('[CareerPilot] Extension session cleared via portal logout.');
+      sendResponse({ success: true });
+    });
+    return true;
+  }
+
+  return false; // unhandled — don't keep channel open
 });
-

@@ -1,98 +1,110 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Create Extension Icons</title>
+  <title>CareerPilot Icon Generator</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      text-align: center;
-    }
-    canvas {
-      border: 1px solid #ccc;
-      margin: 10px;
-    }
-    button {
-      padding: 10px 20px;
-      margin: 10px;
-      font-size: 16px;
-      cursor: pointer;
-    }
+    body { font-family: system-ui, sans-serif; padding: 30px; text-align: center; background: #f9fafb; }
+    h2 { margin-bottom: 20px; color: #111; }
+    .canvases { display: flex; gap: 20px; justify-content: center; align-items: center; margin-bottom: 24px; flex-wrap: wrap; }
+    .canvas-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    canvas { border: 1px solid #e5e7eb; border-radius: 4px; background: white; }
+    p { color: #6b7280; font-size: 13px; margin-bottom: 16px; }
+    button { padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    button:hover { background: #059669; }
+    .status { margin-top: 12px; color: #059669; font-weight: 600; font-size: 13px; }
   </style>
 </head>
 <body>
-  <h1>TrackMate Extension Icon Generator</h1>
-  <p>Click the buttons below to generate and download icons</p>
-  
-  <div>
-    <canvas id="icon16" width="16" height="16"></canvas>
-    <canvas id="icon48" width="48" height="48"></canvas>
-    <canvas id="icon128" width="128" height="128"></canvas>
-  </div>
-  
-  <div>
-    <button onclick="generateIcon(16)">Generate & Download 16x16</button>
-    <button onclick="generateIcon(48)">Generate & Download 48x48</button>
-    <button onclick="generateIcon(128)">Generate & Download 128x128</button>
+  <h2>🎯 CareerPilot AI — Icon Generator</h2>
+  <p>Place the downloaded files in your extension's <code>icons/</code> folder.</p>
+
+  <div class="canvases">
+    <div class="canvas-wrap"><canvas id="c16"  width="16"  height="16"></canvas>  <span style="font-size:11px;color:#9ca3af">16×16</span></div>
+    <div class="canvas-wrap"><canvas id="c48"  width="48"  height="48"></canvas>  <span style="font-size:11px;color:#9ca3af">48×48</span></div>
+    <div class="canvas-wrap"><canvas id="c128" width="128" height="128"></canvas> <span style="font-size:11px;color:#9ca3af">128×128</span></div>
   </div>
 
+  <button onclick="downloadAll()">⬇ Download All 3 Icons</button>
+  <div class="status" id="status"></div>
+
   <script>
-    function generateIcon(size) {
-      const canvas = document.getElementById(`icon${size}`);
+    function drawIcon(canvas) {
+      const s   = canvas.width;
       const ctx = canvas.getContext('2d');
-      
-      // Clear canvas
-      ctx.clearRect(0, 0, size, size);
-      
-      // Draw background (green gradient)
-      const gradient = ctx.createLinearGradient(0, 0, size, size);
-      gradient.addColorStop(0, '#10b981');
-      gradient.addColorStop(1, '#059669');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, size, size);
-      
-      // Draw target/bullseye icon
-      ctx.strokeStyle = 'white';
-      ctx.fillStyle = 'white';
-      ctx.lineWidth = Math.max(1, size / 16);
-      
-      // Outer circle
-      const centerX = size / 2;
-      const centerY = size / 2;
-      const radius = size * 0.35;
-      
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-      ctx.stroke();
-      
-      // Inner circle
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, radius * 0.6, 0, Math.PI * 2);
-      ctx.stroke();
-      
-      // Center dot
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, radius * 0.3, 0, Math.PI * 2);
+      const cx  = s / 2, cy = s / 2;
+      const r   = s * 0.42;
+      const lw  = Math.max(1.5, s / 14);
+
+      // Background
+      const grad = ctx.createLinearGradient(0, 0, s, s);
+      grad.addColorStop(0, '#10b981');
+      grad.addColorStop(1, '#059669');
+      ctx.fillStyle = grad;
+      roundRect(ctx, 0, 0, s, s, s * 0.18);
       ctx.fill();
-      
-      // Download
-      canvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `icon${size}.png`;
-        a.click();
-        URL.revokeObjectURL(url);
+
+      // Target rings
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+      ctx.lineWidth   = lw;
+      ctx.beginPath(); ctx.arc(cx, cy, r,        0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx, cy, r * 0.62, 0, Math.PI * 2); ctx.stroke();
+
+      // Center dot
+      ctx.fillStyle = 'white';
+      ctx.beginPath(); ctx.arc(cx, cy, r * 0.28, 0, Math.PI * 2); ctx.fill();
+
+      // Crosshairs
+      ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+      ctx.lineWidth   = Math.max(1, lw * 0.6);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - r * 1.1); ctx.lineTo(cx, cy - r * 0.72);
+      ctx.moveTo(cx, cy + r * 0.72); ctx.lineTo(cx, cy + r * 1.1);
+      ctx.moveTo(cx - r * 1.1, cy); ctx.lineTo(cx - r * 0.72, cy);
+      ctx.moveTo(cx + r * 0.72, cy); ctx.lineTo(cx + r * 1.1, cy);
+      ctx.stroke();
+    }
+
+    function roundRect(ctx, x, y, w, h, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + w - radius, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+      ctx.lineTo(x + w, y + h - radius);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+      ctx.lineTo(x + radius, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
+    function downloadCanvas(canvas, filename) {
+      return new Promise(resolve => {
+        canvas.toBlob(blob => {
+          const url = URL.createObjectURL(blob);
+          const a   = Object.assign(document.createElement('a'), { href: url, download: filename });
+          document.body.appendChild(a); a.click();
+          setTimeout(() => { URL.revokeObjectURL(url); a.remove(); resolve(); }, 100);
+        });
       });
     }
-    
-    // Generate all icons on load
-    window.onload = () => {
-      generateIcon(16);
-      setTimeout(() => generateIcon(48), 500);
-      setTimeout(() => generateIcon(128), 1000);
-    };
+
+    async function downloadAll() {
+      const btn = document.querySelector('button');
+      btn.disabled = true;
+      btn.textContent = 'Downloading…';
+      await downloadCanvas(document.getElementById('c16'),  'icon16.png');
+      await new Promise(r => setTimeout(r, 300));
+      await downloadCanvas(document.getElementById('c48'),  'icon48.png');
+      await new Promise(r => setTimeout(r, 300));
+      await downloadCanvas(document.getElementById('c128'), 'icon128.png');
+      btn.disabled = false;
+      btn.textContent = '⬇ Download All 3 Icons';
+      document.getElementById('status').textContent = '✓ All 3 icons downloaded! Move them to icons/ folder.';
+    }
+
+    // Draw all on load
+    ['c16', 'c48', 'c128'].forEach(id => drawIcon(document.getElementById(id)));
   </script>
 </body>
 </html>
-

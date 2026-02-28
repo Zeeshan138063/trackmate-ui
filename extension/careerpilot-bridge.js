@@ -1,41 +1,71 @@
-// This content script acts as a bridge between the CareerPilot web page and the extension.
-// It allows the web page to request data stored in the extension's local storage.
+// ================================================================
+// CareerPilot AI - Bridge Content Script v2.0
+// Runs on: CareerPilot web app tabs (document_start)
+// Purpose: Two-way bridge between the CareerPilot React app and the extension
+// ================================================================
 
-// Listen for messages from the web page
-window.addEventListener('message', (event) => {
-  // Only accept messages from the same window
+'use strict';
+
+const BRIDGE_SOURCE_WEB = 'careerpilot-web-app';
+const BRIDGE_SOURCE_EXT = 'careerpilot-extension';
+const SUPABASE_PROJECT_REF = 'jdplobgtxzncwxhordah';
+const AUTH_KEY = `sb-${SUPABASE_PROJECT_REF}-auth-token`;
+
+// ────────────────────────────────────────────────────────────────
+// Web App → Extension messaging
+// ────────────────────────────────────────────────────────────────
+window.addEventListener('message', event => {
   if (event.source !== window) return;
+  const msg = event.data;
+  if (!msg || msg.source !== BRIDGE_SOURCE_WEB) return;
 
-  // Check if the message is intended for the extension
-  if (event.data && event.data.source === 'careerpilot-web-app') {
-    if (event.data.action === 'getJobData') {
-      // Forward the request to the background script
-      chrome.runtime.sendMessage({
-        action: 'getJobData',
-        dataId: event.data.dataId
-      }, (response) => {
-        // Send the response back to the web page
-        window.postMessage({
-          source: 'careerpilot-extension',
-          action: 'jobDataResponse',
-          success: response.success,
-          data: response.data,
-          error: response.error
-        }, '*');
-      });
+  // ── Fetch stored job/contact/profile data by ID ──
+  if (msg.action === 'getJobData' || msg.action === 'getData') {
+    const dataId = msg.dataId;
+    if (!dataId) {
+      _reply({ action: 'dataResponse', success: false, error: 'No dataId provided' });
+      return;
     }
+
+    chrome.runtime.sendMessage({ action: 'getJobData', dataId }, response => {
+      if (chrome.runtime.lastError) {
+        _reply({ action: 'dataResponse', success: false, error: chrome.runtime.lastError.message });
+        return;
+      }
+      _reply({
+        action:  'dataResponse',
+        dataId,
+        success: response?.success || false,
+        data:    response?.data    || null,
+        error:   response?.error   || null,
+      });
+    });
+  }
+
+  // ── Extension presence check (web app can verify extension is installed) ──
+  if (msg.action === 'ping') {
+    _reply({ action: 'pong', version: chrome.runtime.getManifest().version });
   }
 });
 
-// --- PORTAL-TO-EXTENSION LOGOUT SYNC ---
-// Listen for changes to localStorage to detect when the user logs out from the portal
-window.addEventListener('storage', (event) => {
-  const projectRef = "jdplobgtxzncwxhordah";
-  const storageKey = `sb-${projectRef}-auth-token`;
-
-  // If the auth token is removed (logout), notify the extension background script
-  if (event.key === storageKey && !event.newValue) {
-    console.log("CareerPilot Bridge: Portal logout detected, notifying extension...");
-    chrome.runtime.sendMessage({ action: 'portalLogout' });
+// ────────────────────────────────────────────────────────────────
+// Portal logout → notify extension to clear its session
+// ────────────────────────────────────────────────────────────────
+window.addEventListener('storage', event => {
+  if (event.key === AUTH_KEY && !event.newValue) {
+    console.log('[CareerPilot Bridge] Portal logout detected — clearing extension session.');
+    chrome.runtime.sendMessage({ action: 'portalLogout' }, () => {
+      // Ignore errors (extension may be in the middle of something)
+      void chrome.runtime.lastError;
+    });
   }
 });
+
+// ────────────────────────────────────────────────────────────────
+// Private: send reply to web app
+// ────────────────────────────────────────────────────────────────
+function _reply(payload) {
+  window.postMessage({ source: BRIDGE_SOURCE_EXT, ...payload }, '*');
+}
+
+console.log('[CareerPilot Bridge] v2.0 loaded.');
