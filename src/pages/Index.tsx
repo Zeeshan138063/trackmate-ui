@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CareerGoalSection } from "@/components/CareerGoalSection";
 import { JobApplicationsChart } from "@/components/JobApplicationsChart";
@@ -9,24 +8,58 @@ import { DatesCalendar } from "@/components/DatesCalendar";
 import { PrioritiesSection } from "@/components/PrioritiesSection";
 import { useJobs } from "@/hooks/useJobs";
 import { useContacts } from "@/hooks/useContacts";
-import { useState, useMemo, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import {
-  ArrowUpRight,
-  TrendingUp,
-  Target,
-  Users,
-  Search,
-  Bot,
-  Sparkles, Briefcase, FileText, MessageSquare
+  Layers,
+  FileText,
+  Sparkles,
+  Compass,
+  ArrowRight,
 } from "lucide-react";
+
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+// Capitalize first letter only
+function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
 
 export default function Index() {
   const navigate = useNavigate();
   const { jobs, loading: jobsLoading, updateJob } = useJobs();
   const { contacts, loading: contactsLoading } = useContacts();
+  const { user } = useAuth();
+  const [firstName, setFirstName] = useState<string>("");
 
-  // Calculate stats for dashboard with useMemo for stability
+  // Fetch first name from profiles table (most reliable source)
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("full_name, email")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.full_name) {
+          setFirstName(capitalize(data.full_name.split(" ")[0]));
+        } else if (data?.email) {
+          setFirstName(capitalize(data.email.split("@")[0]));
+        } else if (user.email) {
+          setFirstName(capitalize(user.email.split("@")[0]));
+        } else {
+          setFirstName("there");
+        }
+      });
+  }, [user?.id]);
+
   const stats = useMemo(() => {
     const counts = {
       bookmarked: 0,
@@ -44,15 +77,11 @@ export default function Index() {
     let totalExcitement = 0;
 
     jobs.forEach((job) => {
-      // General stats
       const statusKey = job.status.toLowerCase() as keyof typeof counts;
       if (statusKey in counts) counts[statusKey]++;
 
-      // Weekly stats: prioritize createdAt, fallback to dateSaved
       const createdDate = job.createdAt ? new Date(job.createdAt) : new Date(job.dateSaved);
-      if (createdDate > oneWeekAgo) {
-        weeklyJobsSaved++;
-      }
+      if (createdDate > oneWeekAgo) weeklyJobsSaved++;
       totalExcitement += job.excitement;
     });
 
@@ -61,16 +90,44 @@ export default function Index() {
       return created && created > oneWeekAgo;
     }).length;
 
+    const total = jobs.length;
+    const responseRate = total > 0
+      ? Math.round(((counts.interviewing + counts.negotiating + counts.accepted) / total) * 100 * 10) / 10
+      : 0;
+
     return {
       ...counts,
       weeklyJobsSaved,
       newConnections,
-      avgExcitement: jobs.length > 0 ? totalExcitement / jobs.length : 0,
-      applyVelocity: jobs.length > 0 ? Math.round((counts.applied / jobs.length) * 100) : 0
+      avgExcitement: total > 0 ? totalExcitement / total : 0,
+      applyVelocity: total > 0 ? Math.round((counts.applied / total) * 100) : 0,
+      total,
+      responseRate,
     };
   }, [jobs, contacts]);
 
   const loading = jobsLoading || contactsLoading;
+
+  // 5 most recent jobs for the mini-table
+  const recentJobs = useMemo(() => {
+    return [...jobs]
+      .sort((a, b) => {
+        const aDate = a.createdAt ? new Date(a.createdAt) : new Date(a.dateSaved);
+        const bDate = b.createdAt ? new Date(b.createdAt) : new Date(b.dateSaved);
+        return bDate.getTime() - aDate.getTime();
+      })
+      .slice(0, 5);
+  }, [jobs]);
+
+  const STATUS_COLORS: Record<string, string> = {
+    Bookmarked: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300",
+    Applying: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300",
+    Applied: "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300",
+    Interviewing: "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
+    Negotiating: "bg-purple-100 text-purple-700",
+    Accepted: "bg-green-100 text-green-700",
+    Rejected: "bg-red-100 text-red-700",
+  };
 
   if (loading) {
     return (
@@ -83,17 +140,53 @@ export default function Index() {
   return (
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-8 space-y-8">
+
+        {/* ── Personalized Greeting ── */}
+        <div className="pb-2">
+          <h1 className="text-3xl font-extrabold tracking-tight text-[#0F172A] dark:text-white">
+            {getGreeting()}, {firstName || "…"}.
+          </h1>
+          <p className="mt-1 text-sm text-[#64748B] font-normal">
+            Here's where your job search stands today.
+          </p>
+        </div>
+
+        {/* ── 3 Clean Stat Cards ── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-xs font-medium text-[#64748B] uppercase tracking-wider mb-1">Total Applications</p>
+              <p className="text-4xl font-bold text-[#0F172A] dark:text-white tracking-tight">{stats.total}</p>
+              <p className="text-xs text-[#64748B] mt-1">All time</p>
+            </CardContent>
+          </Card>
+          <Card className="border-primary/30 ring-1 ring-primary/10">
+            <CardContent className="p-6">
+              <p className="text-xs font-medium text-[#64748B] uppercase tracking-wider mb-1">Interviews</p>
+              <p className="text-4xl font-bold text-primary tracking-tight">{stats.interviewing}</p>
+              <p className="text-xs text-[#64748B] mt-1">Scheduled / active</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-xs font-medium text-[#64748B] uppercase tracking-wider mb-1">Response Rate</p>
+              <p className="text-4xl font-bold text-[#0F172A] dark:text-white tracking-tight">{stats.responseRate}%</p>
+              <p className="text-xs text-[#64748B] mt-1">Based on applications</p>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Career Goal Section */}
         <CareerGoalSection />
 
-        {/* Primary Stats Row - 3 Columns */}
+        {/* Primary Stats Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <JobApplicationsChart appliedCount={stats.applied} />
           <JobSearchPipeline stats={stats} totalJobs={jobs.length} />
           <DatesCalendar jobs={jobs} onUpdateJob={updateJob} />
         </div>
 
-        {/* Insights Row - 2 Columns */}
+        {/* Insights Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <WeeklySummary
             jobsSaved={stats.weeklyJobsSaved}
@@ -107,87 +200,121 @@ export default function Index() {
         {/* Priorities Section */}
         <PrioritiesSection />
 
-        {/* Welcome Section */}
-        <div className="text-center py-12">
-          <h1 className="text-4xl font-bold tracking-tight mb-4 flex items-center justify-center gap-3">
-            Welcome to CareerPilot <span className="text-sm font-mono font-black bg-[length:200%_auto] bg-gradient-to-r from-primary via-white to-primary bg-clip-text text-transparent px-3 py-1 rounded-full border border-primary/20 flex items-center gap-1 animate-shimmer tracking-widest shadow-sm">AI <Sparkles className="h-3 w-3 text-primary" /></span>
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12">
-            Your intelligent navigator for career growth. Organize your search, track applications, and land your dream job with AI-powered insights.
-          </p>
+        {/* ── Recent Applications Mini-Table ── */}
+        {recentJobs.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-semibold">Recent Applications</CardTitle>
+                <button
+                  onClick={() => navigate("/trackers")}
+                  className="text-xs text-primary font-medium hover:underline flex items-center gap-1"
+                >
+                  View All <ArrowRight className="h-3 w-3" />
+                </button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-border/50">
+                {recentJobs.map((job) => {
+                  const dateStr = job.createdAt
+                    ? new Date(job.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                    : new Date(job.dateSaved).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                  return (
+                    <div
+                      key={job.id}
+                      onClick={() => navigate("/trackers")}
+                      className="flex items-center justify-between px-6 py-3 hover:bg-muted/30 transition-colors cursor-pointer"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-[#0F172A] dark:text-white truncate">{job.position}</p>
+                        <p className="text-xs text-[#64748B] truncate">{job.company}</p>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0 ml-4">
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${STATUS_COLORS[job.status] || "bg-slate-100 text-slate-600"}`}>
+                          {job.status}
+                        </span>
+                        <span className="text-xs text-[#64748B]">{dateStr}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/trackers")}>
+        {/* ── Quick Nav Cards (OS Hero) ── */}
+        <div className="text-center pt-4 pb-2">
+          <h2 className="text-xl font-extrabold tracking-tight mb-1">
+            Job<span className="font-mono text-primary">OS</span> — everything you need
+          </h2>
+          <p className="text-sm text-[#64748B] mb-8">One OS. Every job.</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <Card className="hover:shadow-md transition-all cursor-pointer hover:border-primary/30" onClick={() => navigate("/trackers")}>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-lg">Application Tracker</h3>
-                    <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20 font-mono font-black animate-shimmer bg-[length:200%_auto] bg-gradient-to-r from-primary via-white to-primary bg-clip-text text-transparent flex items-center gap-1 tracking-widest uppercase">
-                      AI POWERED <Bot className="h-3 w-3 text-primary" />
-                    </span>
-                  </div>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Layers className="h-5 w-5 text-primary" />
+                  Applications
                 </CardTitle>
-                <CardDescription>
-                  Keep track of all your job applications in one organized place
-                </CardDescription>
+                <CardDescription>Track every application across your full pipeline</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full">View Job Applications</Button>
+                <button className="w-full h-9 px-4 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 transition-colors">View Applications</button>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/resume")}>
+            <Card className="hover:shadow-md transition-all cursor-pointer hover:border-primary/30" onClick={() => navigate("/resume")}>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <FileText className="mr-2 h-5 w-5" />
-                  Resume Builder
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <FileText className="h-5 w-5 text-primary" />
+                  Resume <span className="text-[10px] font-mono text-[#818CF8] font-semibold">✦ AI</span>
                 </CardTitle>
-                <CardDescription>
-                  Create professional resumes tailored to your target positions
-                </CardDescription>
+                <CardDescription>Build your master profile and auto-tailor per job</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full" variant="outline">Build Resume</Button>
+                <button className="w-full h-9 px-4 border border-input bg-background text-sm font-medium rounded-md hover:bg-muted/50 transition-colors">Open Resume Builder</button>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/interview")}>
+            <Card className="hover:shadow-md transition-all cursor-pointer hover:border-primary/30" onClick={() => navigate("/application-copilot")}>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <MessageSquare className="mr-2 h-5 w-5" />
-                  Interview Practice
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Copilot <span className="text-[10px] font-mono text-[#818CF8] font-semibold">✦</span>
                 </CardTitle>
-                <CardDescription>
-                  Prepare for interviews with practice questions and tips
-                </CardDescription>
+                <CardDescription>AI that reads the JD and rewrites your resume to match</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full" variant="outline">Practice Interviews</Button>
+                <button className="w-full h-9 px-4 border border-input bg-background text-sm font-medium rounded-md hover:bg-muted/50 transition-colors">Open Copilot</button>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/work-styles")}>
+            <Card className="hover:shadow-md transition-all cursor-pointer hover:border-primary/30" onClick={() => navigate("/job-search")}>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Users className="mr-2 h-5 w-5" />
-                  Work Styles
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Compass className="h-5 w-5 text-primary" />
+                  Discover
                 </CardTitle>
-                <CardDescription>
-                  Discover your work style and find matching opportunities
-                </CardDescription>
+                <CardDescription>Find jobs from every board, globally, in one place</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full" variant="outline">Assess Work Style</Button>
+                <button className="w-full h-9 px-4 border border-input bg-background text-sm font-medium rounded-md hover:bg-muted/50 transition-colors">Browse Jobs</button>
               </CardContent>
             </Card>
           </div>
 
-          <div className="mt-12">
-            <Button size="lg" onClick={() => navigate("/trackers")}>
-              Get Started with Job Tracking
-            </Button>
+          <div className="mt-10">
+            <button
+              onClick={() => navigate("/trackers")}
+              className="h-11 px-8 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors shadow-md shadow-primary/20"
+            >
+              Get Started →
+            </button>
           </div>
         </div>
+
       </div>
     </div>
   );

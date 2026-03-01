@@ -298,7 +298,7 @@ export default function JobSearch() {
     <div className="container max-w-6xl mx-auto py-8 space-y-8 animate-fade-in">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Job Feed</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight">Job Feed</h1>
           <p className="text-muted-foreground mt-2">
             Your personal feed of discovered opportunities.
           </p>

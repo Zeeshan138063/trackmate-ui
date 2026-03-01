@@ -1,5 +1,5 @@
 // ================================================================
-// CareerPilot AI - Background Service Worker v3.0  (Production)
+// JobOS — Background Service Worker v3.0  (Production)
 // ================================================================
 
 'use strict';
@@ -159,7 +159,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
-  // Send to CareerPilot Trackers
+  // Send to JobOS Trackers
   if (request.action === 'sendToCareerPilot') {
     const data = request.data;
     const id   = uid('cp_job');
@@ -183,7 +183,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
-  // Send to CareerPilot Connections
+  // Send to JobOS Connections
   if (request.action === 'sendContactToCareerPilot') {
     const data = request.data;
     const id   = uid('cp_contact');
@@ -221,7 +221,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   // Portal logout
   if (request.action === 'portalLogout') {
     chrome.storage.local.remove([AUTH_STORAGE_KEY], () => {
-      console.log('[CareerPilot] Session cleared via portal logout.');
+      console.log('[JobOS] Session cleared via portal logout.');
       sendResponse({ success: true });
     });
     return true;

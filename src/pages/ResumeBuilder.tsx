@@ -127,7 +127,7 @@ export default function ResumeBuilder() {
                       className="gap-2 bg-background shadow-sm hover:text-indigo-600"
                       onClick={() => {
                         const baseUrl = 'https://careerpilot.ai';
-                        const text = `I just updated my resume using CareerPilot AI! Check out this awesome AI career assistant that helps you track jobs and build a technical profile. #career #jobs #careerpilot`;
+                        const text = `I just updated my resume using JobOS! Check out this awesome AI career assistant that helps you track jobs and build a technical profile. #career #jobs #jobos`;
                         const shareUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text + " " + baseUrl)}`;
                         window.open(shareUrl, '_blank', 'width=600,height=600');
                       }}

@@ -350,7 +350,7 @@ export function ResumeImporter({ onImport }: ResumeImporterProps) {
                             </div>
                             <h3 className="font-semibold text-lg mb-2">Use the Browser Extension</h3>
                             <p className="text-sm text-muted-foreground mb-4">
-                                To import a LinkedIn profile, please navigate to the profile page on LinkedIn, open the CareerPilot AI Extension, and click <strong>"Import to Resume"</strong>.
+                                To import a LinkedIn profile, please navigate to the profile page on LinkedIn, open the JobOS Extension, and click <strong>"Import to Resume"</strong>.
                             </p>
                             <div className="text-xs text-slate-500 bg-white p-2 rounded border">
                                 <strong>Why?</strong> LinkedIn blocks direct URL importing. The extension securely captures the data from your browser session.
@@ -364,7 +364,7 @@ export function ResumeImporter({ onImport }: ResumeImporterProps) {
                                 <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
                                 <div className="text-sm text-amber-900">
                                     <p className="font-semibold">Import from Reactive Resume</p>
-                                    <p className="mt-1">Upload the <strong>.json</strong> export from your Reactive Resume account (rxresu.me) to instantly populate your CareerPilot AI profile.</p>
+                                    <p className="mt-1">Upload the <strong>.json</strong> export from your Reactive Resume account (rxresu.me) to instantly populate your JobOS profile.</p>
                                 </div>
                             </div>
 

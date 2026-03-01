@@ -1,7 +1,7 @@
 // ================================================================
-// CareerPilot AI - Bridge Content Script v2.0
-// Runs on: CareerPilot web app tabs (document_start)
-// Purpose: Two-way bridge between the CareerPilot React app and the extension
+// JobOS — Bridge Content Script v3.0
+// Runs on: JobOS web app tabs (document_start)
+// Purpose: Two-way bridge between the JobOS app and the extension
 // ================================================================
 
 'use strict';
@@ -53,7 +53,7 @@ window.addEventListener('message', event => {
 // ────────────────────────────────────────────────────────────────
 window.addEventListener('storage', event => {
   if (event.key === AUTH_KEY && !event.newValue) {
-    console.log('[CareerPilot Bridge] Portal logout detected — clearing extension session.');
+    console.log('[JobOS Bridge] Portal logout detected — clearing extension session.');
     chrome.runtime.sendMessage({ action: 'portalLogout' }, () => {
       // Ignore errors (extension may be in the middle of something)
       void chrome.runtime.lastError;
@@ -68,4 +68,4 @@ function _reply(payload) {
   window.postMessage({ source: BRIDGE_SOURCE_EXT, ...payload }, '*');
 }
 
-console.log('[CareerPilot Bridge] v2.0 loaded.');
+console.log('[JobOS Bridge] v2.0 loaded.');

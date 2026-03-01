@@ -61,7 +61,7 @@ export default function PublicJobDiscovery() {
                 <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
                         <Briefcase className="h-6 w-6 text-indigo-600" />
-                        <span className="font-bold text-xl tracking-tight text-slate-900 hidden md:block">CareerPilot AI Jobs</span>
+                        <span className="font-bold text-xl tracking-tight text-slate-900 hidden md:block">JobOS Job Discovery</span>
                     </div>
 
                     <form onSubmit={handleSearch} className="flex-1 max-w-lg relative">
@@ -155,7 +155,7 @@ export default function PublicJobDiscovery() {
                                 <div className="max-w-md text-center md:text-left">
                                     <h2 className="text-2xl font-bold mb-2">Help others find their next role</h2>
                                     <p className="opacity-90 text-sm">
-                                        Know someone searching for a job? Share CareerPilot AI's discovery platform
+                                        Know someone searching for a job? Share JobOS — the AI-powered job search OS
                                         with your network and help them land their dream job.
                                     </p>
                                 </div>
@@ -164,7 +164,7 @@ export default function PublicJobDiscovery() {
                                         className="bg-white text-indigo-600 hover:bg-slate-100 font-semibold"
                                         onClick={() => {
                                             const url = "https://careerpilot.ai/jobs";
-                                            const text = "Found an amazing AI job discovery platform! CareerPilot AI helps you track applications and automate your search. Check it out: ";
+                                            const text = "Found an amazing AI job discovery platform! JobOS helps you track every application and autofill every form. Check it out: ";
                                             const shareUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text + " " + url)}`;
                                             window.open(shareUrl, '_blank', 'width=600,height=600');
                                         }}
@@ -195,7 +195,7 @@ export default function PublicJobDiscovery() {
                     <div>
                         <div className="flex items-center gap-2 mb-4">
                             <Briefcase className="h-6 w-6 text-indigo-400" />
-                            <span className="font-bold text-xl tracking-tight">CareerPilot AI</span>
+                            <span className="font-bold text-xl tracking-tight">JobOS</span>
                         </div>
                         <p className="text-slate-400 text-sm leading-relaxed">
                             The ultimate AI-powered career assistant. Track applications,
@@ -220,7 +220,7 @@ export default function PublicJobDiscovery() {
                     </div>
                 </div>
                 <div className="container mx-auto px-4 mt-12 pt-8 border-t border-slate-800 text-center text-xs text-slate-500">
-                    &copy; {new Date().getFullYear()} CareerPilot AI. All rights reserved.
+                    &copy; {new Date().getFullYear()} JobOS · jobos.dev · Built for job seekers worldwide.
                 </div>
             </footer>
         </div >

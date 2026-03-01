@@ -1,5 +1,5 @@
 // ================================================================
-// CareerPilot AI - Content Script v3.0  (Production)
+// JobOS — Content Script v3.0  (Production)
 // Responsibilities:
 //   1. Detect which site/ATS we're on
 //   2. Extract job / profile / company data
@@ -231,7 +231,7 @@ const ATSDetector = (() => {
 // ────────────────────────────────────────────────────────────────
 class ATSAutofiller {
   /**
-   * @param {Object} profile - User profile from CareerPilot
+   * @param {Object} profile - User profile from JobOS
    * @param {string} profile.firstName
    * @param {string} profile.lastName
    * @param {string} profile.email
@@ -254,7 +254,7 @@ class ATSAutofiller {
       return { success: false, reason: 'No ATS/application form detected on this page.' };
     }
 
-    console.log(`[CareerPilot] Autofilling ${this.ats} form...`);
+    console.log(`[JobOS] Autofilling ${this.ats} form...`);
 
     try {
       switch (this.ats) {
@@ -271,7 +271,7 @@ class ATSAutofiller {
       }
       return { success: true, ats: this.ats };
     } catch (err) {
-      console.warn('[CareerPilot] Autofill primary strategy failed, falling back to generic:', err);
+      console.warn('[JobOS] Autofill primary strategy failed, falling back to generic:', err);
       try {
         await this._fillGeneric();
         return { success: true, ats: 'generic-fallback' };
@@ -497,7 +497,7 @@ class ATSAutofiller {
       input.files = dt.files;
       input.dispatchEvent(new Event('change', { bubbles: true }));
     } catch (err) {
-      console.warn('[CareerPilot] Resume upload failed:', err.message);
+      console.warn('[JobOS] Resume upload failed:', err.message);
     }
   }
 

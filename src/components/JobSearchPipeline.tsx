@@ -9,12 +9,12 @@ interface JobSearchPipelineProps {
 
 export function JobSearchPipeline({ stats, totalJobs }: JobSearchPipelineProps) {
   const pipelineData = [
-    { name: 'Bookmarked', count: stats.bookmarked, color: 'bg-slate-400', glow: 'shadow-slate-400/20' },
+    { name: 'Bookmarked', count: stats.bookmarked, color: 'bg-indigo-500', glow: 'shadow-indigo-500/20' },
     { name: 'Applying', count: stats.applying, color: 'bg-indigo-400', glow: 'shadow-indigo-400/20' },
-    { name: 'Applied', count: stats.applied, color: 'bg-amber-400', glow: 'shadow-amber-400/20' },
-    { name: 'Interviewing', count: stats.interviewing, color: 'bg-emerald-400', glow: 'shadow-emerald-400/20' },
-    { name: 'Negotiating', count: stats.negotiating, color: 'bg-blue-400', glow: 'shadow-blue-400/20' },
-    { name: 'Accepted', count: stats.accepted, color: 'bg-violet-400', glow: 'shadow-violet-400/20' },
+    { name: 'Applied', count: stats.applied, color: 'bg-emerald-400', glow: 'shadow-emerald-400/20' },
+    { name: 'Interviewing', count: stats.interviewing, color: 'bg-emerald-500', glow: 'shadow-emerald-500/20' },
+    { name: 'Negotiating', count: stats.negotiating, color: 'bg-amber-400', glow: 'shadow-amber-400/20' },
+    { name: 'Accepted', count: stats.accepted, color: 'bg-green-400', glow: 'shadow-green-400/20' },
   ];
 
   const today = new Date();

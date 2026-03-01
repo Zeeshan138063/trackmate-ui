@@ -1,38 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 210 24% 16%;
+    /* ── JobOS Brand — Light Mode ── */
+    --background: 210 40% 98%;
+    /* #F8FAFC */
+    --foreground: 222 84% 5%;
+    /* #0F172A */
 
     --card: 0 0% 100%;
-    --card-foreground: 210 24% 16%;
+    --card-foreground: 222 84% 5%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 24% 16%;
+    --popover-foreground: 222 84% 5%;
 
-    --primary: 173 58% 39%;
-    --primary-foreground: 0 0% 98%;
+    /* Indigo #6366F1 — "AI + intelligence" primary */
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 173 10% 96%;
-    --secondary-foreground: 173 100% 13%;
+    --secondary: 235 20% 96%;
+    --secondary-foreground: 239 50% 30%;
 
     --muted: 210 20% 96%;
-    --muted-foreground: 210 12% 47%;
+    --muted-foreground: 215 16% 47%;
+    /* #64748B */
 
-    --accent: 173 58% 39%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 239 84% 67%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 210 20% 90%;
-    --input: 210 20% 90%;
-    --ring: 173 58% 39%;
+    --border: 214 32% 91%;
+    /* #E2E8F0 */
+    --input: 214 32% 91%;
+    --ring: 239 84% 67%;
 
-    --success: 142 76% 36%;
+    /* ── JobOS Extended Palette ── */
+    --success: 160 84% 39%;
+    /* #10B981 emerald */
     --success-foreground: 0 0% 98%;
 
     --warning: 38 92% 50%;
@@ -41,39 +51,64 @@
     --info: 221 83% 53%;
     --info-foreground: 0 0% 98%;
 
+    /* AI accent — lighter indigo for AI-generated content tints */
+    --ai-accent: 234 89% 74%;
+    /* #818CF8 */
+    --ai-accent-foreground: 0 0% 100%;
+
+    /* Core dark — near-black with blue undertone */
+    --core-dark: 228 45% 8%;
+    /* #0A0E1A */
+
     --radius: 0.5rem;
+
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 84% 5%;
+    --sidebar-primary: 239 84% 67%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 235 20% 96%;
+    --sidebar-accent-foreground: 239 50% 30%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 239 84% 67%;
   }
 
   .dark {
-    --background: 210 24% 16%;
-    --foreground: 0 0% 98%;
+    /* ── JobOS Brand — Dark Mode ── */
+    --background: 228 45% 8%;
+    /* #0A0E1A — deep core dark */
+    --foreground: 210 40% 98%;
+    /* #F8FAFC */
 
-    --card: 210 24% 16%;
-    --card-foreground: 0 0% 98%;
+    --card: 231 35% 13%;
+    /* #141828 — clearly lighter than bg */
+    --card-foreground: 210 40% 98%;
 
-    --popover: 210 24% 16%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 228 38% 11%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 173 58% 39%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 239 84% 67%;
+    /* indigo stays vibrant in dark */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 24% 21%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 228 30% 16%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 210 24% 21%;
-    --muted-foreground: 210 20% 65%;
+    --muted: 228 30% 16%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 173 58% 39%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 239 84% 67%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 210 24% 21%;
-    --input: 210 24% 21%;
-    --ring: 173 58% 39%;
+    --border: 228 26% 20%;
+    /* #2D3148 — visible card separator */
+    --input: 228 26% 20%;
+    --ring: 239 84% 67%;
 
-    --success: 142 71% 45%;
+    --success: 160 84% 39%;
     --success-foreground: 0 0% 98%;
 
     --warning: 38 92% 50%;
@@ -81,6 +116,21 @@
 
     --info: 221 83% 53%;
     --info-foreground: 0 0% 98%;
+
+    --ai-accent: 234 89% 74%;
+    --ai-accent-foreground: 0 0% 100%;
+
+    --core-dark: 228 45% 8%;
+
+    /* Sidebar — dark: slightly elevated from bg */
+    --sidebar-background: 228 38% 10%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 239 84% 67%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 228 30% 16%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 228 26% 18%;
+    --sidebar-ring: 239 84% 67%;
   }
 }
 

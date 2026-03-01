@@ -102,15 +102,15 @@ export function AuthForm({ onSuccess, initialMode = 'signin' }: AuthFormProps) {
         {/* Header Section */}
         <div className="mb-8 space-y-4">
           <p className="text-slate-200 text-sm font-medium tracking-widest uppercase flex items-center justify-center gap-2">
-            Unlock Your Future <Sparkles className="h-3 w-3" />
+            One OS. Every job. <span className="text-primary font-mono">✦</span>
           </p>
 
           <div className="space-y-1">
-            <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight drop-shadow-lg flex items-center justify-center gap-3">
-              CareerPilot <span className="text-[11px] font-mono font-black bg-[length:200%_auto] bg-gradient-to-r from-primary via-white to-primary bg-clip-text text-transparent animate-shimmer inline-block ml-1 tracking-tighter shadow-sm">AI</span>
+            <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight drop-shadow-lg flex items-center justify-center gap-2">
+              Job<span className="font-mono text-primary">OS</span>
             </h1>
             <p className="text-slate-300 text-lg font-light">
-              {isResetPassword ? "Secure your account" : "Stop Searching. Start Interviewing."}
+              {isResetPassword ? "Secure your account" : "Your job search, systemized."}
             </p>
           </div>
         </div>
@@ -125,7 +125,7 @@ export function AuthForm({ onSuccess, initialMode = 'signin' }: AuthFormProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-12 bg-white border-0 text-slate-900 placeholder:text-slate-400 rounded-lg shadow-lg focus-visible:ring-2 focus-visible:ring-emerald-400"
+                className="h-12 bg-white border-0 text-slate-900 placeholder:text-slate-400 rounded-lg shadow-lg focus-visible:ring-2 focus-visible:ring-indigo-400"
               />
             )}
             {!isForgotPassword && (
@@ -136,7 +136,7 @@ export function AuthForm({ onSuccess, initialMode = 'signin' }: AuthFormProps) {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="h-12 bg-white border-0 text-slate-900 placeholder:text-slate-400 rounded-lg shadow-lg focus-visible:ring-2 focus-visible:ring-emerald-400"
+                className="h-12 bg-white border-0 text-slate-900 placeholder:text-slate-400 rounded-lg shadow-lg focus-visible:ring-2 focus-visible:ring-indigo-400"
               />
             )}
           </div>
@@ -172,11 +172,11 @@ export function AuthForm({ onSuccess, initialMode = 'signin' }: AuthFormProps) {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full h-12 bg-gradient-to-r from-teal-400 to-emerald-500 hover:from-teal-500 hover:to-emerald-600 text-white font-bold text-lg shadow-lg shadow-emerald-500/20 rounded-lg transition-all transform hover:scale-[1.02]"
+            className="w-full h-12 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-bold text-lg shadow-lg shadow-indigo-500/25 rounded-lg transition-all transform hover:scale-[1.02]"
           >
             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
               <span className="flex items-center gap-2">
-                {isResetPassword ? "Update Password" : (isForgotPassword ? "Send Reset Link" : (isSignUp ? "Create Account" : "Launch CareerPilot AI"))} <Sparkles className="w-4 h-4" />
+                {isResetPassword ? "Update Password" : (isForgotPassword ? "Send Reset Link" : (isSignUp ? "Create Account" : "Enter JobOS"))} <span className="font-mono text-indigo-200">✦</span>
               </span>
             )}
           </Button>
@@ -234,7 +234,7 @@ export function AuthForm({ onSuccess, initialMode = 'signin' }: AuthFormProps) {
 
         {/* Footer */}
         <div className="mt-12 text-slate-400/60 text-[10px]">
-          © {new Date().getFullYear()} CareerPilot AI. All rights reserved.
+          © {new Date().getFullYear()} JobOS · jobos.dev · Built for job seekers worldwide.
         </div>
       </div>
     </div>

@@ -145,7 +145,7 @@ export default function Connections() {
         <div className="container py-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Connections</h1>
+                    <h1 className="text-3xl font-extrabold tracking-tight">Connections</h1>
                     <p className="text-muted-foreground mt-1">
                         Manage your professional network and contacts.
                     </p>

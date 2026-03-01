@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "CareerPilot AI",
-  "version": "2.0.0",
-  "description": "Capture jobs, contacts & companies. Autofill ATS forms with your tailored resume.",
+  "name": "JobOS — AI Job Tracker & Autofill",
+  "version": "3.0.0",
+  "description": "Capture jobs from any site. Autofill any ATS. Track everything. Powered by JobOS AI.",
   "permissions": [
     "activeTab",
     "storage",
@@ -50,11 +50,14 @@
         "https://jobs.smartrecruiters.com/*",
         "https://apply.workable.com/*",
         "https://*.taleo.net/*",
+        "https://jobos.dev/*",
         "https://*/*",
         "http://localhost:*/*",
         "http://127.0.0.1:*/*"
       ],
-      "js": ["content.js"],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_idle"
     },
     {
@@ -62,16 +65,24 @@
         "http://localhost:*/*",
         "http://127.0.0.1:*/*",
         "https://job.zeeshare.com/*",
+        "https://jobos.dev/*",
         "https://*/*"
       ],
-      "js": ["careerpilot-bridge.js"],
+      "js": [
+        "careerpilot-bridge.js"
+      ],
       "run_at": "document_start"
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["popup.html", "supabase-js.js"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "popup.html",
+        "supabase-js.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }

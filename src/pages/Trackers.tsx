@@ -345,7 +345,7 @@ export default function Trackers() {
       // the user should be authenticated. But double-check anyway.
       if (!isAuthenticated || !user) {
         console.warn('User not authenticated when processing extension data', { isAuthenticated, user, authLoading });
-        toast.error('Please log in to CareerPilot first, then use the extension to add jobs. Redirecting to login...', {
+        toast.error('Please log in to JobOS first, then use the extension to add jobs. Redirecting to login...', {
           duration: 4000
         });
         // Redirect to auth page with redirect back to trackers

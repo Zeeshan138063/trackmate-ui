@@ -144,24 +144,23 @@ export function PostGenerator() {
                         </Select>
                     </div>
 
-                    <Button
-                        className="w-full"
-                        size="lg"
+                    <button
+                        className="w-full h-11 bg-[#6366F1] hover:bg-[#4F46E5] disabled:bg-[#C7D2FE] disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
                         onClick={handleGenerate}
                         disabled={loading || !topic}
                     >
                         {loading ? (
                             <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Drafting...
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Drafting…
                             </>
                         ) : (
                             <>
-                                <Sparkles className="w-4 h-4 mr-2" />
+                                <span className="font-mono">✦</span>
                                 Generate Draft
                             </>
                         )}
-                    </Button>
+                    </button>
                 </CardContent>
             </Card>
 

@@ -8,44 +8,44 @@ const strategies = [
         description: "Define your precise role, target companies, and unique value proposition.",
         steps: [
             "Select 3-5 target job titles.",
-            "List 20 'Dream Companies' in your niche.",
+            "List 20 companies in your niche for your Watchlist.",
             "Update your LinkedIn 'About' section with keywords.",
         ],
         icon: Target,
-        color: "text-blue-500",
+        color: "text-[#6366F1]",
     },
     {
         title: "Phase 2: Networking Mastery",
         description: "80% of roles are filled through the 'Hidden Job Market'.",
         steps: [
-            "Connect with 5 people at your Dream Companies.",
+            "Connect with 5 people at your target companies.",
             "Ask for 2 informational interviews per week.",
             "Engage with target company social posts.",
         ],
         icon: Users,
-        color: "text-purple-500",
+        color: "text-[#6366F1]",
     },
     {
         title: "Phase 3: Application Optimization",
-        description: "Quality over quantity. Use AI to tailor every application.",
+        description: "Quality over quantity — every application tailored, every resume matched.",
         steps: [
-            "Use CareerPilot AI Copilot for resume tailoring.",
-            "Write unique cover letters for Top 10 roles.",
+            "Use JobOS Copilot ✦ to tailor your resume to each job description.",
+            "Write unique cover letters for your Top 10 roles.",
             "Submit applications within 48 hours of posting.",
         ],
         icon: TrendingUp,
-        color: "text-green-500",
+        color: "text-[#10B981]",
     },
     {
         title: "Phase 4: Interview Domination",
         description: "Practice makes perfect. Review your feedback loops.",
         steps: [
             "Record mock interviews for tricky questions.",
-            "Review past interview feedback in CareerPilot AI.",
+            "Analyze past interview patterns with JobOS Copilot ✦.",
             "Prepare 3 STAR-method stories per role.",
         ],
         icon: CheckCircle2,
-        color: "text-orange-500",
+        color: "text-[#10B981]",
     },
 ];
 
@@ -53,7 +53,7 @@ const StrategyGuide = () => {
     return (
         <div className="space-y-8 animate-fade-in p-6">
             <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold tracking-tight">Job Search Strategy Guide</h1>
+                <h1 className="text-3xl font-extrabold tracking-tight">Playbook</h1>
                 <p className="text-muted-foreground text-lg">
                     Follow this blueprint to accelerate your job search and land higher-quality offers.
                 </p>
@@ -76,8 +76,8 @@ const StrategyGuide = () => {
                             <ul className="space-y-3">
                                 {strategy.steps.map((step, i) => (
                                     <li key={i} className="flex items-start gap-3 text-sm">
-                                        <Lightbulb className="w-4 h-4 mt-0.5 text-yellow-500 shrink-0" />
-                                        <span>{step}</span>
+                                        <Lightbulb className="w-4 h-4 mt-0.5 text-[#6366F1] shrink-0" />
+                                        <span dangerouslySetInnerHTML={{ __html: step.replace(/✦/g, '<span style="color:#6366F1;font-family:monospace">✦</span>') }} />
                                     </li>
                                 ))}
                             </ul>

@@ -151,29 +151,63 @@ export default function ApplicationCopilot() {
     const resumeToShow = tailoredResume || masterProfile;
 
     if (jobsLoading || profileLoading) {
-        return <div className="p-8 flex items-center justify-center"><Bot className="animate-bounce h-8 w-8 text-indigo-600" /></div>
+        return (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center bg-[#F5F3FF] dark:bg-indigo-950/10 rounded-2xl mx-6 my-4">
+                <div className="h-14 w-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 animate-pulse">
+                    <span className="text-2xl text-primary font-mono font-bold">✦</span>
+                </div>
+                <p className="text-sm text-[#64748B] font-medium">Copilot is loading your queue…</p>
+            </div>
+        );
     }
 
     if (queue.length === 0) {
         return (
-            <div className="container max-w-4xl mx-auto py-12 flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in zoom-in duration-500">
-                <div className="h-24 w-24 bg-indigo-50 rounded-full flex items-center justify-center">
-                    <Bot className="h-12 w-12 text-indigo-600" />
+            <div className="min-h-[70vh] flex flex-col items-center justify-center bg-[#F5F3FF] dark:bg-indigo-950/10 rounded-2xl mx-6 my-4 text-center px-8 py-16 animate-in fade-in zoom-in duration-500">
+                {/* ✦ Icon */}
+                <div className="h-16 w-16 bg-primary rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-primary/20">
+                    <span className="text-3xl text-white font-mono font-bold leading-none">✦</span>
                 </div>
-                <div className="space-y-2">
-                    <h2 className="text-3xl font-bold tracking-tight">All Caught Up!</h2>
-                    <p className="text-muted-foreground text-lg max-w-md mx-auto">
-                        You've cleared your application queue. There are no jobs in "Applying" or "Bookmarked" status to review.
-                    </p>
+
+                <h2 className="text-2xl font-extrabold tracking-tight text-[#0F172A] dark:text-white mb-3">
+                    JobOS Copilot
+                </h2>
+                <p className="text-[#64748B] text-sm max-w-sm mb-2 leading-relaxed">
+                    Your AI that reads a job description and tailors your entire
+                    application — resume, cover letter, and match score — in seconds.
+                </p>
+                <p className="text-[#64748B] text-xs mb-8">
+                    Add jobs to your <span className="font-semibold text-primary">Applications</span> pipeline to begin.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                        onClick={() => window.location.href = '/trackers'}
+                        className="h-10 px-6 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors shadow-md shadow-primary/20"
+                    >
+                        Select a Job to Analyze
+                    </button>
+                    <button
+                        onClick={() => window.location.href = '/job-search'}
+                        className="h-10 px-6 border border-[#E2E8F0] bg-white text-[#0F172A] text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                        Discover New Jobs
+                    </button>
                 </div>
-                <div className="flex gap-4">
-                    <Button size="lg" onClick={() => window.location.href = '/job-search'}>
-                        <ExternalLink className="mr-2 h-4 w-4" />
-                        Find New Jobs
-                    </Button>
-                    <Button size="lg" variant="outline" onClick={() => window.location.href = '/trackers'}>
-                        View Tracker
-                    </Button>
+
+                {/* Feature list */}
+                <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 text-left max-w-2xl w-full">
+                    {[
+                        { icon: "📄", title: "Resume Tailoring", desc: "Rewrites your resume to match the job description" },
+                        { icon: "🎯", title: "Match Score", desc: "AI-powered compatibility score for every application" },
+                        { icon: "⚡", title: "One Click Apply", desc: "Approve & mark as applied in a single action" },
+                    ].map(f => (
+                        <div key={f.title} className="flex flex-col gap-1 p-4 rounded-xl bg-white dark:bg-slate-900 border border-[#E2E8F0]">
+                            <span className="text-xl">{f.icon}</span>
+                            <p className="text-xs font-semibold text-[#0F172A] dark:text-white">{f.title}</p>
+                            <p className="text-xs text-[#64748B]">{f.desc}</p>
+                        </div>
+                    ))}
                 </div>
             </div>
         );

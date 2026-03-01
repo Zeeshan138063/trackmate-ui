@@ -4,19 +4,19 @@ import { useLocation } from 'react-router-dom';
 const pageTitles: Record<string, string> = {
     '/': 'Dashboard',
     '/auth': 'Sign In',
-    '/trackers': 'Job Trackers',
+    '/trackers': 'Applications',
     '/interview-practice': 'Interview Practice',
     '/interview-feedback': 'Interview Feedback',
-    '/resume-builder': 'Resume Builder',
-    '/meeting-hub': 'Meeting Hub',
-    '/connections': 'Connections',
-    '/dream-companies': 'Dream Companies',
-    '/job-search': 'Job Search',
-    '/application-copilot': 'Application Copilot',
-    '/strategy-guide': 'Strategy Guide',
-    '/growth-engine': 'Growth Engine',
-    '/settings': 'Account Settings',
-    '/support': 'Support Center',
+    '/resume': 'Resume',
+    '/meeting-hub': 'Interviews',
+    '/connections': 'Network',
+    '/dream-companies': 'Watchlist',
+    '/job-search': 'Discover',
+    '/application-copilot': 'Copilot',
+    '/strategy-guide': 'Playbook',
+    '/growth': 'Analytics',
+    '/settings': 'Settings',
+    '/support': 'Support',
 };
 
 export const usePageTitle = () => {
@@ -24,7 +24,8 @@ export const usePageTitle = () => {
 
     useEffect(() => {
         const path = location.pathname;
-        const title = pageTitles[path] || 'CareerPilot AI';
-        document.title = `${title} | CareerPilot AI`;
+        const title = pageTitles[path] || 'JobOS';
+        document.title = `${title} | JobOS`;
     }, [location]);
 };
+

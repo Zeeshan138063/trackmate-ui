@@ -1,5 +1,5 @@
 // ================================================================
-// CareerPilot AI - Popup Script v2.0
+// JobOS — Popup Script v3.0
 // ================================================================
 
 'use strict';
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const manifest = chrome.runtime.getManifest();
   if (el('appVersion')) el('appVersion').textContent = `v${manifest.version}`;
 
-  // ── Load saved CareerPilot URL ──
+  // ── Load saved JobOS URL ──
   chrome.storage.local.get(['careerPilotUrl'], result => {
     if (result.careerPilotUrl && el('careerPilotUrl')) {
       el('careerPilotUrl').value = result.careerPilotUrl;
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Save ──
   el('saveBtn')?.addEventListener('click', handleSave);
 
-  // ── Open CareerPilot ──
+  // ── Open JobOS ──
   el('openBtn')?.addEventListener('click', () => {
     chrome.tabs.create({ url: el('careerPilotUrl').value || 'http://localhost:8080/trackers' });
   });
@@ -351,7 +351,7 @@ async function handleSave() {
 
   const saveBtn = el('saveBtn');
   saveBtn.disabled = true;
-  setStatus('Saving to CareerPilot…', 'info');
+  setStatus('Saving to JobOS…', 'info');
 
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -436,12 +436,12 @@ async function handleAutofill() {
     const profile  = profiles[0];
 
     if (!profile) {
-      setStatus('No profile found. Complete your CareerPilot profile first.', 'error');
+      setStatus('No profile found. Complete your JobOS profile first.', 'error');
       btn.disabled = false;
       return;
     }
 
-    // Map CareerPilot profile schema → autofiller schema
+    // Map JobOS profile schema → autofiller schema
     const autofillProfile = {
       firstName:    profile.first_name  || profile.name?.split(' ')[0] || '',
       lastName:     profile.last_name   || profile.name?.split(' ').slice(1).join(' ') || '',

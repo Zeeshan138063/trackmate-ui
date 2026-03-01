@@ -92,7 +92,7 @@ const DreamCompanies = () => {
         <div className="container mx-auto p-6 space-y-6 animate-fade-in">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Dream Companies</h1>
+                    <h1 className="text-3xl font-extrabold tracking-tight">Dream Companies</h1>
                     <p className="text-muted-foreground mt-1">
                         Track and manage your target companies strategically.
                     </p>
