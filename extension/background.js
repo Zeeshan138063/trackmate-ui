@@ -1,5 +1,5 @@
 // ================================================================
-// CareerPilot AI - Background Service Worker v2.0
+// CareerPilot AI - Background Service Worker v3.0  (Production)
 // ================================================================
 
 'use strict';
@@ -9,22 +9,79 @@ const AUTH_STORAGE_KEY     = `sb-${SUPABASE_PROJECT_REF}-auth-token`;
 const DATA_TTL_MS          = 60 * 60 * 1000; // 1 hour
 
 // ────────────────────────────────────────────────────────────────
-// Helper: generate unique data ID
+// TAB STATE STORE
+// Per-tab state: url, detected ATS, last extracted data, badge.
+// ────────────────────────────────────────────────────────────────
+const TabStore = (() => {
+  const _store = new Map();
+  function get(tabId)        { return _store.get(tabId) || {}; }
+  function set(tabId, patch) { _store.set(tabId, { ..._store.get(tabId), ...patch, tabId }); }
+  function del(tabId)        { _store.delete(tabId); }
+  function prune() {
+    chrome.tabs.query({}, tabs => {
+      const live = new Set(tabs.map(t => t.id));
+      for (const id of _store.keys()) if (!live.has(id)) _store.delete(id);
+    });
+  }
+  return { get, set, del, prune };
+})();
+setInterval(() => TabStore.prune(), 5 * 60 * 1000);
+
+// ────────────────────────────────────────────────────────────────
+// BADGE MANAGER
+// ────────────────────────────────────────────────────────────────
+const Badge = {
+  set(tabId, text, color = '#10b981') {
+    chrome.action.setBadgeText({ text, tabId });
+    chrome.action.setBadgeBackgroundColor({ color, tabId });
+    TabStore.set(tabId, { badgeText: text });
+  },
+  clear(tabId) {
+    chrome.action.setBadgeText({ text: '', tabId });
+    TabStore.set(tabId, { badgeText: '' });
+  },
+  restore(tabId) {
+    const state = TabStore.get(tabId);
+    if (state?.badgeText) chrome.action.setBadgeText({ text: state.badgeText, tabId });
+  },
+};
+
+function badgeFromUrl(url) {
+  if (!url) return null;
+  if (/linkedin\.com\/in\//.test(url))                                             return { text: 'PROF', color: '#3b82f6' };
+  if (/linkedin\.com\/(company|school)\//.test(url))                               return { text: 'CO',   color: '#8b5cf6' };
+  if (/linkedin\.com\/jobs\/|indeed\.|glassdoor\.|rozee\.pk|naukri\.com/.test(url)) return { text: 'JOB',  color: '#10b981' };
+  if (/lever\.co|greenhouse\.io|myworkdayjobs\.com|icims\.com|workable\.com|smartrecruiters\.com|taleo\.net/.test(url))
+    return { text: 'FILL', color: '#f59e0b' };
+  return null;
+}
+
+// ────────────────────────────────────────────────────────────────
+// TAB LIFECYCLE
+// ────────────────────────────────────────────────────────────────
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (!tab.url) return;
+  if (changeInfo.url || changeInfo.status === 'loading') {
+    TabStore.set(tabId, { url: tab.url, data: null, ats: null, isApplyPage: false, updatedAt: Date.now() });
+  }
+  if (changeInfo.status === 'complete') {
+    const b = badgeFromUrl(tab.url);
+    if (b) Badge.set(tabId, b.text, b.color);
+    else   Badge.clear(tabId);
+  }
+});
+chrome.tabs.onRemoved.addListener(tabId => TabStore.del(tabId));
+chrome.tabs.onActivated.addListener(({ tabId }) => Badge.restore(tabId));
+
+// ────────────────────────────────────────────────────────────────
+// HELPERS
 // ────────────────────────────────────────────────────────────────
 function uid(prefix = 'cp') {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
-
-// ────────────────────────────────────────────────────────────────
-// Helper: strip /trackers from base URL
-// ────────────────────────────────────────────────────────────────
 function baseUrl(url) {
   return (url || 'http://localhost:8080').replace(/\/trackers\/?$/, '');
 }
-
-// ────────────────────────────────────────────────────────────────
-// Helper: store data + auto-cleanup after TTL
-// ────────────────────────────────────────────────────────────────
 function storeTemp(id, data) {
   return new Promise(resolve => {
     chrome.storage.local.set({ [id]: data }, () => {
@@ -33,18 +90,9 @@ function storeTemp(id, data) {
     });
   });
 }
-
-// ────────────────────────────────────────────────────────────────
-// Helper: build URL-safe params (never include description/screenshot)
-// ────────────────────────────────────────────────────────────────
 function buildSafeParams(dataId, overrides = {}) {
-  const params = new URLSearchParams({ dataId, ...overrides });
-  return params;
+  return new URLSearchParams({ dataId, ...overrides });
 }
-
-// ────────────────────────────────────────────────────────────────
-// Screenshot capture
-// ────────────────────────────────────────────────────────────────
 async function captureScreenshot(tabId) {
   const tab = await chrome.tabs.get(tabId);
   if (!tab) throw new Error('Tab not found');
@@ -52,103 +100,72 @@ async function captureScreenshot(tabId) {
 }
 
 // ────────────────────────────────────────────────────────────────
-// Badge management
-// ────────────────────────────────────────────────────────────────
-const Badge = {
-  set(tabId, text, color = '#10b981') {
-    chrome.action.setBadgeText({ text, tabId });
-    chrome.action.setBadgeBackgroundColor({ color, tabId });
-  },
-  clear(tabId) {
-    chrome.action.setBadgeText({ text: '', tabId });
-  },
-};
-
-// ────────────────────────────────────────────────────────────────
-// Tab URL → badge
-// ────────────────────────────────────────────────────────────────
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status !== 'complete' || !tab.url) return;
-
-  const url = tab.url;
-
-  if (/linkedin\.com\/in\//.test(url))                              Badge.set(tabId, 'PROF', '#3b82f6');
-  else if (/linkedin\.com\/(company|school)\//.test(url))          Badge.set(tabId, 'CO',   '#8b5cf6');
-  else if (/linkedin\.com\/jobs\/|indeed\.com\/|glassdoor\.com\/|rozee\.pk\/|naukri\.com\//.test(url))
-                                                                    Badge.set(tabId, 'JOB',  '#10b981');
-  else if (/lever\.co\/|greenhouse\.io\/|myworkdayjobs\.com\/|icims\.com\/|workable\.com\//.test(url))
-                                                                    Badge.set(tabId, 'FILL', '#f59e0b');
-  else                                                              Badge.clear(tabId);
-});
-
-// ────────────────────────────────────────────────────────────────
-// When content script detects ATS — update badge
-// ────────────────────────────────────────────────────────────────
-// (handled inside message listener below)
-
-// ────────────────────────────────────────────────────────────────
-// Main message listener
+// MAIN MESSAGE LISTENER
 // ────────────────────────────────────────────────────────────────
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  const senderTabId = sender.tab?.id;
 
-  // ── Screenshot ──
-  if (request.action === 'captureScreenshot') {
-    const tabId = request.tabId || sender.tab?.id;
-    if (!tabId) { sendResponse({ success: false, error: 'No tab ID' }); return true; }
-
-    captureScreenshot(tabId)
-      .then(screenshot => sendResponse({ success: true, screenshot }))
-      .catch(err       => sendResponse({ success: false, error: err.message }));
-    return true;
-  }
-
-  // ── ATS detected by content script ──
-  if (request.action === 'atsDetected') {
-    const tabId = sender.tab?.id;
-    if (tabId) Badge.set(tabId, 'FILL', '#f59e0b');
+  // Content script → background: reactive job data update
+  if (request.action === 'jobDataExtracted') {
+    if (senderTabId) {
+      TabStore.set(senderTabId, { data: request.data, updatedAt: Date.now() });
+      const b = badgeFromUrl(sender.tab?.url);
+      if (b) Badge.set(senderTabId, b.text, b.color);
+    }
     return false;
   }
 
-  // ── Job data extracted (cache notification) ──
-  if (request.action === 'jobDataExtracted') {
-    return false; // no response needed — just for popup to know it's ready
+  // Content script → background: ATS detected
+  if (request.action === 'atsDetected') {
+    if (senderTabId) {
+      TabStore.set(senderTabId, { ats: request.ats, isApplyPage: request.isApplyPage, updatedAt: Date.now() });
+      Badge.set(senderTabId, 'FILL', '#f59e0b');
+    }
+    return false;
   }
 
-  // ── Save job to local storage ──
+  // Popup requests current tab state (instant — reads from store, no round-trip)
+  if (request.action === 'getTabState') {
+    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+      const tabId = tabs[0]?.id;
+      if (!tabId) { sendResponse({ success: false }); return; }
+      sendResponse({ success: true, state: TabStore.get(tabId) });
+    });
+    return true;
+  }
+
+  // Screenshot
+  if (request.action === 'captureScreenshot') {
+    const tabId = request.tabId || senderTabId;
+    if (!tabId) { sendResponse({ success: false, error: 'No tab ID' }); return true; }
+    captureScreenshot(tabId)
+      .then(s  => sendResponse({ success: true, screenshot: s }))
+      .catch(e => sendResponse({ success: false, error: e.message }));
+    return true;
+  }
+
+  // Save job locally
   if (request.action === 'saveJobData') {
-    const jobData = {
-      ...request.data,
-      screenshot: request.screenshot || null,
-      capturedAt: new Date().toISOString(),
-      url: request.url || sender.tab?.url,
-    };
+    const jobData = { ...request.data, screenshot: request.screenshot || null, capturedAt: new Date().toISOString(), url: request.url || sender.tab?.url };
     chrome.storage.local.get(['savedJobs'], result => {
-      const jobs = result.savedJobs || [];
-      jobs.push(jobData);
-      chrome.storage.local.set({ savedJobs: jobs }, () => {
-        sendResponse({ success: true, jobId: jobs.length - 1 });
-      });
+      const jobs = [...(result.savedJobs || []), jobData];
+      chrome.storage.local.set({ savedJobs: jobs }, () => sendResponse({ success: true, jobId: jobs.length - 1 }));
     });
     return true;
   }
 
-  // ── Get saved jobs ──
   if (request.action === 'getSavedJobs') {
-    chrome.storage.local.get(['savedJobs'], result => {
-      sendResponse({ success: true, jobs: result.savedJobs || [] });
-    });
+    chrome.storage.local.get(['savedJobs'], result => sendResponse({ success: true, jobs: result.savedJobs || [] }));
     return true;
   }
 
-  // ── Send job to CareerPilot Trackers page ──
+  // Send to CareerPilot Trackers
   if (request.action === 'sendToCareerPilot') {
-    const data  = request.data;
-    const cpUrl = `${baseUrl(request.careerPilotUrl)}/trackers`;
-    const id    = uid('cp_job');
-
+    const data = request.data;
+    const id   = uid('cp_job');
     storeTemp(id, data).then(() => {
       const params = buildSafeParams(id, {
-        action:    'addJob',
+        action: 'addJob',
         position:  (data.position  || '').substring(0, 100),
         company:   (data.company   || '').substring(0, 100),
         jobUrl:    (data.jobUrl    || '').substring(0, 200),
@@ -157,74 +174,58 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         maxSalary: data.maxSalary ? String(data.maxSalary) : '',
         datePosted: (data.datePosted || '').substring(0, 50),
         deadline:   (data.deadline   || '').substring(0, 50),
-        status:     data.status     || 'Bookmarked',
+        status:     data.status    || 'Bookmarked',
         excitement: data.excitement ? String(data.excitement) : '3',
       });
-      chrome.tabs.create({ url: `${cpUrl}?${params}` });
+      chrome.tabs.create({ url: `${baseUrl(request.careerPilotUrl)}/trackers?${params}` });
       sendResponse({ success: true });
     });
     return true;
   }
 
-  // ── Send contact/profile to CareerPilot Connections page ──
+  // Send to CareerPilot Connections
   if (request.action === 'sendContactToCareerPilot') {
-    const data  = request.data;
-    const cpUrl = `${baseUrl(request.careerPilotUrl)}/connections`;
-    const id    = uid('cp_contact');
-
+    const data = request.data;
+    const id   = uid('cp_contact');
     storeTemp(id, data).then(() => {
-      const params = buildSafeParams(id, {
-        action:  'addContact',
-        name:    (data.name    || '').substring(0, 100),
-        company: (data.company || '').substring(0, 100),
-      });
-      chrome.tabs.create({ url: `${cpUrl}?${params}` });
+      const params = buildSafeParams(id, { action: 'addContact', name: (data.name || '').substring(0, 100), company: (data.company || '').substring(0, 100) });
+      chrome.tabs.create({ url: `${baseUrl(request.careerPilotUrl)}/connections?${params}` });
       sendResponse({ success: true });
     });
     return true;
   }
 
-  // ── Send profile to CareerPilot Resume Builder ──
+  // Send to Resume Builder
   if (request.action === 'sendProfileToCareerPilot') {
-    const data  = request.data;
-    const cpUrl = `${baseUrl(request.careerPilotUrl)}/resume`;
-    const id    = uid('cp_profile');
-
+    const data = request.data;
+    const id   = uid('cp_profile');
     storeTemp(id, data).then(() => {
-      const params = buildSafeParams(id, {
-        action: 'importProfile',
-        source: 'linkedin_extension',
-      });
-      chrome.tabs.create({ url: `${cpUrl}?${params}` });
+      const params = buildSafeParams(id, { action: 'importProfile', source: 'linkedin_extension' });
+      chrome.tabs.create({ url: `${baseUrl(request.careerPilotUrl)}/resume?${params}` });
       sendResponse({ success: true });
     });
     return true;
   }
 
-  // ── CareerPilot page fetches full data by ID ──
+  // CareerPilot page fetches data by ID
   if (request.action === 'getJobData') {
     const id = request.dataId;
     if (!id) { sendResponse({ success: false, error: 'No dataId' }); return true; }
-
     chrome.storage.local.get([id], result => {
-      if (result[id]) {
-        sendResponse({ success: true, data: result[id] });
-        chrome.storage.local.remove([id]); // clean up after fetch
-      } else {
-        sendResponse({ success: false, error: 'Data not found or expired' });
-      }
+      if (result[id]) { sendResponse({ success: true, data: result[id] }); chrome.storage.local.remove([id]); }
+      else             sendResponse({ success: false, error: 'Data not found or expired' });
     });
     return true;
   }
 
-  // ── Portal logout → clear extension session ──
+  // Portal logout
   if (request.action === 'portalLogout') {
     chrome.storage.local.remove([AUTH_STORAGE_KEY], () => {
-      console.log('[CareerPilot] Extension session cleared via portal logout.');
+      console.log('[CareerPilot] Session cleared via portal logout.');
       sendResponse({ success: true });
     });
     return true;
   }
 
-  return false; // unhandled — don't keep channel open
+  return false;
 });

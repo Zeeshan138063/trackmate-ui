@@ -1,12 +1,176 @@
 // ================================================================
-// CareerPilot AI - Content Script v2.0
+// CareerPilot AI - Content Script v3.0  (Production)
 // Responsibilities:
 //   1. Detect which site/ATS we're on
 //   2. Extract job / profile / company data
 //   3. Autofill ATS application forms with profile data
+//   4. React to URL changes (SPA navigation) without page reload
+//   5. React to DOM mutations (lazy-loaded content, expand sections)
+//   6. Debounce rapid changes to avoid thrashing
 // ================================================================
 
 'use strict';
+
+// ────────────────────────────────────────────────────────────────
+// PAGE STATE MANAGER
+// Single source of truth for all reactive logic.
+// ────────────────────────────────────────────────────────────────
+const PageState = (() => {
+  let _currentUrl    = window.location.href;
+  let _currentData   = null;   // last successfully extracted data
+  let _currentAts    = null;   // last detected ATS
+  let _domObserver   = null;   // MutationObserver instance
+  let _debounceTimer = null;
+  let _extractTimer  = null;
+  let _retryCount    = 0;
+  const MAX_RETRIES  = 5;      // max retries waiting for page to hydrate
+  const DEBOUNCE_MS  = 600;    // wait 600ms after last DOM change before re-extracting
+  const STABLE_MS    = 2000;   // wait 2s after navigation (LinkedIn hydration takes ~1.5-2s)
+  const RETRY_MS     = 1500;   // retry interval when data comes back empty
+
+  // ── Called on every meaningful change (URL or DOM) ──
+  function _onChanged(reason) {
+    clearTimeout(_debounceTimer);
+    _debounceTimer = setTimeout(() => _runExtraction(reason), DEBOUNCE_MS);
+  }
+
+  function _hasUsefulData(data) {
+    if (!data) return false;
+    // Require at least one of these to be non-empty to consider extraction valid
+    return !!(data.name || data.position || data.company || data.description);
+  }
+
+  function _runExtraction(reason) {
+    // Bust cache — always fresh on change
+    extractor.invalidate();
+
+    const data        = extractor.getJobData('auto');
+    const ats         = ATSDetector.detect();
+    const isApplyPage = ATSDetector.isApplyPage();
+
+    // ── Quality gate: ignore empty/skeleton extractions ──
+    // LinkedIn's React app renders a skeleton loader first; we must wait for
+    // real content. If data has no meaningful fields, schedule a retry.
+    if (!isApplyPage && !_hasUsefulData(data)) {
+      if (_retryCount < MAX_RETRIES) {
+        _retryCount++;
+        clearTimeout(_extractTimer);
+        _extractTimer = setTimeout(() => _runExtraction(reason + '-retry'), RETRY_MS);
+      }
+      return;
+    }
+    _retryCount = 0; // reset on success
+
+    const dataChanged = JSON.stringify(data) !== JSON.stringify(_currentData);
+    const atsChanged  = ats !== _currentAts;
+
+    if (!dataChanged && !atsChanged) return; // nothing meaningful changed
+
+    _currentData = data;
+    _currentAts  = ats;
+
+    if (isApplyPage) {
+      _notify('atsDetected', { ats, isApplyPage, url: window.location.href, reason });
+    } else if (_hasUsefulData(data)) {
+      _notify('jobDataExtracted', { data, reason });
+    }
+  }
+
+  function _notify(action, payload) {
+    try {
+      chrome.runtime.sendMessage({ action, ...payload });
+    } catch (_) {
+      // Extension context may be invalidated after update — safe to ignore
+    }
+  }
+
+  // ── URL change detection (covers SPA pushState + popstate) ──
+  function _watchUrl() {
+    const check = () => {
+      const newUrl = window.location.href;
+      if (newUrl !== _currentUrl) {
+        _currentUrl  = newUrl;
+        _currentData = null;  // bust data cache on navigation
+        _currentAts  = null;
+        _retryCount  = 0;     // reset retry counter on new page
+        // Give the SPA time to render the new page content
+        clearTimeout(_extractTimer);
+        _extractTimer = setTimeout(() => _runExtraction('url-change'), STABLE_MS);
+      }
+    };
+
+    // Intercept history.pushState / replaceState (LinkedIn, Indeed use these heavily)
+    const _origPush    = history.pushState.bind(history);
+    const _origReplace = history.replaceState.bind(history);
+
+    history.pushState = function (...args) {
+      _origPush(...args);
+      check();
+    };
+    history.replaceState = function (...args) {
+      _origReplace(...args);
+      check();
+    };
+
+    // Browser back/forward
+    window.addEventListener('popstate', check);
+  }
+
+  // ── DOM mutation observation ──
+  function _watchDom() {
+    if (_domObserver) _domObserver.disconnect();
+
+    _domObserver = new MutationObserver(mutations => {
+      // Ignore mutations that are only attribute changes on non-content nodes
+      const meaningful = mutations.some(m => {
+        // characterData = text node content changed (e.g. profile name rendered)
+        if (m.type === 'characterData') {
+          const t = m.target.textContent?.trim() || '';
+          return t.length > 5;
+        }
+        if (m.type !== 'childList' || m.addedNodes.length === 0) return false;
+        return Array.from(m.addedNodes).some(n => {
+          if (n.nodeType !== 1) return false; // only elements
+          // Skip mutations in clearly non-content areas
+          if (n.closest?.('nav, footer, aside, [role="dialog"], [aria-label="Messaging"]')) return false;
+          // Must add real text content (not just empty scaffolding)
+          return n.textContent.trim().length > 20;
+        });
+      });
+      if (meaningful) _onChanged('dom-mutation');
+    });
+
+    _domObserver.observe(document.body, {
+      childList:  true,
+      subtree:    true,
+      characterData: true,
+    });
+  }
+
+  // ── Init ──
+  function init() {
+    _watchUrl();
+
+    // Wait for initial page content to settle before observing DOM
+    // (avoids false positives from the initial render burst)
+    const readyFn = () => {
+      _watchDom();
+      clearTimeout(_extractTimer);
+      _extractTimer = setTimeout(() => _runExtraction('page-load'), STABLE_MS);
+    };
+
+    if (document.readyState === 'complete') {
+      readyFn();
+    } else {
+      window.addEventListener('load', readyFn, { once: true });
+    }
+  }
+
+  function getCurrentData() { return _currentData; }
+  function getCurrentAts()  { return _currentAts;  }
+
+  return { init, getCurrentData, getCurrentAts };
+})();
 
 // ────────────────────────────────────────────────────────────────
 // SECTION 1: ATS DETECTOR
@@ -448,6 +612,9 @@ class JobExtractor {
     return this._cache;
   }
 
+  // Force-bust the cache so next call always re-reads the DOM
+  invalidate() { this._cache = null; }
+
   // ── JSON-LD (Schema.org/JobPosting) — works on most modern job boards ──
   _fromJsonLd() {
     const data = this._base();
@@ -516,8 +683,29 @@ class JobExtractor {
       '.job-details-jobs-unified-top-card__primary-description'
     );
     if (locEl) {
-      const parts = locEl.textContent.split('·').map(s => s.trim());
-      data.location = parts.length >= 2 ? parts[1] : locEl.textContent.trim();
+      const parts = locEl.textContent.split('·').map(s => s.trim()).filter(Boolean);
+      // Skip first part (company name) and any time/duration segments
+      const locationPart = parts.slice(1).find(p => !/^\d+\s*(minute|hour|day|week|month|year|second)/i.test(p));
+      data.location = locationPart || (parts.length >= 2 ? parts[1] : locEl.textContent.trim());
+    }
+    // LinkedIn 2024+ fallback: location in separate bullet/metadata elements
+    if (!data.location) {
+      const topCard = document.querySelector('[class*="job-details-jobs-unified-top-card"], .jobs-unified-top-card');
+      const container = topCard || document.querySelector('main');
+      if (container) {
+        for (const el of container.querySelectorAll('span, li')) {
+          if (el.children.length > 1) continue; // skip wrapper containers
+          const t = el.textContent.trim();
+          if (
+            t.length > 3 && t.length < 80 &&
+            /,\s*[A-Z]/.test(t) && // city, region/country pattern
+            !/apply|save|easy apply|promoted|follower|employee/i.test(t)
+          ) {
+            data.location = t;
+            break;
+          }
+        }
+      }
     }
 
     data.description = this._pick([
@@ -683,60 +871,291 @@ class JobExtractor {
 
   // ── LinkedIn Profile ──
   _linkedInProfile() {
-    const d = { name: '', headline: '', company: '', position: '', location: '', about: '', profileUrl: window.location.href, photoUrl: '' };
+    const d = {
+      name: '', headline: '', company: '', position: '',
+      location: '', about: '', profileUrl: window.location.href, photoUrl: ''
+    };
 
-    d.name = this._pick(['h1.text-heading-xlarge', 'div.ph5 h1', 'h1.top-card-layout__title'], el => {
-      const t = el.textContent.trim();
-      return t.length < 60 ? t : '';
-    });
+    // ─────────────────────────────────────────────────────────────
+    // STRATEGY: Prefer aria-* attributes, data-* attrs, and element
+    // ROLE / structural position over class names, which LinkedIn
+    // rotates with every deploy (hashed Tailwind / CSS Modules).
+    // ─────────────────────────────────────────────────────────────
 
-    const headlineEl = document.querySelector('div.text-body-medium, .top-card-layout__headline');
-    if (headlineEl) {
-      d.headline = headlineEl.textContent.trim();
-      if (d.headline.includes(' at '))      { const p = d.headline.split(' at ');  d.position = p[0].trim(); d.company = p.slice(1).join(' at ').trim(); }
-      else if (d.headline.includes('@'))    { const p = d.headline.split('@');     d.position = p[0].trim(); d.company = p.slice(1).join('@').trim(); }
-      else if (d.headline.includes('|'))    { d.position = d.headline.split('|')[0].trim(); }
-      else                                  { d.position = d.headline; }
-    }
+    // ── NAME ──────────────────────────────────────────────────────
+    // The profile name is always the first <h1> in <main>. LinkedIn
+    // has never changed this structural contract.
+    const mainEl = document.querySelector('main') || document.body;
 
-    // Current company from aria-label button
-    for (const sel of ['button[aria-label*="Current company" i]', '.pv-text-details__right-panel button']) {
-      const el = document.querySelector(sel);
-      if (!el) continue;
-      const label = el.getAttribute('aria-label') || '';
-      const match = label.match(/Current company[:\s]+([^.]+)/i);
-      if (match) { d.company = match[1].trim(); break; }
-      const text = el.textContent.split('\n')[0].trim();
-      if (text && text.toLowerCase() !== 'company') { d.company = text; break; }
-    }
-
-    // Location — avoid "contact info", "connections" false positives
-    d.location = this._pick([
-      '.pv-text-details__left-panel span.text-body-small.inline',
-      'span.text-body-small.inline.t-black--light.break-words',
-    ], el => {
-      const t = el.textContent.trim();
-      return /contact info|connection|degree/i.test(t) ? '' : t;
-    });
-
-    // About section
-    const headers = Array.from(document.querySelectorAll('h2 span[aria-hidden="true"]'));
-    const aboutHeader = headers.find(h => h.textContent.trim().toLowerCase() === 'about');
-    if (aboutHeader) {
-      const section = aboutHeader.closest('section') || aboutHeader.closest('.artdeco-card');
-      if (section) {
-        const textEl = section.querySelector('.inline-show-more-text, .pv-shared-text-with-see-more span[aria-hidden="true"]');
-        d.about = textEl ? this._clean(textEl) : this._clean(section);
-        d.about = d.about.replace(/…\s*see more/gi, '').trim();
+    const h1s = Array.from(mainEl.querySelectorAll('h1'));
+    for (const h1 of h1s) {
+      // Strip visually-hidden accessibility spans (LinkedIn injects these into h1)
+      const clone = h1.cloneNode(true);
+      clone.querySelectorAll('.visually-hidden, [class*="visually-hidden"]').forEach(n => n.remove());
+      const t = clone.textContent.replace(/\s+/g, ' ').trim();
+      // A real name: 2-80 chars, no action words, not inside the global site nav/banner
+      if (
+        t.length >= 2 && t.length <= 80 &&
+        !/^(sign in|join|connect|message|follow|more|search)/i.test(t) &&
+        !h1.closest('nav') && !h1.closest('[role="banner"]')
+      ) {
+        d.name = t;
+        break;
       }
     }
 
-    const img = document.querySelector('img.pv-top-card-profile-picture__image, img.profile-photo-edit__preview');
-    if (img) d.photoUrl = img.src;
+    // ── HEADLINE ──────────────────────────────────────────────────
+    // LinkedIn renders the headline in the element immediately after
+    // the h1 inside the top-card section. It is NEVER an h1/h2 itself.
+    // We look for the first non-empty sibling text block near the h1.
+    //
+    // Also try well-known selector variants for belt-and-suspenders.
+    const headlineCandidates = [
+      // Stable aria / structural selectors
+      '[aria-label*="headline" i]',
+      '[data-field="headline"]',
+      // Class-name hints (LinkedIn has used these historically)
+      'div.text-body-medium.break-words',
+      'div.text-body-medium',
+      '.top-card-layout__headline',
+      '.pv-top-card--list-bullet',
+    ];
+
+    for (const sel of headlineCandidates) {
+      const el = document.querySelector(sel);
+      if (!el) continue;
+      const t = el.textContent.trim();
+      if (t.length > 3 && t !== d.name && !/^\d+ (connection|follower)/i.test(t)) {
+        d.headline = t;
+        break;
+      }
+    }
+
+    // Structural fallback: sibling of the h1 that holds the name
+    if (!d.headline) {
+      const nameH1 = h1s.find(h => h.textContent.trim() === d.name);
+      if (nameH1) {
+        // Walk forward siblings / parent's children to find the headline div
+        let sib = nameH1.nextElementSibling;
+        for (let i = 0; i < 5 && sib; i++, sib = sib.nextElementSibling) {
+          const t = sib.textContent.trim();
+          if (t.length > 5 && t !== d.name && !/^\d+ (connection|follower)/i.test(t)) {
+            d.headline = t;
+            break;
+          }
+        }
+        // Also try parent's next sibling
+        if (!d.headline && nameH1.parentElement) {
+          const parentSib = nameH1.parentElement.nextElementSibling;
+          if (parentSib) {
+            const t = parentSib.textContent.trim();
+            if (t.length > 5 && t !== d.name) d.headline = t;
+          }
+        }
+      }
+    }
+
+    // Clean up headline — LinkedIn sometimes injects unicode chars
+    d.headline = d.headline.replace(/\u200b/g, '').replace(/\s+/g, ' ').trim();
+
+    // ── PARSE POSITION + COMPANY FROM HEADLINE ────────────────────
+    if (d.headline) {
+      const h = d.headline;
+      // "CEO @ IT Park Uzbekistan | VC Committee Member..."
+      if (h.includes(' @ ')) {
+        const [pos, ...rest] = h.split(' @ ');
+        d.position = pos.trim();
+        d.company  = rest.join(' @ ').split('|')[0].trim();
+      }
+      // "Senior Engineer at Google | Building things"
+      else if (/ at /i.test(h)) {
+        const idx  = h.search(/ at /i);
+        d.position = h.slice(0, idx).trim();
+        d.company  = h.slice(idx + 4).split('|')[0].trim();
+      }
+      // "CEO | IT Park Uzbekistan | VC Committee..."
+      else if (h.includes(' | ')) {
+        const parts = h.split(' | ');
+        d.position = parts[0].trim();
+        d.company  = parts[1]?.trim() || '';
+      }
+      else {
+        d.position = h.trim();
+      }
+    }
+
+    // ── COMPANY (dedicated fallbacks if headline parse came up empty) ─
+    if (!d.company) {
+      // 1. Aria-label on experience buttons
+      for (const el of document.querySelectorAll('[aria-label*="Current company" i], [aria-label*="current employer" i]')) {
+        const label = el.getAttribute('aria-label') || '';
+        const m = label.match(/current company[:\s]+([^.]+)/i) || label.match(/current employer[:\s]+([^.]+)/i);
+        if (m) { d.company = m[1].trim(); break; }
+      }
+    }
+
+    if (!d.company) {
+      // 2. data-field attribute (LinkedIn sometimes uses this on experience items)
+      const compEl = document.querySelector('[data-field="current_company_name"], [data-field="company"]');
+      if (compEl) d.company = compEl.textContent.trim();
+    }
+
+    if (!d.company) {
+      // 3. Experience section — first listed company name
+      // LinkedIn renders experience as a list; first item = current role
+      const expSection = Array.from(document.querySelectorAll('section')).find(s => {
+        const hdr = s.querySelector('h2');
+        return hdr && /experience/i.test(hdr.textContent);
+      });
+      if (expSection) {
+        // Company name is usually a <span> with aria-hidden="false" or a plain anchor
+        const compSpan = expSection.querySelector('span[aria-hidden="true"]');
+        if (compSpan) {
+          const t = compSpan.textContent.trim();
+          if (t.length > 1 && t.length < 80) d.company = t;
+        }
+      }
+    }
+
+    // ── LOCATION ──────────────────────────────────────────────────
+    // LinkedIn renders "Tashkent, Uzbekistan · Contact info"
+    // The location is always a small-font span in the left panel / top card.
+    // Key invariant: it contains a comma (city, country) or just a city.
+    const locCandidates = [
+      '[aria-label*="location" i]',
+      '[data-field="location"]',
+      // LinkedIn 2024-2025: location often in a button in the left panel
+      'button.pv-text-details__left-panel-item-text',
+      '.pv-text-details__left-panel span.text-body-small',
+      // Older LinkedIn class patterns
+      'span.text-body-small.inline.t-black--light.break-words',
+      'span.text-body-small.inline',
+      '.top-card-layout__first-sub-title',
+    ];
+
+    for (const sel of locCandidates) {
+      for (const el of document.querySelectorAll(sel)) {
+        const raw = el.textContent.trim();
+        const t   = raw.split('·')[0].trim(); // drop " · Contact info" suffix
+        if (
+          t.length > 2 && t.length < 100 &&
+          !/contact info|connection|follower|degree|open to|mutual|^\d/i.test(t)
+        ) {
+          d.location = t;
+          break;
+        }
+      }
+      if (d.location) break;
+    }
+
+    // Structural fallback: look for a span near the name h1 that looks like a location
+    if (!d.location) {
+      // Also matches single-city names like "London" or "Tashkent Area"
+      const locationLike = /^[A-Z][a-zA-ZÀ-ÿ\s.'-]+(?:,\s*[A-Z][a-zA-ZÀ-ÿ\s.']+)?(?:\s+Area)?$/;
+      for (const span of mainEl.querySelectorAll('span')) {
+        const t = span.textContent.trim().split('·')[0].trim();
+        if (t.length > 2 && t.length < 80 && locationLike.test(t) && !span.closest('nav')) {
+          d.location = t;
+          break;
+        }
+      }
+    }
+
+    // ── ABOUT ──────────────────────────────────────────────────────
+    // The About section is a <section> whose <h2> contains "About".
+    // LinkedIn uses span[aria-hidden="true"] inside the h2 for the label.
+
+    // Find the About section by its heading text (structural, not class-based)
+    let aboutSection = null;
+    for (const section of mainEl.querySelectorAll('section')) {
+      const h2 = section.querySelector('h2');
+      if (h2 && /^about$/i.test(h2.textContent.replace(/\s+/g,' ').trim())) {
+        aboutSection = section;
+        break;
+      }
+    }
+
+    // Also try <div id="about"> or <section id="about">
+    if (!aboutSection) {
+      aboutSection = mainEl.querySelector('[id="about"]');
+    }
+
+    if (aboutSection) {
+      // Ordered list of text containers LinkedIn has used
+      const aboutTextSelectors = [
+        // Newest: inline-show-more span pattern
+        '.inline-show-more-text span[aria-hidden="true"]',
+        '.inline-show-more-text',
+        '[class*="inline-show-more"]',
+        // Older: pv-shared-text
+        '.pv-shared-text-with-see-more span[aria-hidden="true"]',
+        '.pv-shared-text-with-see-more',
+        // visually-hidden full text (accessibility copy — full unshrunk text)
+        'span.visually-hidden',
+        // Any non-empty paragraph
+        'p',
+        // Catch-all: a <span> with the bulk of text
+        'span',
+      ];
+
+      for (const sel of aboutTextSelectors) {
+        for (const el of aboutSection.querySelectorAll(sel)) {
+          // Skip the "About" heading itself and button labels
+          if (el.closest('h2') || el.closest('button')) continue;
+          const t = el.textContent.replace(/\s+/g, ' ').trim();
+          if (t.length > 30 && !/^about$/i.test(t)) {
+            d.about = t.replace(/[\u2026…]\s*see more/gi, '').trim();
+            break;
+          }
+        }
+        if (d.about) break;
+      }
+
+      // Last resort: dump the section, strip h2 + buttons
+      if (!d.about) {
+        const clone = aboutSection.cloneNode(true);
+        clone.querySelectorAll('h2, button, svg').forEach(n => n.remove());
+        const t = clone.textContent.replace(/\s+/g, ' ').trim();
+        if (t.length > 30) d.about = t.replace(/[\u2026…]\s*see more/gi, '').trim();
+      }
+    }
+
+    // Global fallback for About: first long <p> in main that's not nav/header
+    if (!d.about) {
+      for (const p of mainEl.querySelectorAll('p')) {
+        if (p.closest('nav') || p.closest('header') || p.closest('footer')) continue;
+        const t = p.textContent.replace(/\s+/g, ' ').trim();
+        if (t.length > 80 && !/cookie|privacy|terms|©/i.test(t)) {
+          d.about = t.replace(/[\u2026…]\s*see more/gi, '').trim();
+          break;
+        }
+      }
+    }
+
+    // ── PHOTO ──────────────────────────────────────────────────────
+    const photoSelectors = [
+      // Specific aria labels LinkedIn uses
+      'button[aria-label*="profile photo" i] img',
+      'button[aria-label*="Edit profile photo" i] img',
+      // Class-name variants (historical)
+      'img.pv-top-card-profile-picture__image--show',
+      'img.pv-top-card-profile-picture__image',
+      'img.profile-photo-edit__preview',
+      'img[class*="profile-picture"]',
+      'img[class*="profile-photo"]',
+      // Structural: first 200px img in main
+      'img[width="200"]',
+    ];
+    for (const sel of photoSelectors) {
+      const img = document.querySelector(sel);
+      if (img?.src && !img.src.includes('data:image/gif') && img.src.startsWith('http')) {
+        d.photoUrl = img.src;
+        break;
+      }
+    }
 
     return d;
   }
-
   // ── LinkedIn Company Page ──
   _linkedInCompany() {
     const d = { name: '', industry: '', size: '', location: '', website: '', linkedinUrl: window.location.href, about: '', logoUrl: '', foundedYear: '', employeeCount: '' };
@@ -784,26 +1203,39 @@ class JobExtractor {
 }
 
 
+
 // ────────────────────────────────────────────────────────────────
-// SECTION 4: RUNTIME — MESSAGE LISTENER + AUTO-DETECT
+// SECTION 4: RUNTIME — MESSAGE LISTENER + REACTIVE ENGINE
 // ────────────────────────────────────────────────────────────────
+
+// Instantiate extractor (must exist before PageState.init() is called)
 const extractor = new JobExtractor();
 
+// ── Message listener ──
+// Popup or background can always request fresh data or trigger autofill
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   // ── Extract job / profile / company data ──
   if (request.action === 'extractJobData') {
-    if (request.mode !== 'auto') extractor._cache = null;
+    // Force-bust cache so popup always gets fresh data on manual click
+    extractor.invalidate();
     const data = extractor.getJobData(request.mode || 'auto');
     sendResponse({ success: true, data });
+    return true;
+  }
+
+  // ── Return currently cached data (popup can call this on open to get instant data) ──
+  if (request.action === 'getCachedData') {
+    const cached = PageState.getCurrentData();
+    sendResponse({ success: true, data: cached, ats: PageState.getCurrentAts() });
     return true;
   }
 
   // ── Detect ATS on current page ──
   if (request.action === 'detectATS') {
     sendResponse({
-      success: true,
-      ats: ATSDetector.detect(),
+      success:     true,
+      ats:         ATSDetector.detect(),
       isApplyPage: ATSDetector.isApplyPage(),
     });
     return true;
@@ -813,30 +1245,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'autofill') {
     const filler = new ATSAutofiller(request.profile);
     filler.fill().then(result => sendResponse(result));
-    return true; // Keep channel open — async
+    return true; // async — keep channel open
   }
 
   return false;
 });
 
-// On page load: auto-detect what this page is and notify background
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    const ats         = ATSDetector.detect();
-    const isApplyPage = ATSDetector.isApplyPage();
-
-    if (isApplyPage) {
-      // This is an ATS form — notify background to show autofill badge
-      chrome.runtime.sendMessage({
-        action: 'atsDetected',
-        ats,
-        isApplyPage,
-        url: window.location.href,
-      });
-    } else {
-      // It's a job listing / profile — extract and cache
-      const data = extractor.getJobData('auto');
-      chrome.runtime.sendMessage({ action: 'jobDataExtracted', data });
-    }
-  }, 1500);
-});
+// ── Start the reactive engine ──
+// This replaces the old one-shot window.addEventListener('load', ...) approach.
+// PageState handles: initial load, SPA URL changes, DOM mutations, debouncing.
+PageState.init();

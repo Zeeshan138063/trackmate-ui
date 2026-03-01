@@ -65,16 +65,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   const { data: { session } } = await supabaseClient.auth.getSession();
   updateAuthUI(session);
 
-  // ── Detect mode from active tab URL ──
+  // ── Detect mode from active tab URL + load cached state instantly ──
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (tab?.url) {
     if (/linkedin\.com\/in\//.test(tab.url))                             detectedMode = 'profile';
     else if (/linkedin\.com\/(company|school)\//.test(tab.url))          detectedMode = 'company';
     else                                                                   detectedMode = 'job';
     updateUIMode(detectedMode);
+  }
 
-    // Also detect ATS
-    detectATSOnTab(tab.id);
+  // ── Load cached tab state from background (instant, no DOM round-trip) ──
+  // If background already has data from the reactive engine, show it immediately.
+  // Also detects ATS from stored state.
+  if (session) {
+    loadTabState(tab);
   }
 
   // ── Mode selector ──
@@ -113,10 +117,49 @@ document.addEventListener('DOMContentLoaded', async () => {
   el('autofillBtn')?.addEventListener('click', handleAutofill);
 
   // ── Auto-extract on popup open if logged in ──
-  if (session) {
-    setTimeout(() => el('extractBtn')?.click(), 400);
-  }
+  // Only do a live extract if tab state is stale (>30s old) or missing
+  // loadTabState() handles the fresh case above.
 });
+
+// ────────────────────────────────────────────────────────────────
+// LOAD TAB STATE (instant display from background store)
+// ────────────────────────────────────────────────────────────────
+// Returns true only if data has at least one real field filled
+function _hasUsefulData(data) {
+  if (!data) return false;
+  return !!(data.name || data.position || data.company || data.description);
+}
+
+async function loadTabState(tab) {
+  chrome.runtime.sendMessage({ action: 'getTabState' }, response => {
+    if (!response?.success) {
+      // No cached state yet — trigger a live extract
+      el('extractBtn')?.click();
+      return;
+    }
+
+    const state   = response.state;
+    const isStale = !state?.updatedAt || (Date.now() - state.updatedAt) > 30_000;
+    const isGood  = _hasUsefulData(state?.data);
+
+    // Show ATS banner from stored state
+    if (state?.ats || state?.isApplyPage) {
+      currentATS = state.ats;
+      showATSBanner(state.ats);
+    }
+
+    // Only use cached data if it's fresh AND has actual content.
+    // Empty/skeleton data (LinkedIn hydration race) triggers a live extract instead.
+    if (state?.data && !isStale && isGood) {
+      currentJobData = state.data;
+      _renderExtractedData(state.data);
+    } else {
+      // Stale, missing, or empty — do a fresh live extract
+      // Small delay lets the popup finish rendering before messaging content script
+      setTimeout(() => el('extractBtn')?.click(), 250);
+    }
+  });
+}
 
 // ────────────────────────────────────────────────────────────────
 // AUTH
@@ -189,13 +232,36 @@ function updateUIMode(mode) {
 async function detectATSOnTab(tabId) {
   try {
     chrome.tabs.sendMessage(tabId, { action: 'detectATS' }, response => {
-      if (chrome.runtime.lastError) return; // content script not loaded yet
+      if (chrome.runtime.lastError) return;
       if (response?.ats) {
         currentATS = response.ats;
         showATSBanner(response.ats);
       }
     });
   } catch (_) {}
+}
+
+// ────────────────────────────────────────────────────────────────
+// RENDER EXTRACTED DATA (shared by manual extract + background push)
+// ────────────────────────────────────────────────────────────────
+function _renderExtractedData(data) {
+  if (!data) return;
+
+  if (data.type === 'profile') {
+    displayContactData(data);
+    if (el('saveBtn')) { el('saveBtn').style.display = 'block'; el('saveBtn').querySelector('span').textContent = '💾 Save Contact'; }
+    if (el('importResumeBtn')) el('importResumeBtn').style.display = 'block';
+    setStatus('Profile ready ✓', 'success');
+  } else if (data.type === 'company') {
+    displayCompanyData(data);
+    if (el('saveBtn')) { el('saveBtn').style.display = 'block'; el('saveBtn').querySelector('span').textContent = '💾 Save Company'; }
+    setStatus('Company ready ✓', 'success');
+  } else {
+    displayJobData(data);
+    if (el('saveBtn')) { el('saveBtn').style.display = 'block'; el('saveBtn').querySelector('span').textContent = '💾 Save Job'; }
+    setStatus('Job ready ✓', 'success');
+  }
+  if (el('openBtn')) el('openBtn').style.display = 'block';
 }
 
 function showATSBanner(ats) {
@@ -243,22 +309,7 @@ async function handleExtract() {
 
       currentJobData = response.data;
       if (mode !== 'auto') currentJobData.type = mode;
-
-      if (currentJobData.type === 'profile') {
-        displayContactData(currentJobData);
-        if (el('saveBtn')) { el('saveBtn').style.display = 'block'; el('saveBtn').querySelector('span').textContent = '💾 Save Contact'; }
-        if (el('importResumeBtn')) el('importResumeBtn').style.display = 'block';
-        setStatus('Profile extracted!', 'success');
-      } else if (currentJobData.type === 'company') {
-        displayCompanyData(currentJobData);
-        if (el('saveBtn')) { el('saveBtn').style.display = 'block'; el('saveBtn').querySelector('span').textContent = '💾 Save Company'; }
-        setStatus('Company extracted!', 'success');
-      } else {
-        displayJobData(currentJobData);
-        if (el('saveBtn')) { el('saveBtn').style.display = 'block'; el('saveBtn').querySelector('span').textContent = '💾 Save Job'; }
-        setStatus('Job extracted!', 'success');
-      }
-      if (el('openBtn')) el('openBtn').style.display = 'block';
+      _renderExtractedData(currentJobData);
     });
   } catch (err) {
     extractBtn.disabled = false;
