@@ -178,8 +178,8 @@ export function MeetingCalendar({ meetings, onSelectMeeting, onNewMeeting }: Mee
                                     row: "grid grid-cols-7 w-full mt-2",
                                     cell: "w-full p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
                                     day: "w-full h-full aspect-square p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-md transition-all flex items-center justify-center",
-                                    day_selected: "bg-[hsl(173,58%,39%)] text-primary-foreground hover:bg-[hsl(173,58%,39%)] hover:text-primary-foreground focus:bg-[hsl(173,58%,39%)] focus:text-primary-foreground shadow-md scale-100",
-                                    day_today: "bg-muted text-foreground font-semibold aria-selected:bg-[hsl(173,58%,39%)] aria-selected:text-primary-foreground",
+                                    day_selected: "bg-[#6366F1] text-white hover:bg-[#4F46E5] hover:text-white focus:bg-[#6366F1] focus:text-white shadow-md",
+                                    day_today: "bg-muted text-foreground font-semibold aria-selected:bg-[#6366F1] aria-selected:text-white",
                                     day_outside: "text-muted-foreground opacity-50",
                                 }}
                                 components={{
@@ -189,7 +189,7 @@ export function MeetingCalendar({ meetings, onSelectMeeting, onNewMeeting }: Mee
                                             <div className="relative w-full h-full flex items-center justify-center">
                                                 <span className="z-10 text-xs">{date.getDate()}</span>
                                                 {hasMeeting && (
-                                                    <div className="absolute bottom-1 h-1 w-1 rounded-full bg-[hsl(173,58%,39%)]" />
+                                                    <div className="absolute bottom-1 h-1 w-1 rounded-full bg-[#6366F1]" />
                                                 )}
                                             </div>
                                         );
@@ -204,7 +204,7 @@ export function MeetingCalendar({ meetings, onSelectMeeting, onNewMeeting }: Mee
                                 You have <span className="font-bold text-foreground">{currentMonthMeetings.length}</span> meetings this month.
                                 <br />
                                 <span
-                                    className="font-bold text-[hsl(173,58%,39%)] cursor-pointer hover:underline"
+                                    className="font-bold text-primary cursor-pointer hover:underline"
                                     onClick={() => setView('upcoming')}
                                 >
                                     {upcomingCount} upcoming
