@@ -51,20 +51,20 @@ export function JobTable({
   const isIndeterminate = selectedJobs.length > 0 && selectedJobs.length < jobs.length;
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-      "Bookmarked": "outline",
-      "Applying": "secondary",
-      "Applied": "default",
-      "Interviewing": "default",
-      "Negotiating": "secondary",
-      "Accepted": "default",
-      "Rejected": "destructive"
+    const styles: Record<string, string> = {
+      "Bookmarked": "bg-indigo-950 text-indigo-200 border border-indigo-800",
+      "Applying": "bg-blue-950 text-blue-200 border border-blue-800",
+      "Applied": "bg-emerald-950 text-emerald-200 border border-emerald-800",
+      "Interviewing": "bg-amber-950 text-amber-200 border border-amber-800",
+      "Negotiating": "bg-orange-950 text-orange-200 border border-orange-800",
+      "Accepted": "bg-green-950 text-green-200 border border-green-800",
+      "Rejected": "bg-red-950 text-red-300 border border-red-900",
     };
 
     return (
-      <Badge variant={variants[status] || "outline"} className="whitespace-nowrap">
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${styles[status] || "bg-muted text-muted-foreground border border-border"}`}>
         {status}
-      </Badge>
+      </span>
     );
   };
 

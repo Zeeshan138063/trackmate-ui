@@ -62,6 +62,7 @@ export function DreamCompanyCard({ company, onClick }: DreamCompanyCardProps) {
                         <CompanyLogo
                             src={company.logo_url}
                             alt={company.name}
+                            websiteUrl={company.website_url}
                             className="h-10 w-10 shrink-0"
                         />
                         <CardTitle className="text-lg font-semibold truncate">

@@ -162,22 +162,22 @@ export default function Connections() {
             {followUps.length > 0 && (
                 <div className="space-y-4">
                     {isOverdue && (
-                        <Alert variant="destructive" className="bg-red-50 border-red-200 animate-pulse">
-                            <AlertCircle className="h-4 w-4 text-red-600" />
-                            <AlertTitle className="text-red-800 font-bold flex items-center gap-2">
+                        <Alert variant="destructive" className="bg-[#1C0A0A] border-l-4 border-l-red-500 border-red-900/50 animate-pulse">
+                            <AlertCircle className="h-4 w-4 text-red-400" />
+                            <AlertTitle className="text-[#FCA5A5] font-bold flex items-center gap-2">
                                 OVERDUE ITEMS
-                                <Badge variant="destructive" className="ml-2">
+                                <Badge className="ml-2 bg-red-500 text-white border-0">
                                     {overdue.length} Missed
                                 </Badge>
                             </AlertTitle>
-                            <AlertDescription className="text-red-700 mt-2">
+                            <AlertDescription className="text-red-300/80 mt-2">
                                 <div className="grid gap-2 mt-2">
                                     {overdue.slice(0, 3).map(fu => (
-                                        <div key={fu.id} className="flex items-center justify-between text-sm bg-white/60 p-2 rounded border border-red-100 font-semibold">
+                                        <div key={fu.id} className="flex items-center justify-between text-sm bg-red-950/60 p-2 rounded border border-red-900/50 font-semibold">
                                             <span>
                                                 {contacts.find(c => c.id === fu.contact_id)?.name || 'Unknown Contact'}
                                             </span>
-                                            <span className="flex items-center gap-1">
+                                            <span className="flex items-center gap-1 text-red-300">
                                                 <Clock className="h-3 w-3" />
                                                 {format(new Date(fu.due_date), 'MMM d, h:mm a')}
                                             </span>
@@ -189,22 +189,22 @@ export default function Connections() {
                     )}
 
                     {dueToday.length > 0 && (
-                        <Alert className="bg-amber-50 border-amber-200">
-                            <CalendarClock className="h-4 w-4 text-amber-600" />
-                            <AlertTitle className="text-amber-800 font-medium flex items-center gap-2">
+                        <Alert className="bg-[#1C1200] border-l-4 border-l-amber-500 border-amber-900/50">
+                            <CalendarClock className="h-4 w-4 text-amber-400" />
+                            <AlertTitle className="text-amber-200 font-medium flex items-center gap-2">
                                 Due Later Today
-                                <Badge variant="secondary" className="bg-amber-100 text-amber-700 hover:bg-amber-200">
+                                <Badge className="bg-amber-500 text-white border-0">
                                     {dueToday.length} Due
                                 </Badge>
                             </AlertTitle>
-                            <AlertDescription className="text-amber-700 mt-2">
+                            <AlertDescription className="text-amber-300/70 mt-2">
                                 <div className="grid gap-2 mt-2">
                                     {dueToday.slice(0, 3).map(fu => (
-                                        <div key={fu.id} className="flex items-center justify-between text-sm bg-white/50 p-2 rounded">
-                                            <span className="font-medium">
+                                        <div key={fu.id} className="flex items-center justify-between text-sm bg-amber-950/60 p-2 rounded">
+                                            <span className="font-medium text-amber-200">
                                                 {contacts.find(c => c.id === fu.contact_id)?.name || 'Unknown Contact'}
                                             </span>
-                                            <span className="text-amber-600/80">
+                                            <span className="text-amber-400/80">
                                                 {format(new Date(fu.due_date), 'h:mm a')} - {fu.type}
                                             </span>
                                         </div>
