@@ -284,7 +284,7 @@ export function ResumeImporter({ onImport }: ResumeImporterProps) {
                     Import Resume / LinkedIn
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="w-[calc(100%-1rem)] max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Import Profile</DialogTitle>
                     <DialogDescription>
@@ -294,9 +294,9 @@ export function ResumeImporter({ onImport }: ResumeImporterProps) {
 
                 <Tabs defaultValue="file" value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="file">File Upload</TabsTrigger>
-                        <TabsTrigger value="linkedin">LinkedIn</TabsTrigger>
-                        <TabsTrigger value="reactive">Reactive Resume</TabsTrigger>
+                        <TabsTrigger value="file" className="text-xs sm:text-sm">File Upload</TabsTrigger>
+                        <TabsTrigger value="linkedin" className="text-xs sm:text-sm">LinkedIn</TabsTrigger>
+                        <TabsTrigger value="reactive" className="text-xs sm:text-sm truncate">Reactive Resume</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="file" className="space-y-4 py-4">
