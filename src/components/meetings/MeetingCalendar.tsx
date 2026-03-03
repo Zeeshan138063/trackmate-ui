@@ -152,7 +152,7 @@ export function MeetingCalendar({ meetings, onSelectMeeting, onNewMeeting }: Mee
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-full">
             {/* Left Column: Calendar Navigation */}
             <div className="md:col-span-6 lg:col-span-5 h-full">
-                <div className="rounded-xl border bg-card text-card-foreground shadow-sm h-full flex flex-col">
+                <div className="rounded-xl border dark:border-[#2D3148] bg-card dark:bg-[#141828] text-card-foreground h-full flex flex-col">
                     <div className="p-4 border-b bg-muted/10">
                         <h3 className="font-semibold flex items-center gap-2">
                             <CalendarDays className="h-4 w-4 text-primary" />
@@ -160,7 +160,7 @@ export function MeetingCalendar({ meetings, onSelectMeeting, onNewMeeting }: Mee
                         </h3>
                     </div>
                     <div className="p-4 space-y-4 flex-1">
-                        <div className="rounded-md border bg-background/50 overflow-hidden">
+                        <div className="rounded-md border dark:border-[#2D3148] dark:bg-[#141828] overflow-hidden">
                             <Calendar
                                 mode="single"
                                 selected={selectedDate}
@@ -198,7 +198,7 @@ export function MeetingCalendar({ meetings, onSelectMeeting, onNewMeeting }: Mee
                             />
                         </div>
 
-                        <div className="bg-card/50 p-4 rounded-xl border flex flex-col gap-1 shadow-sm">
+                        <div className="bg-muted/30 dark:bg-[#0F1424] p-4 rounded-xl border dark:border-[#2D3148] flex flex-col gap-1">
                             <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Overview</div>
                             <p className="text-sm text-foreground/90 leading-relaxed font-medium">
                                 You have <span className="font-bold text-foreground">{currentMonthMeetings.length}</span> meetings this month.
@@ -212,7 +212,7 @@ export function MeetingCalendar({ meetings, onSelectMeeting, onNewMeeting }: Mee
                             </p>
                         </div>
 
-                        <div className="bg-card/50 p-2 rounded-xl border flex flex-col gap-1 shadow-sm">
+                        <div className="bg-muted/30 dark:bg-[#0F1424] p-2 rounded-xl border dark:border-[#2D3148] flex flex-col gap-1">
                             <div className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Interviews</div>
                             <div className="flex flex-col gap-1">
                                 <Button

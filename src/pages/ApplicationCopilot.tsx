@@ -216,15 +216,18 @@ export default function ApplicationCopilot() {
     return (
         <div className="h-[calc(100vh-4rem)] flex flex-col bg-background/50">
 
-            {/* Header */}
-            <header className="px-6 py-4 border-b bg-white dark:bg-slate-950 flex items-center justify-between shadow-sm shrink-0">
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-indigo-200 shadow-md">
-                        <Bot className="h-6 w-6 text-white" />
+            {/* Page Header — full-width, dark treatment */}
+            <header className="px-6 py-4 border-b bg-white dark:bg-[#0A0E1A] dark:border-[#2D3148] flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-500/20">
+                        <span className="text-white font-mono font-bold text-lg leading-none">✦</span>
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold text-slate-900 dark:text-white">Application Copilot</h1>
-                        <p className="text-xs text-muted-foreground font-medium">
+                        <h1 className="text-[28px] font-extrabold tracking-tight text-slate-900 dark:text-white leading-none">
+                            Application Copilot
+                            <span className="ml-2 text-sm font-semibold text-[#818CF8] align-middle">✦ AI</span>
+                        </h1>
+                        <p className="text-xs text-[#64748B] mt-0.5 font-medium">
                             JOB {selectedIndex + 1} OF {queue.length} • {currentJob.status.toUpperCase()} QUEUE
                         </p>
                     </div>

@@ -80,7 +80,7 @@ export function CareerGoalSection() {
   }
 
   return (
-    <Card>
+    <Card className="border-l-[3px] border-l-indigo-500 dark:bg-[#141828] dark:border-[#2D3148]">
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <div className="flex items-center space-x-2">
           <Target className="h-5 w-5 text-primary" />

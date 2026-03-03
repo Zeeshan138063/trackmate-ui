@@ -12,8 +12,38 @@ import { User, Bell, Shield, CreditCard, Download, Trash2, Sparkles, Link } from
 import { AIHelper } from "@/utils/ai-helper";
 import { PROVIDERS, AIProviderId } from "@/utils/ai-providers/registry";
 import { IntegrationsSettings } from "@/components/Settings/IntegrationsSettings";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Settings() {
+  const { user } = useAuth();
+  const [profileFirstName, setProfileFirstName] = useState("John");
+  const [profileLastName, setProfileLastName] = useState("Doe");
+  const [profileEmail, setProfileEmail] = useState("");
+
+  // Derive initials from profile
+  const avatarInitials = `${profileFirstName.charAt(0)}${profileLastName.charAt(0)}`.toUpperCase() || "?";
+
+  // Fetch profile from Supabase
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("full_name, email")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.full_name) {
+          const parts = data.full_name.trim().split(/\s+/);
+          setProfileFirstName(parts[0] || "John");
+          setProfileLastName(parts.slice(1).join(" ") || "Doe");
+        }
+        if (data?.email || user.email) {
+          setProfileEmail(data?.email || user.email || "");
+        }
+      });
+  }, [user]);
+
   const [notifications, setNotifications] = useState({
     email: true,
     push: false,
@@ -131,7 +161,9 @@ export default function Settings() {
               <div className="flex items-center space-x-4">
                 <Avatar className="h-20 w-20">
                   <AvatarImage src="/placeholder-avatar.jpg" />
-                  <AvatarFallback>JD</AvatarFallback>
+                  <AvatarFallback className="bg-indigo-600 text-white text-xl font-bold">
+                    {avatarInitials}
+                  </AvatarFallback>
                 </Avatar>
                 <div>
                   <Button variant="outline">Change Photo</Button>
@@ -144,17 +176,17 @@ export default function Settings() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" defaultValue="John" />
+                  <Input id="firstName" value={profileFirstName} onChange={e => setProfileFirstName(e.target.value)} />
                 </div>
                 <div>
                   <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" defaultValue="Doe" />
+                  <Input id="lastName" value={profileLastName} onChange={e => setProfileLastName(e.target.value)} />
                 </div>
               </div>
 
               <div>
                 <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" defaultValue="john.doe@email.com" />
+                <Input id="email" type="email" value={profileEmail} onChange={e => setProfileEmail(e.target.value)} />
               </div>
 
               <div>

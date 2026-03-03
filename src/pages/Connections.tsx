@@ -162,7 +162,7 @@ export default function Connections() {
             {followUps.length > 0 && (
                 <div className="space-y-4">
                     {isOverdue && (
-                        <Alert variant="destructive" className="bg-[#1C0A0A] border-l-4 border-l-red-500 border-red-900/50 animate-pulse">
+                        <Alert variant="destructive" className="dark:bg-[#1C0A0A] border-l-4 border-l-red-500 dark:border-red-900/50 animate-pulse">
                             <AlertCircle className="h-4 w-4 text-red-400" />
                             <AlertTitle className="text-[#FCA5A5] font-bold flex items-center gap-2">
                                 OVERDUE ITEMS
@@ -189,7 +189,7 @@ export default function Connections() {
                     )}
 
                     {dueToday.length > 0 && (
-                        <Alert className="bg-[#1C1200] border-l-4 border-l-amber-500 border-amber-900/50">
+                        <Alert className="dark:bg-[#1C1200] border-l-4 border-l-amber-500 dark:border-amber-900/50">
                             <CalendarClock className="h-4 w-4 text-amber-400" />
                             <AlertTitle className="text-amber-200 font-medium flex items-center gap-2">
                                 Due Later Today
