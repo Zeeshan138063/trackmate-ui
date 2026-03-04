@@ -284,7 +284,7 @@ export function ResumeImporter({ onImport }: ResumeImporterProps) {
                     Import Resume / LinkedIn
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="w-[calc(100%-1rem)] max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Import Profile</DialogTitle>
                     <DialogDescription>
@@ -294,9 +294,9 @@ export function ResumeImporter({ onImport }: ResumeImporterProps) {
 
                 <Tabs defaultValue="file" value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="file">File Upload</TabsTrigger>
-                        <TabsTrigger value="linkedin">LinkedIn</TabsTrigger>
-                        <TabsTrigger value="reactive">Reactive Resume</TabsTrigger>
+                        <TabsTrigger value="file" className="text-xs sm:text-sm">File Upload</TabsTrigger>
+                        <TabsTrigger value="linkedin" className="text-xs sm:text-sm">LinkedIn</TabsTrigger>
+                        <TabsTrigger value="reactive" className="text-xs sm:text-sm truncate">Reactive Resume</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="file" className="space-y-4 py-4">
@@ -310,7 +310,7 @@ export function ResumeImporter({ onImport }: ResumeImporterProps) {
                         />
 
                         {file && (
-                            <div className="flex items-center gap-3 text-sm text-green-700 bg-green-50/50 p-3 rounded-lg border border-green-100 animate-in fade-in slide-in-from-top-2">
+                            <div className="flex items-center gap-3 text-sm text-green-700 dark:text-green-400 bg-green-50/50 dark:bg-green-950/30 p-3 rounded-lg border border-green-100 dark:border-green-900/50 animate-in fade-in slide-in-from-top-2">
                                 <FileText className="h-5 w-5 text-green-600" />
                                 <div className="flex flex-col overflow-hidden">
                                     <span className="font-medium truncate">{file.name}</span>
@@ -320,7 +320,7 @@ export function ResumeImporter({ onImport }: ResumeImporterProps) {
                             </div>
                         )}
 
-                        <div className="bg-blue-50 text-blue-800 text-xs p-3 rounded-md border border-blue-200 flex gap-2 items-start">
+                        <div className="bg-blue-50 dark:bg-indigo-950/50 text-blue-800 dark:text-indigo-300 text-xs p-3 rounded-md border border-blue-200 dark:border-indigo-800/50 flex gap-2 items-start">
                             <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                             <p>
                                 <strong>Note:</strong> Standard resume layouts work best. Always review imported data.
@@ -344,7 +344,7 @@ export function ResumeImporter({ onImport }: ResumeImporterProps) {
                     </TabsContent>
 
                     <TabsContent value="linkedin" className="space-y-4 py-4">
-                        <div className="flex flex-col items-center justify-center text-center p-6 border-2 border-dashed rounded-lg bg-slate-50">
+                        <div className="flex flex-col items-center justify-center text-center p-6 border-2 border-dashed rounded-lg bg-slate-50 dark:bg-muted/10">
                             <div className="bg-blue-100 p-3 rounded-full mb-4">
                                 <Linkedin className="h-8 w-8 text-blue-600" />
                             </div>
@@ -352,7 +352,7 @@ export function ResumeImporter({ onImport }: ResumeImporterProps) {
                             <p className="text-sm text-muted-foreground mb-4">
                                 To import a LinkedIn profile, please navigate to the profile page on LinkedIn, open the JobOS Extension, and click <strong>"Import to Resume"</strong>.
                             </p>
-                            <div className="text-xs text-slate-500 bg-white p-2 rounded border">
+                            <div className="text-xs text-slate-500 dark:text-slate-400 bg-muted/30 dark:bg-muted/20 p-2 rounded border">
                                 <strong>Why?</strong> LinkedIn blocks direct URL importing. The extension securely captures the data from your browser session.
                             </div>
                         </div>
@@ -360,7 +360,7 @@ export function ResumeImporter({ onImport }: ResumeImporterProps) {
 
                     <TabsContent value="reactive" className="space-y-4 py-4">
                         <div className="space-y-4">
-                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
+                            <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 rounded-lg p-4 flex gap-3">
                                 <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
                                 <div className="text-sm text-amber-900">
                                     <p className="font-semibold">Import from Reactive Resume</p>

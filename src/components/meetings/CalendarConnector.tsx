@@ -244,16 +244,16 @@ const CalendarConnector = ({ userId }: { userId: string }) => {
 
             <div className="flex flex-col gap-2">
                 <UIButton
-                    variant="outline"
-                    className="w-full justify-start gap-3"
+                    variant="ghost"
+                    className="w-full justify-start gap-3 dark:bg-[#1E2238] dark:hover:bg-[#252B45] dark:border dark:border-[#2D3148] dark:text-white"
                     onClick={() => toast({ title: "Coming Soon", description: "Calendar connecting feature coming soon." })}
                 >
                     <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
                     Connect Google Calendar
                 </UIButton>
                 <UIButton
-                    variant="outline"
-                    className="w-full justify-start gap-3"
+                    variant="ghost"
+                    className="w-full justify-start gap-3 dark:bg-[#1E2238] dark:hover:bg-[#252B45] dark:border dark:border-[#2D3148] dark:text-white"
                     onClick={() => toast({ title: "Coming Soon", description: "Calendar connecting feature coming soon." })}
                 >
                     <img src="https://www.microsoft.com/favicon.ico" className="w-4 h-4" alt="Microsoft" />

@@ -46,7 +46,7 @@ const MeetingHub = () => {
     };
 
     return (
-        <div className="container mx-auto py-6 space-y-8 max-w-7xl">
+        <div className="container mx-auto py-6 space-y-8 max-w-7xl dark:bg-[#0A0E1A] min-h-screen">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
@@ -99,7 +99,7 @@ const MeetingHub = () => {
                     {/* Availability Widget */}
                     <div className="space-y-2">
                         <h3 className="text-sm font-medium text-muted-foreground px-1 uppercase tracking-wider">Settings</h3>
-                        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+                        <div className="rounded-xl border dark:border-[#2D3148] bg-card dark:bg-[#141828] overflow-hidden">
                             <div className="p-4 border-b bg-muted/10 flex items-center justify-between">
                                 <h4 className="font-semibold flex items-center gap-2">
                                     <Clock className="h-4 w-4 text-primary" />
@@ -121,7 +121,7 @@ const MeetingHub = () => {
 
                     {/* Sync Widget */}
                     <div className="space-y-2">
-                        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+                        <div className="rounded-xl border dark:border-[#2D3148] bg-card dark:bg-[#141828] overflow-hidden">
                             <div className="p-4 border-b bg-muted/10">
                                 <h4 className="font-semibold flex items-center gap-2">
                                     <Share2 className="h-4 w-4 text-primary" />

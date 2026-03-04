@@ -145,7 +145,7 @@ export function PostGenerator() {
                     </div>
 
                     <button
-                        className="w-full h-11 bg-[#6366F1] hover:bg-[#4F46E5] disabled:bg-[#C7D2FE] disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                        className="w-full h-11 bg-[#6366F1] hover:bg-[#4F46E5] disabled:bg-[#312E81] disabled:text-[#A5B4FC] disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
                         onClick={handleGenerate}
                         disabled={loading || !topic}
                     >

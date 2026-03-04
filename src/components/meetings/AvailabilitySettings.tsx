@@ -121,7 +121,7 @@ const AvailabilitySettings = ({ userId, embedded = false }: { userId: string, em
 
             <div className="space-y-2">
                 {preferences.map((pref, index) => (
-                    <div key={index} className="flex flex-col gap-2 p-2 rounded-lg border bg-muted/30">
+                    <div key={index} className="flex flex-col gap-2 p-2 rounded-lg border dark:border-[#2D3148] bg-muted/30 dark:bg-[#0F1424]">
                         <div className="flex items-center justify-between">
                             <SelectDay
                                 value={pref.day_of_week}
@@ -136,14 +136,14 @@ const AvailabilitySettings = ({ userId, embedded = false }: { userId: string, em
                                 type="time"
                                 value={pref.start_time}
                                 onChange={(e) => handleUpdatePreference(index, { start_time: e.target.value })}
-                                className="h-7 text-xs px-1 bg-background border-input"
+                                className="h-7 text-xs px-1 bg-background dark:bg-[#0A0E1A] dark:border-[#2D3148] dark:text-white"
                             />
                             <span className="text-muted-foreground text-[10px]">to</span>
                             <Input
                                 type="time"
                                 value={pref.end_time}
                                 onChange={(e) => handleUpdatePreference(index, { end_time: e.target.value })}
-                                className="h-7 text-xs px-1 bg-background border-input"
+                                className="h-7 text-xs px-1 bg-background dark:bg-[#0A0E1A] dark:border-[#2D3148] dark:text-white"
                             />
                             <Switch
                                 checked={pref.is_active}
@@ -160,7 +160,7 @@ const AvailabilitySettings = ({ userId, embedded = false }: { userId: string, em
             <Button className="w-full h-8 text-xs" onClick={handleSave}>Save Changes</Button>
 
             {embedded && (
-                <Button size="sm" variant="outline" className="w-full text-xs h-8 border-dashed" onClick={handleAddPreference}>
+                <Button size="sm" variant="outline" className="w-full text-xs h-8 border-dashed dark:border-[#2D3148] dark:text-[#94A3B8] dark:hover:bg-[#1E2238] dark:hover:text-white" onClick={handleAddPreference}>
                     <Plus className="h-3 w-3 mr-1" /> Add Slot
                 </Button>
             )}

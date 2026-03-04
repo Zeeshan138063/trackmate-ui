@@ -138,7 +138,7 @@ export default function Index() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen dark:bg-[#0A0E1A]">
       <div className="container mx-auto px-4 py-8 space-y-8">
 
         {/* ── Personalized Greeting ── */}
@@ -252,7 +252,7 @@ export default function Index() {
           <p className="text-sm text-[#64748B] mb-8">One OS. Every job.</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            <Card className="hover:shadow-md transition-all cursor-pointer hover:border-primary/30" onClick={() => navigate("/trackers")}>
+            <Card className="hover:shadow-md transition-all cursor-pointer hover:border-primary/30 dark:bg-[#141828] dark:border-[#2D3148]" onClick={() => navigate("/trackers")}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Layers className="h-5 w-5 text-primary" />
@@ -265,7 +265,7 @@ export default function Index() {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-all cursor-pointer hover:border-primary/30" onClick={() => navigate("/resume")}>
+            <Card className="hover:shadow-md transition-all cursor-pointer hover:border-primary/30 dark:bg-[#141828] dark:border-[#2D3148]" onClick={() => navigate("/resume")}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <FileText className="h-5 w-5 text-primary" />
@@ -278,7 +278,7 @@ export default function Index() {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-all cursor-pointer hover:border-primary/30" onClick={() => navigate("/application-copilot")}>
+            <Card className="hover:shadow-md transition-all cursor-pointer hover:border-primary/30 dark:bg-[#141828] dark:border-[#2D3148]" onClick={() => navigate("/application-copilot")}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Sparkles className="h-5 w-5 text-primary" />
@@ -291,7 +291,7 @@ export default function Index() {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-all cursor-pointer hover:border-primary/30" onClick={() => navigate("/job-search")}>
+            <Card className="hover:shadow-md transition-all cursor-pointer hover:border-primary/30 dark:bg-[#141828] dark:border-[#2D3148]" onClick={() => navigate("/job-search")}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Compass className="h-5 w-5 text-primary" />
