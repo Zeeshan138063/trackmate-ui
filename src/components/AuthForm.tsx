@@ -233,8 +233,16 @@ export function AuthForm({ onSuccess, initialMode = 'signin' }: AuthFormProps) {
         </div>
 
         {/* Footer */}
-        <div className="mt-12 text-slate-400/60 text-[10px]">
-          © {new Date().getFullYear()} JobOS · jobos.dev · Built for job seekers worldwide.
+        <div className="mt-12 text-slate-400/60 text-[10px] flex flex-col items-center gap-1.5">
+          <span>© {new Date().getFullYear()} JobOS · jobos.dev · Built for job seekers worldwide.</span>
+          <a
+            href="https://jobos.dev/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-slate-400/80 hover:text-slate-200 underline underline-offset-2 transition-colors"
+          >
+            Privacy Policy
+          </a>
         </div>
       </div>
     </div>

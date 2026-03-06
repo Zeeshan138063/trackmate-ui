@@ -316,6 +316,20 @@ export default function Index() {
         </div>
 
       </div>
+
+      {/* Footer */}
+      <footer className="border-t border-border/40 py-4 mt-8 text-center text-xs text-muted-foreground">
+        <a
+          href="https://jobos.dev/privacy"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-foreground hover:underline transition-colors"
+        >
+          Privacy Policy
+        </a>
+        <span className="mx-2">·</span>
+        <span>© {new Date().getFullYear()} JobOS</span>
+      </footer>
     </div>
   );
 }
