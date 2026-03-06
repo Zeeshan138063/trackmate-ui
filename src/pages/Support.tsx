@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { MessageCircle, BookOpen, Video, Mail, Phone, Clock } from "lucide-react";
+import { MessageCircle, BookOpen, Video, Mail, Globe, Clock, Shield, HelpCircle } from "lucide-react";
 
 const faqItems = [
   {
@@ -166,17 +166,31 @@ export default function Support() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex items-center space-x-3">
-              <Mail className="h-5 w-5 text-muted-foreground" />
+              <Shield className="h-5 w-5 text-muted-foreground" />
               <div>
-                <p className="font-medium">Email Support</p>
-                <p className="text-muted-foreground">support@tealhq.com</p>
+                <p className="font-medium">Privacy / Data Requests</p>
+                <a href="mailto:privacy@jobos.dev" className="text-muted-foreground hover:text-foreground transition-colors">privacy@jobos.dev</a>
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <Phone className="h-5 w-5 text-muted-foreground" />
+              <Mail className="h-5 w-5 text-muted-foreground" />
               <div>
-                <p className="font-medium">Phone Support</p>
-                <p className="text-muted-foreground">1-800-TEAL-HQ</p>
+                <p className="font-medium">General Inquiries</p>
+                <a href="mailto:hello@jobos.dev" className="text-muted-foreground hover:text-foreground transition-colors">hello@jobos.dev</a>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <HelpCircle className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="font-medium">Support</p>
+                <a href="mailto:support@jobos.dev" className="text-muted-foreground hover:text-foreground transition-colors">support@jobos.dev</a>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Globe className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="font-medium">Website</p>
+                <a href="https://jobos.dev" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">jobos.dev</a>
               </div>
             </div>
           </div>
