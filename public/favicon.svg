@@ -1,15 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <!-- Dark rounded square background -->
-  <rect width="32" height="32" rx="7" fill="#4F46E5"/>
-  <!-- JO monogram in white mono style -->
-  <text
-    x="16"
-    y="22"
-    font-family="'JetBrains Mono', 'Courier New', monospace"
-    font-weight="700"
-    font-size="13"
-    fill="white"
-    text-anchor="middle"
-    letter-spacing="-0.5"
-  >JO</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="32" height="32" fill="none">
+  <defs>
+    <linearGradient id="hexFill" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4F5FE8"/>
+      <stop offset="100%" stop-color="#3340C8"/>
+    </linearGradient>
+    <linearGradient id="hexBorder" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#9BABFF"/>
+      <stop offset="100%" stop-color="#6678FF"/>
+    </linearGradient>
+    <linearGradient id="arrG" x1="48" y1="18" x2="48" y2="78" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E0E8FF"/>
+    </linearGradient>
+    <clipPath id="clip">
+      <rect x="38" y="18" width="20" height="58"/>
+    </clipPath>
+  </defs>
+  <!-- Bright indigo hex background -->
+  <polygon points="48,4 86,26 86,70 48,92 10,70 10,26" fill="url(#hexFill)"/>
+  <!-- Bright border stroke -->
+  <polygon points="48,4 86,26 86,70 48,92 10,70 10,26" fill="none" stroke="url(#hexBorder)" stroke-width="5" stroke-linejoin="round"/>
+  <!-- Arrow shaft -->
+  <rect x="43" y="40" width="10" height="32" rx="3" fill="url(#arrG)" clip-path="url(#clip)"/>
+  <!-- Arrow head -->
+  <polygon points="48,18 63,43 33,43" fill="url(#arrG)"/>
 </svg>
