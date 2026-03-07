@@ -27,6 +27,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { ModeToggle } from "@/components/mode-toggle";
+import { JobOsLogo } from "@/components/JobOsLogo";
+import { useTheme } from "next-themes";
 
 const navigationItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -52,6 +54,8 @@ export function AppSidebar() {
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
   const navigate = useNavigate();
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
 
   const isRouteActive = (url: string) => {
     if (currentPath === url) return true;
@@ -70,17 +74,8 @@ export function AppSidebar() {
         {/* Logo / Wordmark */}
         <div className="p-4 border-b">
           <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center space-x-2.5 cursor-pointer hover:opacity-80 transition-opacity">
-              {/* JO Logomark — white JO on solid indigo for strong visual weight */}
-              <div className="relative w-8 h-8 bg-[#4F46E5] rounded-lg flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/30">
-                <span className="font-mono font-bold text-[11px] text-white tracking-tight leading-none">JO</span>
-              </div>
-              {/* WordMark: "Job" in sans-serif, "OS" in JetBrains Mono — lighter indigo in dark for contrast */}
-              {!collapsed && (
-                <span className="font-semibold text-lg whitespace-nowrap leading-none">
-                  Job<span className="font-mono font-bold text-[#6366F1] dark:text-[#818CF8]">OS</span>
-                </span>
-              )}
+            <Link to="/" className="cursor-pointer hover:opacity-80 transition-opacity">
+              <JobOsLogo variant="sidebar" showWordmark={!collapsed} lightMode={isLight} />
             </Link>
             {!collapsed && <SidebarTrigger />}
           </div>
@@ -90,6 +85,7 @@ export function AppSidebar() {
             </div>
           )}
         </div>
+
 
         {/* Main Navigation */}
         <SidebarGroup className="flex-1">
