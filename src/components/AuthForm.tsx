@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +22,8 @@ export function AuthForm({ onSuccess, initialMode = 'signin' }: AuthFormProps) {
   const isResetPassword = mode === 'reset_password';
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileInstance>(null);
   const { toast } = useToast();
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -49,8 +52,15 @@ export function AuthForm({ onSuccess, initialMode = 'signin' }: AuthFormProps) {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/auth` }
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth`,
+            captchaToken: captchaToken || undefined
+          }
         });
+
+        turnstileRef.current?.reset();
+        setCaptchaToken(null);
+
         if (error) throw error;
         toast({ title: "Check your email", description: "Confirmation link sent." });
       } else {
@@ -169,9 +179,21 @@ export function AuthForm({ onSuccess, initialMode = 'signin' }: AuthFormProps) {
             )}
           </div>
 
+          {isSignUp && (
+            <div className="flex justify-center py-2">
+              <Turnstile
+                ref={turnstileRef}
+                siteKey={import.meta.env.VITE_TURNSTILE_SITEKEY || "1x00000000000000000000AA"}
+                onSuccess={(token) => setCaptchaToken(token)}
+                onExpire={() => setCaptchaToken(null)}
+                onError={() => setCaptchaToken(null)}
+              />
+            </div>
+          )}
+
           <Button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || (isSignUp && !captchaToken)}
             className="w-full h-12 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-bold text-lg shadow-lg shadow-indigo-500/25 rounded-lg transition-all transform hover:scale-[1.02]"
           >
             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
