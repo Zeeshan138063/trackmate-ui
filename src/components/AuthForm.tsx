@@ -235,14 +235,25 @@ export function AuthForm({ onSuccess, initialMode = 'signin' }: AuthFormProps) {
         {/* Footer */}
         <div className="mt-12 text-slate-400/60 text-[10px] flex flex-col items-center gap-1.5">
           <span>© {new Date().getFullYear()} JobOS · jobos.dev · Built for job seekers worldwide.</span>
-          <a
-            href="https://jobos.dev/privacy"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-slate-400/80 hover:text-slate-200 underline underline-offset-2 transition-colors"
-          >
-            Privacy Policy
-          </a>
+          <div className="flex items-center gap-2">
+            <a
+              href="https://jobos.dev/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-400/80 hover:text-slate-200 underline underline-offset-2 transition-colors"
+            >
+              Privacy Policy
+            </a>
+            <span className="text-slate-400/40">|</span>
+            <a
+              href="https://jobos.dev/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-400/80 hover:text-slate-200 underline underline-offset-2 transition-colors"
+            >
+              Terms of Service
+            </a>
+          </div>
         </div>
       </div>
     </div>
