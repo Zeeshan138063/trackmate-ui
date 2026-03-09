@@ -67,8 +67,15 @@ export function AuthForm({ onSuccess, initialMode = 'signin' }: AuthFormProps) {
         // Sign In Logic
         const { error } = await supabase.auth.signInWithPassword({
           email,
-          password
+          password,
+          options: {
+            captchaToken: captchaToken || undefined
+          }
         });
+
+        turnstileRef.current?.reset();
+        setCaptchaToken(null);
+
         if (error) throw error;
         toast({ title: "Welcome back!", description: "Successfully signed in." });
         onSuccess();
@@ -179,7 +186,7 @@ export function AuthForm({ onSuccess, initialMode = 'signin' }: AuthFormProps) {
             )}
           </div>
 
-          {isSignUp && (
+          {(isSignUp || mode === 'signin') && (
             <div className="flex justify-center py-2">
               <Turnstile
                 ref={turnstileRef}
@@ -193,7 +200,7 @@ export function AuthForm({ onSuccess, initialMode = 'signin' }: AuthFormProps) {
 
           <Button
             type="submit"
-            disabled={isLoading || (isSignUp && !captchaToken)}
+            disabled={isLoading || ((isSignUp || mode === 'signin') && !captchaToken)}
             className="w-full h-12 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-bold text-lg shadow-lg shadow-indigo-500/25 rounded-lg transition-all transform hover:scale-[1.02]"
           >
             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
