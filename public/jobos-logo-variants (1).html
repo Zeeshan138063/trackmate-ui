@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>JobOS — Logo Variants</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:  #080E1E;
+  --blue1: #6678FF;
+  --blue2: #4A5AE8;
+  --card:  #0D1526;
+  --border: rgba(102,120,255,0.12);
+}
+
+html, body {
+  min-height: 100%;
+  background: var(--navy);
+  font-family: 'DM Sans', sans-serif;
+  color: #fff;
+}
+
+/* ── PAGE LAYOUT ──────────────────────────────────────────── */
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 56px 32px 80px;
+}
+
+.page-header {
+  margin-bottom: 56px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 28px;
+}
+.page-header h1 {
+  font-size: 13px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 4px;
+  color: var(--blue1);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.page-header p {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+/* ── SECTION ──────────────────────────────────────────────── */
+.section { margin-bottom: 64px; }
+.section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: rgba(102,120,255,0.5);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+/* ── VARIANT ROW ──────────────────────────────────────────── */
+.variant-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+/* ── CARD ─────────────────────────────────────────────────── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 24px 20px;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s ease;
+}
+.card:hover { border-color: rgba(102,120,255,0.35); }
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(102,120,255,0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.card-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+}
+.card-size {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: rgba(102,120,255,0.5);
+  letter-spacing: 1px;
+}
+
+/* ── LOGO COMPONENT (reusable at any scale) ─────────────────
+   Each variant is a self-contained .logo-unit scoped by a
+   CSS custom property --scale applied to font-size & SVG.
+   All animation keyframes are shared globally.
+───────────────────────────────────────────────────────────── */
+
+/* SHARED KEYFRAMES */
+@keyframes drawHex    { to { stroke-dashoffset: 0; } }
+@keyframes shaftGrow  { 0% { opacity:1; transform:scaleY(0); } 100% { opacity:1; transform:scaleY(1); } }
+@keyframes headPop    { 0% { opacity:1; transform:scale(0) rotate(-10deg); } 100% { opacity:1; transform:scale(1) rotate(0deg); } }
+@keyframes arrowShoot {
+  0%   { opacity:1; transform:translateY(0px)   scale(1);    }
+  55%  { opacity:1; transform:translateY(-10px) scale(1.08); }
+  80%  { opacity:0; transform:translateY(-22px) scale(0.9);  }
+  81%  { opacity:0; transform:translateY(14px)  scale(0.85); }
+  100% { opacity:1; transform:translateY(0px)   scale(1);    }
+}
+@keyframes glowPulse  {
+  0%   { opacity:0;    r:14; }
+  40%  { opacity:0.35; r:20; }
+  70%  { opacity:0;    r:26; }
+  100% { opacity:0;    r:14; }
+}
+@keyframes revealIcon { from { opacity:0; transform:scale(0.6) translateY(8px); } to { opacity:1; transform:scale(1) translateY(0); } }
+@keyframes revealWord { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+@keyframes revealTag  { from { opacity:0; } to { opacity:1; } }
+@keyframes expandLine { from { width:0; opacity:0; } to { opacity:1; } }
+@keyframes iconFloat  { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-5px); } }
+@keyframes pulseGlow  { 0%,100% { transform:scale(1); opacity:0.7; } 50% { transform:scale(1.15); opacity:1; } }
+@keyframes spin        { to { transform:rotate(360deg); } }
+@keyframes spinReverse { to { transform:rotate(-360deg); } }
+@keyframes floatDot    {
+  0%   { opacity:0;   transform:translateY(0)     scale(0.5); }
+  20%  { opacity:0.7; }
+  80%  { opacity:0.4; }
+  100% { opacity:0;   transform:translateY(-60px) scale(0.2); }
+}
+
+/* ── THE SVG ICON (shared, scaled via width/height attr) ──── */
+.logo-icon-svg .hex-stroke {
+  stroke-dasharray: 240;
+  stroke-dashoffset: 240;
+  animation: drawHex 1.2s cubic-bezier(0.4,0,0.2,1) 0.2s forwards;
+}
+.logo-icon-svg .arrow-shaft {
+  opacity: 0;
+  transform-origin: 48px 72px;
+  transform: scaleY(0);
+  animation:
+    shaftGrow  0.4s cubic-bezier(0.22,1,0.36,1) 1.1s forwards,
+    arrowShoot 2.4s ease-in-out 2.2s infinite;
+}
+.logo-icon-svg .arrow-head {
+  opacity: 0;
+  transform-origin: 48px 38px;
+  transform: scale(0);
+  animation:
+    headPop    0.35s cubic-bezier(0.34,1.56,0.64,1) 1.45s forwards,
+    arrowShoot 2.4s  ease-in-out 2.2s infinite;
+}
+.logo-icon-svg .arrow-glow {
+  opacity: 0;
+  animation: glowPulse 2.4s ease-in-out 2.2s infinite;
+}
+
+/* ── VARIANT 1: HERO (512px icon, full wordmark) ───────────── */
+.v-hero .logo-wrap {
+  position: relative;
+  width: 340px; height: 340px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.v-hero .glow-bg {
+  position: absolute;
+  width: 260px; height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(102,120,255,0.2) 0%, transparent 70%);
+  animation: pulseGlow 3.5s ease-in-out infinite;
+}
+.v-hero .orbit-ring {
+  position: absolute;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(102,120,255,0.22);
+  animation: spin 12s linear infinite;
+}
+.v-hero .orbit-ring::before {
+  content: ''; position: absolute;
+  top: -4px; left: 50%; transform: translateX(-50%);
+  width: 8px; height: 8px;
+  background: var(--blue1); border-radius: 50%;
+  box-shadow: 0 0 10px 3px var(--blue1);
+}
+.v-hero .orbit-ring-2 {
+  position: absolute;
+  width: 236px; height: 236px;
+  border-radius: 50%;
+  border: 1px solid rgba(102,120,255,0.10);
+  animation: spinReverse 20s linear infinite;
+}
+.v-hero .orbit-ring-2::after {
+  content: ''; position: absolute;
+  bottom: -3px; left: 50%; transform: translateX(-50%);
+  width: 6px; height: 6px;
+  background: rgba(102,120,255,0.6); border-radius: 50%;
+  box-shadow: 0 0 6px 2px rgba(102,120,255,0.5);
+}
+.v-hero .icon-wrap {
+  position: relative; z-index: 2;
+  margin-bottom: 20px;
+  opacity: 0;
+  animation: revealIcon 0.9s cubic-bezier(0.22,1,0.36,1) 0.3s forwards;
+}
+.v-hero .logo-icon-svg {
+  width: 80px; height: 80px;
+  filter: drop-shadow(0 0 16px rgba(102,120,255,0.6));
+  animation: iconFloat 4s ease-in-out infinite 1.2s;
+}
+.v-hero .wordmark {
+  position: relative; z-index: 2;
+  display: flex; align-items: baseline;
+  opacity: 0;
+  animation: revealWord 0.8s cubic-bezier(0.22,1,0.36,1) 0.75s forwards;
+}
+.v-hero .word-job { font-size: 44px; font-weight: 700; color: #fff; letter-spacing: -2px; line-height: 1; }
+.v-hero .word-os  { font-size: 44px; font-weight: 700; letter-spacing: -2px; line-height: 1;
+  background: linear-gradient(135deg, var(--blue1), var(--blue2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.v-hero .divider {
+  position: relative; z-index: 2;
+  width: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--blue1), transparent);
+  margin: 10px auto 0; opacity: 0;
+  animation: expandLine 0.9s cubic-bezier(0.22,1,0.36,1) 0.9s forwards;
+  animation-fill-mode: forwards;
+}
+.v-hero .divider { animation: expandDivider 0.9s cubic-bezier(0.22,1,0.36,1) 0.9s forwards; }
+@keyframes expandDivider { from { width:0; opacity:0; } to { width:140px; opacity:1; } }
+
+.v-hero .tagline {
+  position: relative; z-index: 2;
+  margin-top: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; font-weight: 500;
+  letter-spacing: 3.5px;
+  color: rgba(102,120,255,0.7);
+  text-transform: uppercase;
+  opacity: 0;
+  animation: revealTag 0.8s ease 1.1s forwards;
+}
+
+/* ── VARIANT 2: LARGE (navbar / splash) ───────────────────── */
+.v-large .logo-unit {
+  display: flex; align-items: center; gap: 14px;
+  opacity: 0;
+  animation: revealWord 0.8s cubic-bezier(0.22,1,0.36,1) 0.3s forwards;
+}
+.v-large .logo-icon-svg {
+  width: 56px; height: 56px;
+  filter: drop-shadow(0 0 12px rgba(102,120,255,0.55));
+  animation: iconFloat 4s ease-in-out infinite 1.2s;
+}
+.v-large .word-job { font-size: 38px; font-weight: 700; color: #fff; letter-spacing: -1.5px; }
+.v-large .word-os  { font-size: 38px; font-weight: 700; letter-spacing: -1.5px;
+  background: linear-gradient(135deg, var(--blue1), var(--blue2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+/* ── VARIANT 3: MEDIUM (standard header) ──────────────────── */
+.v-medium .logo-unit {
+  display: flex; align-items: center; gap: 10px;
+  opacity: 0;
+  animation: revealWord 0.8s cubic-bezier(0.22,1,0.36,1) 0.3s forwards;
+}
+.v-medium .logo-icon-svg {
+  width: 36px; height: 36px;
+  filter: drop-shadow(0 0 8px rgba(102,120,255,0.5));
+  animation: iconFloat 4s ease-in-out infinite 1.2s;
+}
+.v-medium .word-job { font-size: 24px; font-weight: 700; color: #fff; letter-spacing: -0.8px; }
+.v-medium .word-os  { font-size: 24px; font-weight: 700; letter-spacing: -0.8px;
+  background: linear-gradient(135deg, var(--blue1), var(--blue2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+/* ── VARIANT 4: SMALL (sidebar, compact nav) ──────────────── */
+.v-small .logo-unit {
+  display: flex; align-items: center; gap: 7px;
+  opacity: 0;
+  animation: revealWord 0.8s cubic-bezier(0.22,1,0.36,1) 0.3s forwards;
+}
+.v-small .logo-icon-svg {
+  width: 22px; height: 22px;
+  filter: drop-shadow(0 0 5px rgba(102,120,255,0.5));
+  animation: iconFloat 4s ease-in-out infinite 1.2s;
+}
+.v-small .word-job { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -0.4px; }
+.v-small .word-os  { font-size: 15px; font-weight: 700; letter-spacing: -0.4px;
+  background: linear-gradient(135deg, var(--blue1), var(--blue2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+/* ── VARIANT 5: ICON ONLY — large ─────────────────────────── */
+.v-icon-lg .logo-icon-svg {
+  width: 72px; height: 72px;
+  filter: drop-shadow(0 0 14px rgba(102,120,255,0.6));
+  animation: iconFloat 4s ease-in-out infinite 1.2s;
+  opacity: 0;
+  animation: revealIcon 0.9s cubic-bezier(0.22,1,0.36,1) 0.3s forwards,
+             iconFloat 4s ease-in-out infinite 1.4s;
+}
+
+/* ── VARIANT 6: ICON ONLY — medium ────────────────────────── */
+.v-icon-md .logo-icon-svg {
+  width: 44px; height: 44px;
+  filter: drop-shadow(0 0 10px rgba(102,120,255,0.55));
+  opacity: 0;
+  animation: revealIcon 0.9s cubic-bezier(0.22,1,0.36,1) 0.3s forwards,
+             iconFloat 4s ease-in-out infinite 1.4s;
+}
+
+/* ── VARIANT 7: FAVICON (16×16 equivalent) ─────────────────── */
+.v-favicon .logo-icon-svg {
+  width: 20px; height: 20px;
+  filter: drop-shadow(0 0 4px rgba(102,120,255,0.7));
+  opacity: 0;
+  animation: revealIcon 0.9s cubic-bezier(0.22,1,0.36,1) 0.3s forwards;
+  image-rendering: crisp-edges;
+}
+
+/* ── VARIANT 8: LIGHT BACKGROUND ──────────────────────────── */
+.v-light {
+  background: #F0F2FF !important;
+  border-color: rgba(102,120,255,0.15) !important;
+}
+.v-light .logo-unit {
+  display: flex; align-items: center; gap: 10px;
+  opacity: 0;
+  animation: revealWord 0.8s cubic-bezier(0.22,1,0.36,1) 0.3s forwards;
+}
+.v-light .logo-icon-svg {
+  width: 36px; height: 36px;
+  filter: drop-shadow(0 0 8px rgba(102,120,255,0.35));
+  animation: iconFloat 4s ease-in-out infinite 1.2s;
+}
+.v-light .word-job { font-size: 24px; font-weight: 700; color: #0E1525; letter-spacing: -0.8px; }
+.v-light .word-os  { font-size: 24px; font-weight: 700; letter-spacing: -0.8px;
+  background: linear-gradient(135deg, var(--blue1), var(--blue2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+/* ── VARIANT 9: WORDMARK ONLY (no icon) ────────────────────── */
+.v-wordmark .logo-unit {
+  display: flex; align-items: baseline; gap: 0;
+  opacity: 0;
+  animation: revealWord 0.8s cubic-bezier(0.22,1,0.36,1) 0.3s forwards;
+}
+.v-wordmark .word-job { font-size: 28px; font-weight: 700; color: #fff; letter-spacing: -1px; }
+.v-wordmark .word-os  { font-size: 28px; font-weight: 700; letter-spacing: -1px;
+  background: linear-gradient(135deg, var(--blue1), var(--blue2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+/* ── GRID FOR ICON-ONLY ROW ───────────────────────────────── */
+.icon-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+/* ── DIVIDER LINE BETWEEN SECTIONS ───────────────────────── */
+.rule {
+  width: 100%;
+  height: 1px;
+  background: var(--border);
+  margin: 48px 0;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <h1>JobOS · Brand Assets</h1>
+    <p>Logo Variants &amp; Size System</p>
+  </div>
+
+  <!-- ── SECTION 1: HERO ──────────────────────────────────── -->
+  <div class="section">
+    <div class="section-label">01 — Hero / Splash Screen</div>
+    <div class="variant-row">
+      <div class="card" style="width:380px; height:380px;">
+        <div class="v-hero">
+          <div class="logo-wrap">
+            <div class="glow-bg"></div>
+            <div class="orbit-ring"></div>
+            <div class="orbit-ring-2"></div>
+            <div class="icon-wrap">
+              <svg class="logo-icon-svg" viewBox="0 0 96 96" fill="none">
+                <defs>
+                  <linearGradient id="hexG1" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#7B8FFF"/><stop offset="100%" stop-color="#4A5AE8"/>
+                  </linearGradient>
+                  <linearGradient id="arrG1" x1="48" y1="18" x2="48" y2="78" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#C8D2FF"/>
+                  </linearGradient>
+                  <clipPath id="sc1"><rect x="38" y="20" width="20" height="55"/></clipPath>
+                </defs>
+                <polygon class="hex-stroke" points="48,6 84,27 84,69 48,90 12,69 12,27" fill="none" stroke="url(#hexG1)" stroke-width="4" stroke-linejoin="round"/>
+                <circle class="arrow-glow" cx="48" cy="48" r="14" fill="url(#arrG1)" filter="blur(6px)"/>
+                <rect class="arrow-shaft" x="43" y="42" width="10" height="30" rx="3" fill="url(#arrG1)" clip-path="url(#sc1)"/>
+                <polygon class="arrow-head" points="48,20 62,44 34,44" fill="url(#arrG1)"/>
+              </svg>
+            </div>
+            <div class="wordmark">
+              <span class="word-job">Job</span><span class="word-os">OS</span>
+            </div>
+            <div class="divider"></div>
+            <div class="tagline">Career Operating System</div>
+          </div>
+        </div>
+        <div class="card-label">Hero</div>
+        <div class="card-size">512 × 512</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+
+  <!-- ── SECTION 2: HORIZONTAL LOCKUP SIZES ────────────────── -->
+  <div class="section">
+    <div class="section-label">02 — Horizontal Lockup · Icon + Wordmark</div>
+    <div class="variant-row" style="align-items: center;">
+
+      <!-- Large -->
+      <div class="card" style="min-width:220px;">
+        <div class="v-large">
+          <div class="logo-unit">
+            <svg class="logo-icon-svg" viewBox="0 0 96 96" fill="none">
+              <defs>
+                <linearGradient id="hexG2" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#7B8FFF"/><stop offset="100%" stop-color="#4A5AE8"/>
+                </linearGradient>
+                <linearGradient id="arrG2" x1="48" y1="18" x2="48" y2="78" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#C8D2FF"/>
+                </linearGradient>
+                <clipPath id="sc2"><rect x="38" y="20" width="20" height="55"/></clipPath>
+              </defs>
+              <polygon class="hex-stroke" points="48,6 84,27 84,69 48,90 12,69 12,27" fill="none" stroke="url(#hexG2)" stroke-width="4" stroke-linejoin="round"/>
+              <circle class="arrow-glow" cx="48" cy="48" r="14" fill="url(#arrG2)" filter="blur(6px)"/>
+              <rect class="arrow-shaft" x="43" y="42" width="10" height="30" rx="3" fill="url(#arrG2)" clip-path="url(#sc2)"/>
+              <polygon class="arrow-head" points="48,20 62,44 34,44" fill="url(#arrG2)"/>
+            </svg>
+            <span class="word-job">Job</span><span class="word-os">OS</span>
+          </div>
+        </div>
+        <div class="card-label">Large</div>
+        <div class="card-size">56px icon · 38px type</div>
+      </div>
+
+      <!-- Medium -->
+      <div class="card" style="min-width:180px;">
+        <div class="v-medium">
+          <div class="logo-unit">
+            <svg class="logo-icon-svg" viewBox="0 0 96 96" fill="none">
+              <defs>
+                <linearGradient id="hexG3" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#7B8FFF"/><stop offset="100%" stop-color="#4A5AE8"/>
+                </linearGradient>
+                <linearGradient id="arrG3" x1="48" y1="18" x2="48" y2="78" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#C8D2FF"/>
+                </linearGradient>
+                <clipPath id="sc3"><rect x="38" y="20" width="20" height="55"/></clipPath>
+              </defs>
+              <polygon class="hex-stroke" points="48,6 84,27 84,69 48,90 12,69 12,27" fill="none" stroke="url(#hexG3)" stroke-width="4" stroke-linejoin="round"/>
+              <circle class="arrow-glow" cx="48" cy="48" r="14" fill="url(#arrG3)" filter="blur(6px)"/>
+              <rect class="arrow-shaft" x="43" y="42" width="10" height="30" rx="3" fill="url(#arrG3)" clip-path="url(#sc3)"/>
+              <polygon class="arrow-head" points="48,20 62,44 34,44" fill="url(#arrG3)"/>
+            </svg>
+            <span class="word-job">Job</span><span class="word-os">OS</span>
+          </div>
+        </div>
+        <div class="card-label">Medium</div>
+        <div class="card-size">36px icon · 24px type</div>
+      </div>
+
+      <!-- Small -->
+      <div class="card" style="min-width:140px;">
+        <div class="v-small">
+          <div class="logo-unit">
+            <svg class="logo-icon-svg" viewBox="0 0 96 96" fill="none">
+              <defs>
+                <linearGradient id="hexG4" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#7B8FFF"/><stop offset="100%" stop-color="#4A5AE8"/>
+                </linearGradient>
+                <linearGradient id="arrG4" x1="48" y1="18" x2="48" y2="78" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#C8D2FF"/>
+                </linearGradient>
+                <clipPath id="sc4"><rect x="38" y="20" width="20" height="55"/></clipPath>
+              </defs>
+              <polygon class="hex-stroke" points="48,6 84,27 84,69 48,90 12,69 12,27" fill="none" stroke="url(#hexG4)" stroke-width="4" stroke-linejoin="round"/>
+              <circle class="arrow-glow" cx="48" cy="48" r="14" fill="url(#arrG4)" filter="blur(6px)"/>
+              <rect class="arrow-shaft" x="43" y="42" width="10" height="30" rx="3" fill="url(#arrG4)" clip-path="url(#sc4)"/>
+              <polygon class="arrow-head" points="48,20 62,44 34,44" fill="url(#arrG4)"/>
+            </svg>
+            <span class="word-job">Job</span><span class="word-os">OS</span>
+          </div>
+        </div>
+        <div class="card-label">Small</div>
+        <div class="card-size">22px icon · 15px type</div>
+      </div>
+
+      <!-- Wordmark only -->
+      <div class="card" style="min-width:140px;">
+        <div class="v-wordmark">
+          <div class="logo-unit">
+            <span class="word-job">Job</span><span class="word-os">OS</span>
+          </div>
+        </div>
+        <div class="card-label">Wordmark Only</div>
+        <div class="card-size">28px · no icon</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="rule"></div>
+
+  <!-- ── SECTION 3: ICON ONLY ──────────────────────────────── -->
+  <div class="section">
+    <div class="section-label">03 — Icon Only · App Icon / Avatar</div>
+    <div class="icon-row">
+
+      <!-- Icon XL -->
+      <div class="card" style="width:160px; height:160px;">
+        <div class="v-icon-lg">
+          <svg class="logo-icon-svg" viewBox="0 0 96 96" fill="none">
+            <defs>
+              <linearGradient id="hexG5" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#7B8FFF"/><stop offset="100%" stop-color="#4A5AE8"/>
+              </linearGradient>
+              <linearGradient id="arrG5" x1="48" y1="18" x2="48" y2="78" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#C8D2FF"/>
+              </linearGradient>
+              <clipPath id="sc5"><rect x="38" y="20" width="20" height="55"/></clipPath>
+            </defs>
+            <polygon class="hex-stroke" points="48,6 84,27 84,69 48,90 12,69 12,27" fill="none" stroke="url(#hexG5)" stroke-width="4" stroke-linejoin="round"/>
+            <circle class="arrow-glow" cx="48" cy="48" r="14" fill="url(#arrG5)" filter="blur(6px)"/>
+            <rect class="arrow-shaft" x="43" y="42" width="10" height="30" rx="3" fill="url(#arrG5)" clip-path="url(#sc5)"/>
+            <polygon class="arrow-head" points="48,20 62,44 34,44" fill="url(#arrG5)"/>
+          </svg>
+        </div>
+        <div class="card-label">XL Icon</div>
+        <div class="card-size">72px</div>
+      </div>
+
+      <!-- Icon MD -->
+      <div class="card" style="width:120px; height:120px;">
+        <div class="v-icon-md">
+          <svg class="logo-icon-svg" viewBox="0 0 96 96" fill="none">
+            <defs>
+              <linearGradient id="hexG6" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#7B8FFF"/><stop offset="100%" stop-color="#4A5AE8"/>
+              </linearGradient>
+              <linearGradient id="arrG6" x1="48" y1="18" x2="48" y2="78" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#C8D2FF"/>
+              </linearGradient>
+              <clipPath id="sc6"><rect x="38" y="20" width="20" height="55"/></clipPath>
+            </defs>
+            <polygon class="hex-stroke" points="48,6 84,27 84,69 48,90 12,69 12,27" fill="none" stroke="url(#hexG6)" stroke-width="4" stroke-linejoin="round"/>
+            <circle class="arrow-glow" cx="48" cy="48" r="14" fill="url(#arrG6)" filter="blur(6px)"/>
+            <rect class="arrow-shaft" x="43" y="42" width="10" height="30" rx="3" fill="url(#arrG6)" clip-path="url(#sc6)"/>
+            <polygon class="arrow-head" points="48,20 62,44 34,44" fill="url(#arrG6)"/>
+          </svg>
+        </div>
+        <div class="card-label">MD Icon</div>
+        <div class="card-size">44px</div>
+      </div>
+
+      <!-- Favicon -->
+      <div class="card" style="width:80px; height:80px;">
+        <div class="v-favicon">
+          <svg class="logo-icon-svg" viewBox="0 0 96 96" fill="none">
+            <defs>
+              <linearGradient id="hexG7" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#7B8FFF"/><stop offset="100%" stop-color="#4A5AE8"/>
+              </linearGradient>
+              <linearGradient id="arrG7" x1="48" y1="18" x2="48" y2="78" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#C8D2FF"/>
+              </linearGradient>
+              <clipPath id="sc7"><rect x="38" y="20" width="20" height="55"/></clipPath>
+            </defs>
+            <polygon class="hex-stroke" points="48,6 84,27 84,69 48,90 12,69 12,27" fill="none" stroke="url(#hexG7)" stroke-width="4" stroke-linejoin="round"/>
+            <circle class="arrow-glow" cx="48" cy="48" r="14" fill="url(#arrG7)" filter="blur(6px)"/>
+            <rect class="arrow-shaft" x="43" y="42" width="10" height="30" rx="3" fill="url(#arrG7)" clip-path="url(#sc7)"/>
+            <polygon class="arrow-head" points="48,20 62,44 34,44" fill="url(#arrG7)"/>
+          </svg>
+        </div>
+        <div class="card-label">Favicon</div>
+        <div class="card-size">20px</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="rule"></div>
+
+  <!-- ── SECTION 4: LIGHT BG VARIANT ──────────────────────── -->
+  <div class="section">
+    <div class="section-label">04 — Light Background Variant</div>
+    <div class="variant-row">
+      <div class="card v-light" style="min-width:200px;">
+        <div class="v-light">
+          <div class="logo-unit">
+            <!-- Light variant SVG: arrow uses dark blue fills, not white -->
+            <svg class="logo-icon-svg" viewBox="0 0 96 96" fill="none">
+              <defs>
+                <!-- Hex stroke stays blue — visible on both bg -->
+                <linearGradient id="hexG8" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#6678FF"/><stop offset="100%" stop-color="#3A4AD8"/>
+                </linearGradient>
+                <!-- Arrow: dark navy → blue so it pops on the light bg -->
+                <linearGradient id="arrG8" x1="48" y1="18" x2="48" y2="78" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#1A2560"/><stop offset="100%" stop-color="#3A4AD8"/>
+                </linearGradient>
+                <!-- Glow for light bg: use a soft blue tint -->
+                <linearGradient id="glowG8" x1="48" y1="18" x2="48" y2="78" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#6678FF"/><stop offset="100%" stop-color="#4A5AE8"/>
+                </linearGradient>
+                <clipPath id="sc8"><rect x="38" y="20" width="20" height="55"/></clipPath>
+              </defs>
+              <polygon class="hex-stroke" points="48,6 84,27 84,69 48,90 12,69 12,27" fill="none" stroke="url(#hexG8)" stroke-width="4" stroke-linejoin="round"/>
+              <circle class="arrow-glow" cx="48" cy="48" r="14" fill="url(#glowG8)" filter="blur(6px)" opacity="0.3"/>
+              <rect class="arrow-shaft" x="43" y="42" width="10" height="30" rx="3" fill="url(#arrG8)" clip-path="url(#sc8)"/>
+              <polygon class="arrow-head" points="48,20 62,44 34,44" fill="url(#arrG8)"/>
+            </svg>
+            <span class="word-job">Job</span><span class="word-os">OS</span>
+          </div>
+        </div>
+        <div class="card-label" style="color:rgba(14,21,37,0.4);">Light BG</div>
+        <div class="card-size" style="color:rgba(102,120,255,0.6);">Dark arrow on light</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
