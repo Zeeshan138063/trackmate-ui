@@ -37,7 +37,7 @@ export function AuthForm({ onSuccess, initialMode = 'signin' }: AuthFormProps) {
           password: password,
         }, {
           captchaToken: captchaToken || undefined
-        });
+        } as any);
 
         turnstileRef.current?.reset();
         setCaptchaToken(null);
