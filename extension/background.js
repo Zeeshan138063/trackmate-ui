@@ -218,6 +218,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
+  // Portal login
+  if (request.action === 'portalLogin') {
+    const session = request.session;
+    if (session) {
+      chrome.storage.local.set({ [AUTH_STORAGE_KEY]: session }, () => {
+        console.log('[JobOS] Session sync via portal login.');
+        sendResponse({ success: true });
+      });
+    } else {
+      sendResponse({ success: false, error: 'No session data' });
+    }
+    return true;
+  }
+
   // Portal logout
   if (request.action === 'portalLogout') {
     chrome.storage.local.remove([AUTH_STORAGE_KEY], () => {

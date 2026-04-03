@@ -89,9 +89,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // ── Login ──
-  el('loginSubmitBtn')?.addEventListener('click', handleLogin);
-  el('loginEmail')?.addEventListener('keydown', e => { if (e.key === 'Enter') el('loginPassword')?.focus(); });
-  el('loginPassword')?.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+  el('loginTabBtn')?.addEventListener('click', () => {
+    chrome.tabs.create({ url: 'https://app.jobos.dev/auth' });
+  });
 
   // ── Logout ──
   el('logoutBtn')?.addEventListener('click', handleLogout);
@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ── Open JobOS ──
   el('openBtn')?.addEventListener('click', () => {
-    chrome.tabs.create({ url: el('careerPilotUrl').value || 'http://localhost:8080/trackers' });
+    chrome.tabs.create({ url: el('careerPilotUrl').value || 'https://app.jobos.dev/trackers' });
   });
 
   // ── Import to Resume ──
@@ -123,6 +123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // ────────────────────────────────────────────────────────────────
 // LOAD TAB STATE (instant display from background store)
+// Web App Login handled via Tab Redirect
 // ────────────────────────────────────────────────────────────────
 // Returns true only if data has at least one real field filled
 function _hasUsefulData(data) {
@@ -161,9 +162,6 @@ async function loadTabState(tab) {
   });
 }
 
-// ────────────────────────────────────────────────────────────────
-// AUTH
-// ────────────────────────────────────────────────────────────────
 function updateAuthUI(session) {
   const loggedIn = !!session;
   el('loginView')?.style  && (el('loginView').style.display   = loggedIn ? 'none'  : 'block');
@@ -171,27 +169,6 @@ function updateAuthUI(session) {
   el('userProfile')?.style && (el('userProfile').style.display = loggedIn ? 'flex'  : 'none');
   if (loggedIn && el('userEmail')) el('userEmail').textContent = session.user.email;
   if (loggedIn) syncSessionToTabs(session);
-}
-
-async function handleLogin() {
-  const email    = val('loginEmail');
-  const password = val('loginPassword');
-  if (!email || !password) { setStatus('Please enter email and password', 'error'); return; }
-
-  const btn = el('loginSubmitBtn');
-  btn.disabled = true;
-  btn.textContent = 'Logging in…';
-  setStatus('Signing in…', 'info');
-
-  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if (error) {
-    setStatus('Login failed: ' + error.message, 'error');
-    btn.disabled = false;
-    btn.textContent = 'Log In';
-  } else {
-    updateAuthUI(data.session);
-    setTimeout(() => el('extractBtn')?.click(), 300);
-  }
 }
 
 async function handleLogout() {
@@ -487,7 +464,7 @@ async function handleImportResume() {
   chrome.runtime.sendMessage({
     action:        'sendProfileToCareerPilot',
     data:          currentJobData,
-    careerPilotUrl: el('careerPilotUrl').value || 'http://localhost:8080',
+    careerPilotUrl: el('careerPilotUrl').value || 'https://app.jobos.dev',
   }, response => {
     btn.disabled = false;
     if (!response?.success) setStatus('Failed to open Resume Builder', 'error');
@@ -667,11 +644,11 @@ async function saveCompanyDirectly(data) {
 // SESSION SYNC TO CAREERPILOT TABS
 // ────────────────────────────────────────────────────────────────
 async function syncSessionToTabs(session) {
-  const cpUrl       = el('careerPilotUrl')?.value || 'http://localhost:8080';
+  const cpUrl       = el('careerPilotUrl')?.value || 'https://app.jobos.dev';
   const storageKey  = `sb-${SUPABASE_URL.split('//')[1].split('.')[0]}-auth-token`;
 
   let origin;
-  try { origin = new URL(cpUrl).origin; } catch (_) { origin = 'http://localhost:8080'; }
+  try { origin = new URL(cpUrl).origin; } catch (_) { origin = 'https://app.jobos.dev'; }
 
   const tabs = await chrome.tabs.query({ url: `${origin}/*` });
   for (const tab of tabs) {

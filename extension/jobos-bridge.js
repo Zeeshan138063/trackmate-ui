@@ -49,15 +49,38 @@ window.addEventListener('message', event => {
 });
 
 // ────────────────────────────────────────────────────────────────
-// Portal logout → notify extension to clear its session
+// Portal login/logout → notify extension to sync session
 // ────────────────────────────────────────────────────────────────
+function _checkSession() {
+  const sessionData = localStorage.getItem(AUTH_KEY);
+  if (sessionData) {
+    try {
+      const session = JSON.parse(sessionData);
+      console.log('[JobOS Bridge] Active portal session found — syncing.');
+      chrome.runtime.sendMessage({ action: 'portalLogin', session });
+    } catch (e) {
+      console.warn('[JobOS Bridge] Failed to parse session:', e);
+    }
+  }
+}
+
+// Check session on load
+setTimeout(_checkSession, 1000); 
+
 window.addEventListener('storage', event => {
-  if (event.key === AUTH_KEY && !event.newValue) {
-    console.log('[JobOS Bridge] Portal logout detected — clearing extension session.');
-    chrome.runtime.sendMessage({ action: 'portalLogout' }, () => {
-      // Ignore errors (extension may be in the middle of something)
-      void chrome.runtime.lastError;
-    });
+  if (event.key === AUTH_KEY) {
+    if (!event.newValue) {
+      console.log('[JobOS Bridge] Portal logout detected — clearing extension session.');
+      chrome.runtime.sendMessage({ action: 'portalLogout' });
+    } else {
+      try {
+        const session = JSON.parse(event.newValue);
+        console.log('[JobOS Bridge] Portal login/update detected — syncing.');
+        chrome.runtime.sendMessage({ action: 'portalLogin', session });
+      } catch (e) {
+        console.warn('[JobOS Bridge] Failed to parse session on storage event:', e);
+      }
+    }
   }
 });
 

@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>JobOS</title>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <style>
     *,
     *::before,
@@ -413,21 +414,19 @@
     </div>
 
     <!-- ── Login View ── -->
-    <div id="loginView" class="login-container" style="display:none">
-      <p style="text-align:center;color:#4b5563;font-size:13px;margin-bottom:4px;">
-        Log in to save jobs to JobOS
+    <div id="loginView" class="login-container" style="display:none; text-align:center; padding: 20px 10px;">
+      <h2 style="font-size: 20px; margin-bottom: 8px;">Welcome to JobOS</h2>
+      <p style="color:#4b5563; font-size:13px; margin-bottom: 24px;">
+        Please sign in on the web app to sync your session and start tracking jobs.
       </p>
-      <div class="field">
-        <label>Email</label>
-        <input type="email" id="loginEmail" class="input-field" placeholder="you@example.com" autocomplete="email">
-      </div>
-      <div class="field">
-        <label>Password</label>
-        <input type="password" id="loginPassword" class="input-field" placeholder="••••••••"
-          autocomplete="current-password">
-      </div>
-      <button id="loginSubmitBtn" class="btn-primary"><span>Log In</span></button>
-      <p class="hint">No account? <a href="http://localhost:5173/auth" target="_blank">Sign up here</a></p>
+      
+      <button id="loginTabBtn" class="btn-primary" style="height: 48px; font-size: 15px;">
+        <span>🚀 Sign in at JobOS</span>
+      </button>
+      
+      <p class="hint" style="margin-top: 16px;">
+        Don't have an account? <a href="https://app.jobos.dev/auth?mode=signup" target="_blank">Sign up here</a>
+      </p>
     </div>
 
     <!-- ── App View ── -->
@@ -532,8 +531,8 @@
       <!-- Settings -->
       <div class="settings">
         <label>JobOS URL</label>
-        <input type="text" id="careerPilotUrl" class="input-field" placeholder="https://jobos.dev/trackers"
-          value="http://localhost:8080/trackers">
+        <input type="text" id="careerPilotUrl" class="input-field" placeholder="https://app.jobos.dev/trackers"
+          value="https://app.jobos.dev/trackers">
         <div class="note">⚠️ Must be logged in to JobOS before saving.</div>
       </div>
 

@@ -50,7 +50,7 @@
         "https://jobs.smartrecruiters.com/*",
         "https://apply.workable.com/*",
         "https://*.taleo.net/*",
-        "https://jobos.dev/*",
+        "https://app.jobos.dev/*",
         "https://*/*",
         "http://localhost:*/*",
         "http://127.0.0.1:*/*"
@@ -65,11 +65,11 @@
         "http://localhost:*/*",
         "http://127.0.0.1:*/*",
         "https://job.zeeshare.com/*",
-        "https://jobos.dev/*",
+        "https://app.jobos.dev/*",
         "https://*/*"
       ],
       "js": [
-        "careerpilot-bridge.js"
+        "jobos-bridge.js"
       ],
       "run_at": "document_start"
     }

@@ -9,7 +9,10 @@ When asked to "Prepare for Store," I will automatically perform these steps:
 
 1.  **Permission Audit**: Check for JobOS store-safe permissions.
 2.  **Manifest Integrity**: Ensure `manifest_version` is 3 and name is "JobOS".
-3.  **Code Sanitization**: Use `./scripts/bundle.sh` to zip the extension.
+3.  **CAPTCHA Check**: 
+    - Verify `popup.js` has the production Turnstile SiteKey (not the 1x test key).
+    - Ensure `manifest.json` permits `https://challenges.cloudflare.com`.
+4.  **Code Sanitization**: Use `./scripts/bundle.sh` to zip the extension.
     - **Exclude**: `extension (Copy)` and all CareerPilot legacy references.
 4.  **Domain Match**: Verify all host permissions match `jobos.dev`.
 
