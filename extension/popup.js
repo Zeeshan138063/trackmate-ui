@@ -56,6 +56,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // ── Set default date to today ──
+  const today = new Date().toISOString().split('T')[0];
+  if (el('datePosted')) el('datePosted').value = today;
+
   // ── Save URL on change ──
   el('careerPilotUrl')?.addEventListener('change', () => {
     chrome.storage.local.set({ careerPilotUrl: el('careerPilotUrl').value });
@@ -97,7 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   el('logoutBtn')?.addEventListener('click', handleLogout);
 
   // ── Extract ──
-  el('extractBtn')?.addEventListener('click', handleExtract);
+  el('extractBtn')?.addEventListener('click', () => handleExtract(false));
 
   // ── Screenshot ──
   el('captureBtn')?.addEventListener('click', handleScreenshot);
@@ -132,6 +136,35 @@ function _hasUsefulData(data) {
 }
 
 async function loadTabState(tab) {
+  // Fetch tab state robustly on init
+  const fetchState = (isRetry = false) => {
+    chrome.runtime.sendMessage({ action: 'getTabState' }, response => {
+      const state = response?.state;
+      if (response?.success && state) {
+        updateAuthUI(state);
+        const data      = state.data;
+        const isStale   = (Date.now() - (state.updatedAt || 0)) > 30000;
+        const isGood    = _hasUsefulData(data);
+
+        if (state.ats || state.isApplyPage) {
+          currentATS = state.ats;
+          showATSBanner(state.ats);
+        }
+
+        if (data && !isStale && isGood) {
+          currentJobData = data;
+          _renderExtractedData(data);
+        } else if (state.url?.includes('linkedin.com/jobs/')) {
+          // Fresh extract if missing/stale on LinkedIn
+          handleExtract(true); // Pass true for isAuto
+        }
+      } else if (!isRetry) {
+        setTimeout(() => fetchState(true), 300);
+      }
+    });
+  };
+  fetchState();
+
   chrome.runtime.sendMessage({ action: 'getTabState' }, response => {
     if (!response?.success) {
       // No cached state yet — trigger a live extract
@@ -268,7 +301,7 @@ async function handleExtract() {
   const mode      = el('modeSelect')?.value === 'auto' ? detectedMode : (el('modeSelect')?.value || detectedMode);
   const extractBtn = el('extractBtn');
   extractBtn.disabled = true;
-  setStatus(`Extracting ${mode} data…`, 'info');
+  if (!isAuto) setStatus(`Extracting ${mode} data…`, 'info');
 
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -276,11 +309,11 @@ async function handleExtract() {
       extractBtn.disabled = false;
 
       if (chrome.runtime.lastError) {
-        setStatus('Could not access this page. Try refreshing.', 'error');
+        if (!isAuto) setStatus('Could not access this page. Try refreshing.', 'error');
         return;
       }
       if (!response?.success) {
-        setStatus('Extraction failed. Is this a job page?', 'error');
+        if (!isAuto) setStatus('Extraction failed. Is this a job page?', 'error');
         return;
       }
 
@@ -377,7 +410,9 @@ async function handleSave() {
 
     if (success) {
       setStatus('Saved successfully! ✓', 'success');
-      saveBtn.querySelector('span').textContent = '✓ Saved';
+      saveBtn.querySelector('span').textContent = '✅ Saved to JobOS';
+      saveBtn.style.background = '#10b981';
+      if (el('extractBtn')) el('extractBtn').classList.add('btn-secondary');
     } else {
       saveBtn.disabled = false;
     }
@@ -481,7 +516,9 @@ function displayJobData(data) {
   _setVal('location',    data.location    || '');
   _setVal('minSalary',   data.minSalary   || '');
   _setVal('maxSalary',   data.maxSalary   || '');
-  _setVal('datePosted',  data.datePosted  || '');
+  
+  const today = new Date().toISOString().split('T')[0];
+  _setVal('datePosted',  data.datePosted  || el('datePosted').value || today);
   _setVal('deadline',    data.deadline    || '');
   _setVal('description', data.description || '');
   if (el('captureBtn')) el('captureBtn').style.display = 'block';

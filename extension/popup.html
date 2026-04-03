@@ -214,9 +214,9 @@
 
     button {
       width: 100%;
-      padding: 10px 14px;
+      padding: 11px 14px;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
@@ -224,21 +224,34 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      transition: opacity 0.15s, transform 0.1s;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    button:hover:not(:disabled) {
+      filter: brightness(1.1);
+      transform: translateY(-1.5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     }
 
     button:active:not(:disabled) {
       transform: scale(0.98);
-    }
-
-    button:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
+      box-shadow: none;
     }
 
     .btn-primary {
-      background: #6366F1;
+      background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
       color: white;
+    }
+
+    /* ── Animations ── */
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .data-card {
+      animation: slideUpFade 0.4s ease-out forwards;
     }
 
     .btn-primary:hover:not(:disabled) {
@@ -396,7 +409,6 @@
           style="font-family:'Courier New',monospace;color:#818CF8;">OS</span></h1>
       <p id="headerSubtitle" style="font-size:11px;opacity:0.7;margin-top:2px;">AI Job Tracker & Autofill</p>
     </div>
-    <div class="header-right" id="appVersion">v--</div>
   </div>
 
   <!-- ATS Autofill Banner (shown when ATS form detected) -->
@@ -453,10 +465,8 @@
               placeholder="0"></div>
         </div>
         <div class="field-row">
-          <div class="field"><label>Date Posted</label><input type="text" id="datePosted" class="input-field"
-              placeholder="YYYY-MM-DD"></div>
-          <div class="field"><label>Deadline</label><input type="text" id="deadline" class="input-field"
-              placeholder="YYYY-MM-DD"></div>
+          <div class="field"><label>Date Posted</label><input type="date" id="datePosted" class="input-field"></div>
+          <div class="field"><label>Deadline</label><input type="date" id="deadline" class="input-field"></div>
         </div>
         <div class="field"><label>Description</label><textarea id="description" class="input-field"
             placeholder="Job description…"></textarea></div>
@@ -508,12 +518,11 @@
 
       <!-- ── Actions ── -->
       <div class="actions">
+        <button id="saveBtn" class="btn-primary" style="display:none; order: -1; background: linear-gradient(135deg, #10b981 0%, #059669 100%);"><span>💾 Save Job</span></button>
         <button id="extractBtn" class="btn-primary"> <span>✦ Extract Job Data</span></button>
         <button id="autofillBtn" class="btn-autofill" style="display:none"><span>⚡ Autofill This Form</span></button>
         <button id="captureBtn" class="btn-secondary"><span>📸 Capture Screenshot</span></button>
-        <button id="saveBtn" class="btn-primary" style="display:none"><span>💾 Save Job</span></button>
-        <button id="importResumeBtn" class="btn-import" style="display:none"><span>📄 Import to Resume
-            Builder</span></button>
+        <button id="importResumeBtn" class="btn-import" style="display:none"><span>📄 Import to Resume Builder</span></button>
         <button id="openBtn" class="btn-secondary" style="display:none"><span>🚀 Open JobOS</span></button>
       </div>
 
@@ -538,8 +547,8 @@
 
       <!-- Footer -->
       <div class="footer">
-        <span id="appVersion">v--</span>
-        <span class="badge-latest">✦ v3.0 Active</span>
+        <span>© 2026 JobOS</span>
+        <span class="badge-latest">✦ <span id="appVersion">v--</span> Active</span>
       </div>
 
     </div><!-- /appView -->
