@@ -8,7 +8,7 @@
 // Supabase Initialization
 // ────────────────────────────────────────────────────────────────
 const SUPABASE_URL = 'https://jdplobgtxzncwxhordah.supabase.co';
-const SUPABASE_PROJECT_REF = 'oevfiyocidpbeaycgnps';
+const SUPABASE_PROJECT_REF = 'jdplobgtxzncwxhordah';
 const AUTH_STORAGE_KEY     = `sb-${SUPABASE_PROJECT_REF}-auth-token`;
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkcGxvYmd0eHpuY3d4aG9yZGFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2MzcwMzksImV4cCI6MjA3MTIxMzAzOX0.ior862XnLyAtFwo-h2Umhj8tADMlv1dZOUwLCZWOV-c';
 
@@ -98,6 +98,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Check auth ──
   const { data: { session } } = await supabaseClient.auth.getSession();
   updateAuthUI(session);
+
+  // ── Reactive auth: listen for session changes ──
+  // onAuthStateChange is the SINGLE source of truth for UI updates.
+  supabaseClient.auth.onAuthStateChange((event, newSession) => {
+    console.log('[JobOS Popup] Auth state changed:', event);
+    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+      if (newSession) updateAuthUI(newSession);
+    } else if (event === 'SIGNED_OUT') {
+      updateAuthUI(null);
+    }
+  });
+
+  // Storage listener: when the bridge writes a new session, tell Supabase to reload it.
+  // This triggers onAuthStateChange above, which handles the UI update.
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local') return;
+    if (changes[AUTH_STORAGE_KEY]) {
+      if (!changes[AUTH_STORAGE_KEY].newValue) {
+        // Session removed — force sign out
+        supabaseClient.auth.signOut({ scope: 'local' }).catch(() => {});
+      } else {
+        // New session written by bridge — tell Supabase client to re-read from storage
+        supabaseClient.auth.getSession().then(({ data: { session: s } }) => {
+          if (s) updateAuthUI(s);
+        });
+      }
+    }
+  });
 
   // ── Detect mode from active tab URL + load cached state instantly ──
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -243,10 +271,10 @@ function updateAuthUI(session) {
   el('userProfile')?.style && (el('userProfile').style.display = loggedIn ? 'flex'  : 'none');
   if (loggedIn && session?.user?.email && el('userEmail')) {
       el('userEmail').textContent = session.user.email;
-      const loginNote = document.querySelector('.settings .note');
-      if (loginNote) loginNote.style.display = 'none';
       syncSessionToTabs(session);
-    }
+  } else if (!loggedIn && el('userEmail')) {
+      el('userEmail').textContent = '';
+  }
 }
 
 async function handleLogout() {

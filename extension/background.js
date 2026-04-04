@@ -5,7 +5,7 @@
 'use strict';
 
 const SUPABASE_PROJECT_REF = 'jdplobgtxzncwxhordah';
-const AUTH_STORAGE_KEY     = `sb-oevfiyocidpbeaycgnps-auth-token`; // Matches popup.js
+const AUTH_STORAGE_KEY     = `sb-${SUPABASE_PROJECT_REF}-auth-token`; // Matches popup.js
 const SUPABASE_URL         = 'https://jdplobgtxzncwxhordah.supabase.co';
 const SUPABASE_KEY         = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkcGxvYmd0eHpuY3d4aG9yZGFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2MzcwMzksImV4cCI6MjA3MTIxMzAzOX0.ior862XnLyAtFwo-h2Umhj8tADMlv1dZOUwLCZWOV-c';
 const DATA_TTL_MS          = 60 * 60 * 1000; // 1 hour
@@ -244,7 +244,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'portalLogin') {
     const session = request.session;
     if (session) {
-      chrome.storage.local.set({ [AUTH_STORAGE_KEY]: session }, () => {
+      // IMPORTANT: Supabase SDK's storage adapter expects values as JSON strings
+      // (like localStorage), not parsed objects. Stringify before storing.
+      const value = typeof session === 'string' ? session : JSON.stringify(session);
+      chrome.storage.local.set({ [AUTH_STORAGE_KEY]: value }, () => {
         console.log('[JobOS] Session sync via portal login.');
         sendResponse({ success: true });
       });
