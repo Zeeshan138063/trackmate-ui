@@ -12,6 +12,19 @@ const SUPABASE_PROJECT_REF = 'oevfiyocidpbeaycgnps';
 const AUTH_STORAGE_KEY     = `sb-${SUPABASE_PROJECT_REF}-auth-token`;
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkcGxvYmd0eHpuY3d4aG9yZGFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2MzcwMzksImV4cCI6MjA3MTIxMzAzOX0.ior862XnLyAtFwo-h2Umhj8tADMlv1dZOUwLCZWOV-c';
 
+// Safeguard for environments (like some SidePanel contexts) without WebSocket
+if (typeof globalThis.WebSocket === 'undefined') {
+  globalThis.WebSocket = class {
+    constructor() {}
+    send() {}
+    close() {}
+    addEventListener() {}
+    removeEventListener() {}
+  };
+}
+if (typeof window !== 'undefined' && typeof window.WebSocket === 'undefined') {
+  window.WebSocket = globalThis.WebSocket;
+}
 const chromeStorageAdapter = {
   getItem:    key        => new Promise(res => chrome.storage.local.get([key],     r => res(r[key] ?? null))),
   setItem:    (key, val) => new Promise(res => chrome.storage.local.set({ [key]: val }, res)),
@@ -46,6 +59,19 @@ const val = id => el(id)?.value || '';
 // DOM Ready
 // ────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  // ── Sidebar Mode Check ──
+  const params = new URLSearchParams(window.location.search);
+  const isSidebar = params.get('mode') === 'sidebar';
+  if (isSidebar) {
+    document.body.classList.add('sidebar-mode');
+    const closeBtn = document.getElementById('sidebarCloseBtn');
+    if (closeBtn) {
+      closeBtn.style.display = 'block';
+      closeBtn.addEventListener('click', () => {
+        window.parent.postMessage({ action: 'closeJobOsSidebar' }, '*');
+      });
+    }
+  }
 
   // ── Version label ──
   const manifest = chrome.runtime.getManifest();
@@ -440,6 +466,11 @@ async function handleSave() {
       saveBtn.querySelector('span').textContent = '✅ Saved to JobOS';
       saveBtn.style.background = '#10b981';
       if (el('extractBtn')) el('extractBtn').classList.add('btn-secondary');
+      
+      // Notify parent sidebar to update badge
+      if (tab?.id) {
+        chrome.tabs.sendMessage(tab.id, { action: 'jobSavedEvent' }).catch(() => {});
+      }
     } else {
       saveBtn.disabled = false;
     }

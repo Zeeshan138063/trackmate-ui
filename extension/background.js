@@ -5,8 +5,15 @@
 'use strict';
 
 const SUPABASE_PROJECT_REF = 'jdplobgtxzncwxhordah';
-const AUTH_STORAGE_KEY     = `sb-${SUPABASE_PROJECT_REF}-auth-token`;
+const AUTH_STORAGE_KEY     = `sb-oevfiyocidpbeaycgnps-auth-token`; // Matches popup.js
+const SUPABASE_URL         = 'https://jdplobgtxzncwxhordah.supabase.co';
+const SUPABASE_KEY         = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkcGxvYmd0eHpuY3d4aG9yZGFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2MzcwMzksImV4cCI6MjA3MTIxMzAzOX0.ior862XnLyAtFwo-h2Umhj8tADMlv1dZOUwLCZWOV-c';
 const DATA_TTL_MS          = 60 * 60 * 1000; // 1 hour
+
+// ── Native Side Panel Configuration ──
+if (chrome.sidePanel && chrome.sidePanel.setPanelBehavior) {
+  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(console.error);
+}
 
 // ────────────────────────────────────────────────────────────────
 // TAB STATE STORE
@@ -104,6 +111,14 @@ async function captureScreenshot(tabId) {
 // ────────────────────────────────────────────────────────────────
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   const senderTabId = sender.tab?.id;
+
+  // Content script asks to open native side panel
+  if (request.action === 'openNativeSidePanel') {
+    if (senderTabId && chrome.sidePanel && chrome.sidePanel.open) {
+      chrome.sidePanel.open({ windowId: sender.tab.windowId });
+    }
+    return false;
+  }
 
   // Content script → background: reactive job data update
   if (request.action === 'jobDataExtracted') {
@@ -237,6 +252,53 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     chrome.storage.local.remove([AUTH_STORAGE_KEY], () => {
       console.log('[JobOS] Session cleared via portal logout.');
       sendResponse({ success: true });
+    });
+    return true;
+  }
+
+  // Check if job is already saved
+  if (request.action === 'checkSavedJob') {
+    chrome.storage.local.get([AUTH_STORAGE_KEY], result => {
+      const sessionData = result[AUTH_STORAGE_KEY];
+      if (!sessionData) { sendResponse({ saved: false }); return; }
+      
+      const sessionStr = typeof sessionData === 'string' ? sessionData : JSON.stringify(sessionData);
+      let session;
+      try { session = JSON.parse(sessionStr); } catch (e) { sendResponse({ saved: false }); return; }
+      
+      const token = session.access_token;
+      if (!token) { sendResponse({ saved: false }); return; }
+
+      // Strip query parameters for better matching, except for LinkedIn job IDs
+      let cleanUrl = request.url;
+      try {
+        const u = new URL(request.url);
+        if (u.hostname.includes('linkedin.com')) {
+          const jobId = u.searchParams.get('currentJobId');
+          if (jobId) cleanUrl = `https://www.linkedin.com/jobs/view/${jobId}/`;
+          else cleanUrl = `${u.origin}${u.pathname}`;
+        } else {
+          cleanUrl = `${u.origin}${u.pathname}`; // Remove UTM params, etc.
+        }
+      } catch (e) {}
+      
+      const encodedUrl = encodeURIComponent(cleanUrl);
+
+      fetch(`${SUPABASE_URL}/rest/v1/jobs?job_url=ilike.${encodedUrl}*&select=id&limit=1`, {
+        method: 'GET',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const saved = Array.isArray(data) && data.length > 0;
+        sendResponse({ saved });
+      })
+      .catch(e => {
+        sendResponse({ saved: false });
+      });
     });
     return true;
   }
