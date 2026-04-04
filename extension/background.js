@@ -160,7 +160,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   // Send to JobOS Trackers
-  if (request.action === 'sendToCareerPilot') {
+  if (request.action === 'sendToJobOS') {
     const data = request.data;
     const id   = uid('cp_job');
     storeTemp(id, data).then(() => {
@@ -177,37 +177,37 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         status:     data.status    || 'Bookmarked',
         excitement: data.excitement ? String(data.excitement) : '3',
       });
-      chrome.tabs.create({ url: `${baseUrl(request.careerPilotUrl)}/trackers?${params}` });
+      chrome.tabs.create({ url: `${baseUrl(request.jobosUrl)}/trackers?${params}` });
       sendResponse({ success: true });
     });
     return true;
   }
 
   // Send to JobOS Connections
-  if (request.action === 'sendContactToCareerPilot') {
+  if (request.action === 'sendContactToJobOS') {
     const data = request.data;
     const id   = uid('cp_contact');
     storeTemp(id, data).then(() => {
       const params = buildSafeParams(id, { action: 'addContact', name: (data.name || '').substring(0, 100), company: (data.company || '').substring(0, 100) });
-      chrome.tabs.create({ url: `${baseUrl(request.careerPilotUrl)}/connections?${params}` });
+      chrome.tabs.create({ url: `${baseUrl(request.jobosUrl)}/connections?${params}` });
       sendResponse({ success: true });
     });
     return true;
   }
 
   // Send to Resume Builder
-  if (request.action === 'sendProfileToCareerPilot') {
+  if (request.action === 'sendProfileToJobOS') {
     const data = request.data;
     const id   = uid('cp_profile');
     storeTemp(id, data).then(() => {
       const params = buildSafeParams(id, { action: 'importProfile', source: 'linkedin_extension' });
-      chrome.tabs.create({ url: `${baseUrl(request.careerPilotUrl)}/resume?${params}` });
+      chrome.tabs.create({ url: `${baseUrl(request.jobosUrl)}/resume?${params}` });
       sendResponse({ success: true });
     });
     return true;
   }
 
-  // CareerPilot page fetches data by ID
+  // JobOS page fetches data by ID
   if (request.action === 'getJobData') {
     const id = request.dataId;
     if (!id) { sendResponse({ success: false, error: 'No dataId' }); return true; }

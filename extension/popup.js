@@ -8,6 +8,8 @@
 // Supabase Initialization
 // ────────────────────────────────────────────────────────────────
 const SUPABASE_URL = 'https://jdplobgtxzncwxhordah.supabase.co';
+const SUPABASE_PROJECT_REF = 'oevfiyocidpbeaycgnps';
+const AUTH_STORAGE_KEY     = `sb-${SUPABASE_PROJECT_REF}-auth-token`;
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkcGxvYmd0eHpuY3d4aG9yZGFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2MzcwMzksImV4cCI6MjA3MTIxMzAzOX0.ior862XnLyAtFwo-h2Umhj8tADMlv1dZOUwLCZWOV-c';
 
 const chromeStorageAdapter = {
@@ -50,9 +52,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (el('appVersion')) el('appVersion').textContent = `v${manifest.version}`;
 
   // ── Load saved JobOS URL ──
-  chrome.storage.local.get(['careerPilotUrl'], result => {
-    if (result.careerPilotUrl && el('careerPilotUrl')) {
-      el('careerPilotUrl').value = result.careerPilotUrl;
+  chrome.storage.local.get(['jobosUrl'], result => {
+    if (result.jobosUrl && el('jobosUrl')) {
+      el('jobosUrl').value = result.jobosUrl;
     }
   });
 
@@ -60,9 +62,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   const today = new Date().toISOString().split('T')[0];
   if (el('datePosted')) el('datePosted').value = today;
 
+  // ── Star Rating handler ──
+  document.querySelectorAll('.star-rating span').forEach(star => {
+    star.addEventListener('click', e => {
+      const val = parseInt(e.target.dataset.value);
+      if (el('excitement')) el('excitement').value = val;
+      // Update UI: Light up stars up to the selected value
+      document.querySelectorAll('#excitementRating span').forEach(s => {
+        const sVal = parseInt(s.dataset.value);
+        s.classList.toggle('active', sVal <= val);
+        s.style.color = sVal <= val ? '#FBBF24' : '#D1D5DB';
+      });
+    });
+  });
+
   // ── Save URL on change ──
-  el('careerPilotUrl')?.addEventListener('change', () => {
-    chrome.storage.local.set({ careerPilotUrl: el('careerPilotUrl').value });
+  el('jobosUrl')?.addEventListener('change', () => {
+    chrome.storage.local.set({ jobosUrl: el('jobosUrl').value });
   });
 
   // ── Check auth ──
@@ -111,7 +127,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ── Open JobOS ──
   el('openBtn')?.addEventListener('click', () => {
-    chrome.tabs.create({ url: el('careerPilotUrl').value || 'https://app.jobos.dev/trackers' });
+    chrome.tabs.create({ url: el('jobosUrl').value || 'https://app.jobos.dev/trackers' });
   });
 
   // ── Import to Resume ──
@@ -120,9 +136,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Autofill button ──
   el('autofillBtn')?.addEventListener('click', handleAutofill);
 
-  // ── Auto-extract on popup open if logged in ──
-  // Only do a live extract if tab state is stale (>30s old) or missing
-  // loadTabState() handles the fresh case above.
+  // ── Auto-load tab state on popup open ──
+  loadTabState();
 });
 
 // ────────────────────────────────────────────────────────────────
@@ -200,8 +215,12 @@ function updateAuthUI(session) {
   el('loginView')?.style  && (el('loginView').style.display   = loggedIn ? 'none'  : 'block');
   el('appView')?.style    && (el('appView').style.display     = loggedIn ? 'block' : 'none');
   el('userProfile')?.style && (el('userProfile').style.display = loggedIn ? 'flex'  : 'none');
-  if (loggedIn && el('userEmail')) el('userEmail').textContent = session.user.email;
-  if (loggedIn) syncSessionToTabs(session);
+  if (loggedIn && session?.user?.email && el('userEmail')) {
+      el('userEmail').textContent = session.user.email;
+      const loginNote = document.querySelector('.settings .note');
+      if (loginNote) loginNote.style.display = 'none';
+      syncSessionToTabs(session);
+    }
 }
 
 async function handleLogout() {
@@ -290,6 +309,15 @@ function showATSBanner(ats) {
     generic:         'Generic ATS',
   };
   banner.textContent = `🎯 ATS detected: ${atsNames[ats] || ats} — Autofill available`;
+  el('appView').style.display   = 'block';
+    
+  // Hide the 'Must be logged in' warning if we have a valid session
+  const loginNote = document.querySelector('.settings .note');
+  if (loginNote) loginNote.style.display = 'none';
+
+  if (el('accountEmail')) {
+    el('autofillBtn').style.display = 'block';
+  }
   banner.style.display = 'block';
   if (el('autofillBtn')) el('autofillBtn').style.display = 'block';
 }
@@ -297,7 +325,7 @@ function showATSBanner(ats) {
 // ────────────────────────────────────────────────────────────────
 // EXTRACT
 // ────────────────────────────────────────────────────────────────
-async function handleExtract() {
+async function handleExtract(isAuto = false) {
   const mode      = el('modeSelect')?.value === 'auto' ? detectedMode : (el('modeSelect')?.value || detectedMode);
   const extractBtn = el('extractBtn');
   extractBtn.disabled = true;
@@ -403,8 +431,7 @@ async function handleSave() {
         date_posted: val('datePosted') || null,
         deadline:    val('deadline')   || null,
         status:      'Bookmarked',
-        excitement:  3,
-        screenshot_url: currentScreenshot || null,
+        excitement:  parseInt(el('excitement')?.value) || 3,
       });
     }
 
@@ -497,9 +524,9 @@ async function handleImportResume() {
   setStatus('Opening Resume Builder…', 'info');
 
   chrome.runtime.sendMessage({
-    action:        'sendProfileToCareerPilot',
+    action:        'sendProfileToJobOS',
     data:          currentJobData,
-    careerPilotUrl: el('careerPilotUrl').value || 'https://app.jobos.dev',
+    jobosUrl: el('jobosUrl').value || 'https://app.jobos.dev',
   }, response => {
     btn.disabled = false;
     if (!response?.success) setStatus('Failed to open Resume Builder', 'error');
@@ -522,6 +549,15 @@ function displayJobData(data) {
   _setVal('deadline',    data.deadline    || '');
   _setVal('description', data.description || '');
   if (el('captureBtn')) el('captureBtn').style.display = 'block';
+  
+  // Handle Excitement level
+  const exc = parseInt(data.excitement) || 3;
+  if (el('excitement')) el('excitement').value = exc;
+  document.querySelectorAll('#excitementRating span').forEach(s => {
+    const sVal = parseInt(s.dataset.value);
+    s.classList.toggle('active', sVal <= exc);
+    s.style.color = sVal <= exc ? '#FBBF24' : '#D1D5DB';
+  });
 }
 
 function displayContactData(data) {
@@ -678,10 +714,10 @@ async function saveCompanyDirectly(data) {
 }
 
 // ────────────────────────────────────────────────────────────────
-// SESSION SYNC TO CAREERPILOT TABS
+// SESSION SYNC TO JOBOS TABS
 // ────────────────────────────────────────────────────────────────
 async function syncSessionToTabs(session) {
-  const cpUrl       = el('careerPilotUrl')?.value || 'https://app.jobos.dev';
+  const cpUrl       = el('jobosUrl')?.value || 'https://app.jobos.dev';
   const storageKey  = `sb-${SUPABASE_URL.split('//')[1].split('.')[0]}-auth-token`;
 
   let origin;

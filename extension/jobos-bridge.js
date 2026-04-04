@@ -6,8 +6,8 @@
 
 'use strict';
 
-const BRIDGE_SOURCE_WEB = 'careerpilot-web-app';
-const BRIDGE_SOURCE_EXT = 'careerpilot-extension';
+const BRIDGE_SOURCE_WEB = 'jobos-web-app';
+const BRIDGE_SOURCE_EXT = 'jobos-extension';
 const SUPABASE_PROJECT_REF = 'jdplobgtxzncwxhordah';
 const AUTH_KEY = `sb-${SUPABASE_PROJECT_REF}-auth-token`;
 

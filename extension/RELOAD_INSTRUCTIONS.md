@@ -10,8 +10,8 @@ After the code changes to fix the 431 error, you **must reload the extension** f
    - Go to `chrome://extensions/` or `edge://extensions/`
    - Or click the three dots menu → Extensions → Manage extensions
 
-2. **Find CareerPilot AI Extension**
-   - Look for "CareerPilot AI Job Capture" in your extensions list
+2. **Find JobOS AI Extension**
+   - Look for "JobOS AI Job Capture" in your extensions list
 
 3. **Reload the Extension**
    - Click the **reload icon** (circular arrow) next to the extension
@@ -34,13 +34,13 @@ The browser caches the old extension code, so you need to reload to get the new 
 1. Go to a job posting page
 2. Click extension icon
 3. Extract job data
-4. Click "Save to CareerPilot AI"
+4. Click "Save to JobOS AI"
 5. Should work without 431 errors
 
 ### If Still Getting 431 Errors
 
 1. **Clear browser cache** for localhost:8080
-2. **Hard reload** the CareerPilot AI page (Ctrl+Shift+R or Cmd+Shift+R)
+2. **Hard reload** the JobOS AI page (Ctrl+Shift+R or Cmd+Shift+R)
 3. **Check extension console** for errors:
    - Go to `chrome://extensions/`
    - Click "service worker" or "background page" link
@@ -51,7 +51,7 @@ The browser caches the old extension code, so you need to reload to get the new 
 ### Quick Checklist
 
 - [ ] Extension reloaded in `chrome://extensions/`
-- [ ] CareerPilot AI page hard reloaded (Ctrl+Shift+R)
+- [ ] JobOS AI page hard reloaded (Ctrl+Shift+R)
 - [ ] Browser cache cleared (optional but recommended)
 - [ ] Tested with a job posting
 

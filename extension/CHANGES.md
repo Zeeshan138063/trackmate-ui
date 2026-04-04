@@ -1,4 +1,4 @@
-# CareerPilot AI Extension — v2.0 Changes
+# JobOS AI Extension — v2.0 Changes
 
 ## What Was Rebuilt & Why
 
@@ -31,7 +31,7 @@ One-click form fill for all major ATS platforms:
 
 **React/Vue/Angular compatibility**: Uses native value setters + synthetic event dispatch so framework state updates correctly.
 
-**Resume upload**: Downloads PDF from CareerPilot URL and injects it via `DataTransfer` API — this means the tailored resume (specific to the job) is attached, not just a generic resume.
+**Resume upload**: Downloads PDF from JobOS URL and injects it via `DataTransfer` API — this means the tailored resume (specific to the job) is attached, not just a generic resume.
 
 ### Improved: All Job Board Extractors
 - **Rozee.pk** — new dedicated extractor (position, company, location, salary, date posted)
@@ -114,10 +114,10 @@ Amber `⚡ Autofill This Form` button (hidden by default, shown when ATS detecte
 
 ---
 
-## `careerpilot-bridge.js` — Minor Improvements
+## `jobos-bridge.js` — Minor Improvements
 
 ### Added: `ping` / `pong`
-Web app can verify extension is installed by sending `{ source: 'careerpilot-web-app', action: 'ping' }`.
+Web app can verify extension is installed by sending `{ source: 'jobos-web-app', action: 'ping' }`.
 
 ### Added: Generic `getData` alias
 Both `getJobData` and `getData` action names work — future-proofing for when contacts/companies also use the bridge.

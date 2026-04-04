@@ -5,7 +5,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>JobOS</title>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <style>
     *,
     *::before,
@@ -228,6 +227,30 @@
       box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
 
+    /* ── Star Rating ── */
+    .star-rating {
+      display: flex;
+      gap: 5px;
+      margin-top: 5px;
+    }
+    .star-rating span {
+      font-size: 26px;
+      cursor: pointer;
+      color: #D1D5DB;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      line-height: 1;
+      display: inline-block;
+    }
+    .star-rating span:hover {
+      transform: scale(1.3);
+      color: #FBBF24;
+      text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
+    }
+    .star-rating span.active {
+      color: #FBBF24;
+      text-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
+    }
+
     button:hover:not(:disabled) {
       filter: brightness(1.1);
       transform: translateY(-1.5px);
@@ -404,10 +427,30 @@
 
   <!-- Header -->
   <div class="header">
-    <div class="header-left">
-      <h1 style="font-size:18px;font-weight:700;letter-spacing:-0.02em;">Job<span
-          style="font-family:'Courier New',monospace;color:#818CF8;">OS</span></h1>
-      <p id="headerSubtitle" style="font-size:11px;opacity:0.7;margin-top:2px;">AI Job Tracker & Autofill</p>
+    <div class="header-left" style="display: flex; align-items: center; gap: 10px;">
+      <!-- Hex Icon -->
+      <svg width="28" height="28" viewBox="0 0 96 96" fill="none" style="filter: drop-shadow(0 0 5px rgba(102,120,255,0.4));">
+        <defs>
+          <linearGradient id="hexG" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#7B8FFF" />
+            <stop offset="100%" stopColor="#4A5AE8" />
+          </linearGradient>
+          <linearGradient id="arrG" x1="48" y1="18" x2="48" y2="78" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#FFFFFF" />
+            <stop offset="100%" stopColor="#C8D2FF" />
+          </linearGradient>
+        </defs>
+        <polygon points="48,6 84,27 84,69 48,90 12,69 12,27" fill="none" stroke="url(#hexG)" strokeWidth="5" strokeLinejoin="round" />
+        <rect x="43" y="42" width="10" height="30" rx="3" fill="url(#arrG)" />
+        <polygon points="48,20 62,44 34,44" fill="url(#arrG)" />
+      </svg>
+      <div>
+        <h1 style="font-family: 'DM Sans', sans-serif; font-size:22px; font-weight:700; letter-spacing:-1px; line-height: 1; display: flex; align-items: baseline;">
+          <span>Job</span>
+          <span style="background: linear-gradient(135deg, #6678FF, #4A5AE8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">OS</span>
+        </h1>
+        <p id="headerSubtitle" style="font-family: 'DM Mono', monospace; font-size:8px; text-transform: uppercase; letter-spacing: 2px; color: rgba(102,120,255,0.7); margin-top: 4px;">Career Operating System</p>
+      </div>
     </div>
   </div>
 
@@ -426,13 +469,11 @@
     </div>
 
     <!-- ── Login View ── -->
-    <div id="loginView" class="login-container" style="display:none; text-align:center; padding: 20px 10px;">
-      <h2 style="font-size: 20px; margin-bottom: 8px;">Welcome to JobOS</h2>
-      <p style="color:#4b5563; font-size:13px; margin-bottom: 24px;">
-        Please sign in on the web app to sync your session and start tracking jobs.
-      </p>
+    <div id="loginView" style="display:none; text-align: center; padding: 40px 20px;">
+      <h2 style="margin-bottom: 8px;">Welcome to JobOS</h2>
+      <p style="font-size: 13px; opacity: 0.7; margin-bottom: 24px;">Please sign in on the web app to sync your session and start tracking jobs.</p>
       
-      <button id="loginTabBtn" class="btn-primary" style="height: 48px; font-size: 15px;">
+      <button id="loginTabBtn" class="btn-primary" style="margin-bottom: 12px;">
         <span>🚀 Sign in at JobOS</span>
       </button>
       
@@ -468,6 +509,18 @@
           <div class="field"><label>Date Posted</label><input type="date" id="datePosted" class="input-field"></div>
           <div class="field"><label>Deadline</label><input type="date" id="deadline" class="input-field"></div>
         </div>
+        <div class="field">
+          <label>Excitement Level (1-5 stars)</label>
+          <div class="star-rating" id="excitementRating">
+            <span data-value="1">★</span>
+            <span data-value="2">★</span>
+            <span data-value="3" class="active">★</span>
+            <span data-value="4">★</span>
+            <span data-value="5">★</span>
+          </div>
+          <input type="hidden" id="excitement" value="3">
+        </div>
+
         <div class="field"><label>Description</label><textarea id="description" class="input-field"
             placeholder="Job description…"></textarea></div>
       </div>
@@ -540,7 +593,7 @@
       <!-- Settings -->
       <div class="settings">
         <label>JobOS URL</label>
-        <input type="text" id="careerPilotUrl" class="input-field" placeholder="https://app.jobos.dev/trackers"
+        <input type="text" id="jobosUrl" class="input-field" placeholder="https://app.jobos.dev/trackers"
           value="https://app.jobos.dev/trackers">
         <div class="note">⚠️ Must be logged in to JobOS before saving.</div>
       </div>
