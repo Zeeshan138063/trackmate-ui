@@ -515,13 +515,28 @@ class JobExtractor {
   _clean(el) {
     if (!el) return '';
     const clone = el.cloneNode(true);
-    clone.querySelectorAll('script, style, button, noscript').forEach(n => n.remove());
-    clone.querySelectorAll('li').forEach(li => { li.textContent = `• ${li.textContent.trim()}\n`; });
-    clone.querySelectorAll('p, div, h1, h2, h3, h4, h5, h6').forEach(b => {
-      b.textContent = `${b.textContent.trim()}\n\n`;
+    
+    // 1. Remove non-content junk
+    clone.querySelectorAll('script, style, button, noscript, svg, path, .visually-hidden, [aria-hidden="true"]').forEach(n => n.remove());
+    
+    // 2. Structural spacing to prevent text smushing (CamelCase bugs like OpportunityJoin)
+    // We add a space/newline around block elements without destroying their children.
+    clone.querySelectorAll('p, div, li, h1, h2, h3, h4, h5, h6, section, article, dt, dd').forEach(b => {
+      const spStart = document.createTextNode('\n ');
+      const spEnd   = document.createTextNode(' \n');
+      b.prepend(spStart);
+      b.append(spEnd);
     });
+
+    // 3. Explicit breaks
     clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
-    return clone.textContent.replace(/\n{3,}/g, '\n\n').trim();
+
+    // 4. Extract and normalize whitespace
+    return clone.textContent
+      .replace(/\r/g, '')
+      .replace(/[ \t]+/g, ' ')           // collapse horizontal spaces
+      .replace(/\n\s*\n/g, '\n\n')       // max 2 newlines
+      .trim();
   }
 
   // ── Try a list of CSS selectors, return first truthy result ──
@@ -570,6 +585,55 @@ class JobExtractor {
     };
   }
 
+  // Expand location to include Remote/Hybrid based on title and other metadata
+  _enhanceWorkplaceType(data) {
+    if (!data || data.type === 'profile' || data.type === 'company') return;
+    
+    const lowerLocation = (data.location || '').toLowerCase();
+    const lowerTitle    = (data.position || '').toLowerCase();
+    
+    // Quick exit if it already has explicit classification
+    if (lowerLocation.includes(' remote') || lowerLocation.includes('(remote)')) return;
+    if (lowerLocation.includes(' hybrid') || lowerLocation.includes('(hybrid)')) return;
+
+    let detectedType = null;
+    
+    // 1. Title inference is strongest signal
+    if (/\bremote\b/i.test(lowerTitle)) detectedType = 'Remote';
+    else if (/\bhybrid\b/i.test(lowerTitle)) detectedType = 'Hybrid';
+    else if (/\bonsite|on-site\b/i.test(lowerTitle)) detectedType = 'On-site';
+
+    // 2. Extracted metadata / badges
+    if (!detectedType) {
+      // Gather text from common "workplace type" UI badges across major job boards
+      const metadataStr = Array.from(document.querySelectorAll(
+        '.job-details-jobs-unified-top-card__job-insight, ' +
+        '.job-details-preferences-and-skills__pill, ' +
+        '.ui-label, ' +
+        '[data-testid="job-location"], ' +
+        '.jobsearch-JobInfoHeader-subtitle'
+      )).map(el => el.textContent.toLowerCase()).join(' | ');
+
+      if (/\bremote\b/i.test(metadataStr)) detectedType = 'Remote';
+      else if (/\bhybrid\b/i.test(metadataStr)) detectedType = 'Hybrid';
+      else if (/\bonsite|on-site\b/i.test(metadataStr)) detectedType = 'On-site';
+    }
+
+    // Apply to location
+    if (detectedType) {
+      if (!lowerLocation.includes(detectedType.toLowerCase())) {
+        // If there's an existing valid location string, append it
+        if (data.location && data.location.trim().length > 2 && data.location.toLowerCase() !== detectedType.toLowerCase()) {
+          const loc = data.location.replace(/[,\s-]+$/, '');
+          data.location = `${loc} (${detectedType})`;
+        } else {
+          // Otherwise simply use it as the location
+          data.location = detectedType;
+        }
+      }
+    }
+  }
+
   // ── Main entry point ──
   extractJobData() {
     const { hostname, pathname } = window.location;
@@ -582,26 +646,27 @@ class JobExtractor {
     if (hostname.includes('linkedin.com') && (pathname.includes('/company/') || pathname.includes('/school/')))
       return { type: 'company', ...this._linkedInCompany() };
 
-    // Try JSON-LD first (best quality, works on many sites)
-    const jsonLd = this._fromJsonLd();
-    if (jsonLd?.position) return jsonLd;
+    let data = this._fromJsonLd();
 
-    // Site-specific extractors
-    if (hostname.includes('linkedin.com'))      return this._linkedInJob();
-    if (hostname.includes('indeed.com'))        return this._indeed();
-    if (hostname.includes('glassdoor.com'))     return this._glassdoor();
-    if (hostname.includes('rozee.pk'))          return this._rozee();
-    if (hostname.includes('naukri.com'))        return this._naukri();
-    if (hostname.includes('lever.co'))          return this._lever();
-    if (hostname.includes('greenhouse.io'))     return this._greenhouse();
-    if (hostname.includes('myworkdayjobs.com')) return this._workday();
+    // Site-specific extractors if JSON-LD failed
+    if (!data || !data.position) {
+      if (hostname.includes('linkedin.com'))      data = this._linkedInJob();
+      else if (hostname.includes('indeed.com'))   data = this._indeed();
+      else if (hostname.includes('glassdoor.com'))data = this._glassdoor();
+      else if (hostname.includes('rozee.pk'))     data = this._rozee();
+      else if (hostname.includes('naukri.com'))   data = this._naukri();
+      else if (hostname.includes('lever.co'))     data = this._lever();
+      else if (hostname.includes('greenhouse.io'))data = this._greenhouse();
+      else if (hostname.includes('myworkdayjobs.com')) data = this._workday();
+      else {
+        // Meta tags fallback
+        data = this._fromMetaTags();
+        if (!data || !data.position) data = this._generic(); // Last resort
+      }
+    }
 
-    // Meta tags fallback
-    const meta = this._fromMetaTags();
-    if (meta?.position) return meta;
-
-    // Last resort: generic DOM heuristics
-    return this._generic();
+    if (data) this._enhanceWorkplaceType(data);
+    return data;
   }
 
   getJobData(mode = 'auto') {

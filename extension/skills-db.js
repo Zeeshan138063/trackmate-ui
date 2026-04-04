@@ -68,6 +68,7 @@ const JobOSSkillsDB = (() => {
     'autogen': 'AutoGen',
     'llamaindex': 'LlamaIndex', 'llama index': 'LlamaIndex', 'llama-index': 'LlamaIndex',
     'openai': 'OpenAI API', 'open ai': 'OpenAI API',
+    'openai codex': 'OpenAI Codex', 'codex': 'OpenAI Codex',
     'anthropic': 'Anthropic Claude', 'claude': 'Anthropic Claude',
     'gemini': 'Google Gemini',
     'hugging face': 'Hugging Face', 'huggingface': 'Hugging Face',
@@ -232,7 +233,7 @@ const JobOSSkillsDB = (() => {
       'Agentic AI', 'Fine-tuning', 'Prompt Engineering',
       'Hallucination Reduction', 'Embeddings', 'Semantic Search',
       'LangChain', 'LangGraph', 'CrewAI', 'AutoGen', 'LlamaIndex',
-      'OpenAI API', 'Anthropic Claude', 'Google Gemini',
+      'OpenAI API', 'OpenAI Codex', 'Anthropic Claude', 'Google Gemini',
       'TensorFlow', 'PyTorch', 'Keras', 'JAX', 'Hugging Face',
       'scikit-learn', 'XGBoost', 'LightGBM', 'CatBoost',
       'Spark MLlib', 'MLflow', 'MLOps', 'LLMOps',
@@ -328,6 +329,7 @@ const JobOSSkillsDB = (() => {
     'back end', 'front end', 'back-end', 'front-end', 'full-stack',
     'workflows', 'workflow', 'pipeline', 'pipelines', 'core', 'advanced',
     'level', 'senior', 'junior', 'mid', 'lead', 'principal',
+    'glassdoor', 'indeed', 'linkedin', 'apply', 'save', 'easy apply',
   ]);
 
   // ────────────────────────────────────────────────────────────────
@@ -402,7 +404,7 @@ const JobOSSkillsDB = (() => {
     // Very strict dictionary of false positives for this pattern
     const DYNAMIC_NOISE = new Set([
       'youtube', 'linkedin', 'github', 'mcdonalds', 'whatsapp', 'powerpoint', 'macbook', 
-      'javascript', 'typescript'
+      'javascript', 'typescript', 'fullstack', 'fullstackfullstack', 'opportunityjoin', 'glassdoor'
     ]);
 
     const dynamicMatches = text.match(DYNAMIC_TECH_PATTERN) || [];
