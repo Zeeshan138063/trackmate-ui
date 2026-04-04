@@ -164,6 +164,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ── Auto-load tab state on popup open ──
   loadTabState();
+
+  // ── Listen for real-time SPA navigation updates from content.js ──
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg.action === 'jobDataExtracted' && msg.data) {
+      console.log('Real-time data update received (SPA Nav):', msg.data);
+      currentJobData = msg.data;
+      _renderExtractedData(currentJobData);
+    } else if (msg.action === 'atsDetected' && msg.ats) {
+      currentATS = msg.ats;
+      showATSBanner(currentATS);
+    }
+  });
 });
 
 // ────────────────────────────────────────────────────────────────
