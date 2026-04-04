@@ -138,7 +138,6 @@
         0 4px 20px rgba(99, 102, 241, 0.45),
         inset 0 1px 0 rgba(255,255,255,0.08);
       transition: box-shadow 0.25s ease, transform 0.2s ease;
-      overflow: hidden;
     }
 
     /* Inner shimmer sweep on hover */
