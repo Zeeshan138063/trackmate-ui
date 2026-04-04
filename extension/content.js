@@ -608,10 +608,13 @@ class JobExtractor {
       // Gather text from common "workplace type" UI badges across major job boards
       const metadataStr = Array.from(document.querySelectorAll(
         '.job-details-jobs-unified-top-card__job-insight, ' +
+        '.job-details-jobs-unified-top-card__job-insight-line, ' +
         '.job-details-preferences-and-skills__pill, ' +
         '.ui-label, ' +
         '[data-testid="job-location"], ' +
-        '.jobsearch-JobInfoHeader-subtitle'
+        '[data-test-id="job-location"], ' +
+        '.jobsearch-JobInfoHeader-subtitle, ' +
+        '.topcard__flavor--bullet'
       )).map(el => el.textContent.toLowerCase()).join(' | ');
 
       if (/\bremote\b/i.test(metadataStr)) detectedType = 'Remote';
@@ -621,13 +624,14 @@ class JobExtractor {
 
     // Apply to location
     if (detectedType) {
+      data.location = (data.location || '').trim();
+      const lowerLocation = data.location.toLowerCase();
+      
       if (!lowerLocation.includes(detectedType.toLowerCase())) {
-        // If there's an existing valid location string, append it
-        if (data.location && data.location.trim().length > 2 && data.location.toLowerCase() !== detectedType.toLowerCase()) {
+        if (data.location && data.location.length > 2) {
           const loc = data.location.replace(/[,\s-]+$/, '');
           data.location = `${loc} (${detectedType})`;
         } else {
-          // Otherwise simply use it as the location
           data.location = detectedType;
         }
       }
@@ -646,22 +650,43 @@ class JobExtractor {
     if (hostname.includes('linkedin.com') && (pathname.includes('/company/') || pathname.includes('/school/')))
       return { type: 'company', ...this._linkedInCompany() };
 
-    let data = this._fromJsonLd();
+    let data = this._fromJsonLd() || this._base();
 
-    // Site-specific extractors if JSON-LD failed
-    if (!data || !data.position) {
-      if (hostname.includes('linkedin.com'))      data = this._linkedInJob();
-      else if (hostname.includes('indeed.com'))   data = this._indeed();
-      else if (hostname.includes('glassdoor.com'))data = this._glassdoor();
-      else if (hostname.includes('rozee.pk'))     data = this._rozee();
-      else if (hostname.includes('naukri.com'))   data = this._naukri();
-      else if (hostname.includes('lever.co'))     data = this._lever();
-      else if (hostname.includes('greenhouse.io'))data = this._greenhouse();
-      else if (hostname.includes('myworkdayjobs.com')) data = this._workday();
-      else {
-        // Meta tags fallback
-        data = this._fromMetaTags();
-        if (!data || !data.position) data = this._generic(); // Last resort
+    const isLinkedIn = hostname.includes('linkedin.com');
+
+    // 1. Fill Gaps / Site-Specific Extraction
+    // If JSON-LD is missing critical info, use site extractors to supplement
+    if (isLinkedIn) {
+      const liData = this._linkedInJob();
+      // Supplement JSON-LD with DOM-scraped data if fields are missing
+      if (!data.position) data.position = liData.position;
+      if (!data.company)  data.company  = liData.company;
+      if (!data.location) data.location = liData.location;
+      if (!data.description) data.description = liData.description;
+      if (!data.minSalary) { data.minSalary = liData.minSalary; data.maxSalary = liData.maxSalary; }
+    } else if (hostname.includes('indeed.com')) {
+      const indeedData = this._indeed();
+      if (!data.position) data = indeedData; else { if (!data.location) data.location = indeedData.location; }
+    } else if (hostname.includes('glassdoor.com')) {
+      const gdData = this._glassdoor();
+      if (!data.position) data = gdData; else { if (!data.location) data.location = gdData.location; }
+    } else if (hostname.includes('rozee.pk'))          data = this._rozee();
+    else if (hostname.includes('naukri.com'))        data = this._naukri();
+    else if (hostname.includes('lever.co'))          data = this._lever();
+    else if (hostname.includes('greenhouse.io'))     data = this._greenhouse();
+    else if (hostname.includes('myworkdayjobs.com')) data = this._workday();
+    
+    // 2. Final Fallbacks
+    if (!data.position) {
+      const meta = this._fromMetaTags();
+      if (meta?.position) {
+        data.position = meta.position;
+        if (!data.location) data.location = meta.location;
+      }
+      if (!data.position) {
+        const gen = this._generic();
+        data.position = gen.position;
+        if (!data.location) data.location = gen.location;
       }
     }
 
@@ -694,7 +719,8 @@ class JobExtractor {
         data.company     = job.hiringOrganization?.name || '';
         data.location    = job.jobLocation?.address?.addressLocality
           || job.jobLocation?.address?.addressRegion
-          || job.jobLocation?.address?.addressCountry || '';
+          || job.jobLocation?.address?.addressCountry 
+          || job.jobLocation?.name || '';
         data.datePosted  = job.datePosted || null;
         data.deadline    = job.validThrough || null;
         data.minSalary   = job.baseSalary?.value?.minValue || null;
@@ -742,31 +768,46 @@ class JobExtractor {
       '.jobs-details-top-card__company-name',
     ]);
 
-    // Location line format: "Company · Location · X days ago"
-    const locEl = document.querySelector(
-      '.job-details-jobs-unified-top-card__primary-description-without-tagline, ' +
-      '.job-details-jobs-unified-top-card__primary-description'
-    );
-    if (locEl) {
-      const parts = locEl.textContent.split('·').map(s => s.trim()).filter(Boolean);
-      // Skip first part (company name) and any time/duration segments
-      const locationPart = parts.slice(1).find(p => !/^\d+\s*(minute|hour|day|week|month|year|second)/i.test(p));
-      data.location = locationPart || (parts.length >= 2 ? parts[1] : locEl.textContent.trim());
-    }
-    // LinkedIn 2024+ fallback: location in separate bullet/metadata elements
+    // ── Location Scavenger ──
     if (!data.location) {
-      const topCard = document.querySelector('[class*="job-details-jobs-unified-top-card"], .jobs-unified-top-card');
-      const container = topCard || document.querySelector('main');
+      const container = document.querySelector(
+        '.job-details-jobs-unified-top-card__primary-description-without-tagline, ' +
+        '.job-details-jobs-unified-top-card__primary-description, ' +
+        '.jobs-unified-top-card__primary-description, ' +
+        '.jobs-unified-top-card__subtitle-container'
+      );
       if (container) {
-        for (const el of container.querySelectorAll('span, li')) {
-          if (el.children.length > 1) continue; // skip wrapper containers
-          const t = el.textContent.trim();
+        // Method A: Split the whole line by dividers
+        const partsArr = container.textContent.split(/[·\•\.\-\*\|]+/).map(s => s.trim()).filter(Boolean);
+        for (const p of partsArr) {
           if (
-            t.length > 3 && t.length < 80 &&
-            /,\s*[A-Z]/.test(t) && // city, region/country pattern
-            !/apply|save|easy apply|promoted|follower|employee/i.test(t)
+            p.length > 2 && p.length < 80 &&
+            !/^\d+/.test(p) && // Skip 'X days ago'
+            !/share|follow|report|applicants|promoted|apply|save|employer|about|hiring/i.test(p) &&
+            (!data.company || !p.toLowerCase().includes(data.company.toLowerCase()))
           ) {
-            data.location = t;
+            data.location = p;
+            break;
+          }
+        }
+      }
+    }
+    // Final emergency fallback: Regex match any line that looks like geo-location
+    if (!data.location) {
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      let node;
+      while (node = walker.nextNode()) {
+        const text = node.textContent.trim();
+        // Heuristic for "City, Country" or "Country"
+        if (text.length > 2 && text.length < 50 && /^[A-Z][a-z]+/.test(text)) {
+          // Avoid common UI noise words
+          if (/share|follow|report|about|hiring|contact|message|apply|save|career|jobs/i.test(text)) continue;
+          
+          const parent = node.parentElement;
+          if (!parent || parent.tagName === 'BUTTON' || parent.closest('button, a, svg')) continue;
+
+          if (parent.closest('[class*="unified-top-card"]')) {
+            data.location = text;
             break;
           }
         }
