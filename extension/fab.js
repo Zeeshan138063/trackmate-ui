@@ -30,152 +30,306 @@
     :host {
       all: initial;
     }
-    
-    /* ── Floating Button ── */
-    #jobos-fab {
+
+    /* ─────────────────────────────────────
+       Keyframe Animations
+    ───────────────────────────────────── */
+
+    /* Gentle vertical float */
+    @keyframes jobos-float {
+      0%, 100% { transform: translateY(-50%) translateY(0px); }
+      50%       { transform: translateY(-50%) translateY(-6px); }
+    }
+
+    /* Spinning conic-gradient border ring */
+    @keyframes jobos-spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    /* Expanding pulse ring */
+    @keyframes jobos-pulse {
+      0%   { transform: scale(1);   opacity: 0.5; }
+      100% { transform: scale(1.55); opacity: 0; }
+    }
+
+    /* Hex stroke dash animation — draws itself */
+    @keyframes jobos-draw {
+      from { stroke-dashoffset: 260; }
+      to   { stroke-dashoffset: 0; }
+    }
+
+    /* Arrow bob up/down inside the hex */
+    @keyframes jobos-arrow-bob {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-3px); }
+    }
+
+    /* Inner glow breathe */
+    @keyframes jobos-glow-breathe {
+      0%, 100% { opacity: 0.55; }
+      50%       { opacity: 1; }
+    }
+
+    /* ─────────────────────────────────────
+       Wrapper — positions everything
+    ───────────────────────────────────── */
+    #jobos-wrapper {
       position: fixed;
       right: 20px;
       top: 50%;
-      transform: translateY(-50%);
-      width: 52px;
-      height: 52px;
-      background: linear-gradient(135deg, #0A0E1A 0%, #12172B 100%);
-      border: 2px solid #6366F1;
+      width: 46px;
+      height: 46px;
+      pointer-events: auto;
+      z-index: 2;
+      /* Floating bob */
+      animation: jobos-float 3s ease-in-out infinite;
+    }
+
+    /* Pulse rings — sit behind the button */
+    .jobos-ring {
+      position: absolute;
+      inset: 0;
       border-radius: 50%;
-      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+      border: 1.5px solid rgba(99, 102, 241, 0.55);
+      animation: jobos-pulse 2.4s ease-out infinite;
+      pointer-events: none;
+    }
+    .jobos-ring:nth-child(2) { animation-delay: 0.8s; }
+    .jobos-ring:nth-child(3) { animation-delay: 1.6s; }
+
+    /* Spinning conic ring pseudo-layer */
+    .jobos-spin-ring {
+      position: absolute;
+      inset: -2px;
+      border-radius: 50%;
+      background: conic-gradient(
+        from 0deg,
+        transparent 0%,
+        #6366F1 20%,
+        #818CF8 40%,
+        #C7D2FE 50%,
+        transparent 70%
+      );
+      animation: jobos-spin 2.8s linear infinite;
+      pointer-events: none;
+    }
+    /* Mask center so only border shows */
+    .jobos-spin-ring::after {
+      content: '';
+      position: absolute;
+      inset: 2px;
+      border-radius: 50%;
+      background: #0A0E1A;
+    }
+
+    /* ── Floating Button ── */
+    #jobos-fab {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 35% 35%, #1E2340 0%, #0A0E1A 100%);
+      border-radius: 50%;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s, border-color 0.2s;
-      pointer-events: auto;
-      z-index: 2;
+      box-shadow:
+        0 0 0 1px rgba(99,102,241,0.3),
+        0 4px 20px rgba(99, 102, 241, 0.45),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+      transition: box-shadow 0.25s ease, transform 0.2s ease;
+      overflow: hidden;
     }
-    
+
+    /* Inner shimmer sweep on hover */
+    #jobos-fab::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    #jobos-fab:hover::before { opacity: 1; }
+
     #jobos-fab:hover {
-      transform: translateY(-50%) scale(1.08);
-      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
-      border-color: #818CF8;
+      box-shadow:
+        0 0 0 1px rgba(99,102,241,0.6),
+        0 6px 28px rgba(99,102,241,0.65),
+        inset 0 1px 0 rgba(255,255,255,0.12);
+      transform: scale(1.07);
     }
-    
+    #jobos-fab:active {
+      transform: scale(0.94);
+    }
+
+    /* SVG wrapper so we can animate the arrow group separately */
     #jobos-fab svg {
-      width: 26px;
-      height: 26px;
-      filter: drop-shadow(0 0 4px rgba(102,120,255,0.6));
+      width: 28px;
+      height: 28px;
+      position: relative;
+      z-index: 1;
     }
-    
-    /* Dragging classes */
-    #jobos-fab.dragged {
-      transform: none;
+
+    /* Hex stroke self-draws on load */
+    #jobos-hex-stroke {
+      stroke-dasharray: 260;
+      stroke-dashoffset: 260;
+      animation: jobos-draw 1.2s cubic-bezier(0.4,0,0.2,1) 0.3s forwards;
     }
-    #jobos-fab.dragged:hover {
-      transform: scale(1.08); /* Kept scale effect without translateY */
+
+    /* Arrow inside bobs continuously */
+    #jobos-arrow-group {
+      animation: jobos-arrow-bob 2s ease-in-out infinite;
     }
-    #jobos-fab.dragging {
-      transition: none !important;
+
+    /* Glow behind the icon that breathes */
+    #jobos-fab-glow {
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,102,241,0.55) 0%, transparent 70%);
+      animation: jobos-glow-breathe 2.2s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    /* Dragging states */
+    #jobos-wrapper.dragged  { animation: none; }
+    #jobos-wrapper.dragging {
+      animation: none !important;
       cursor: grabbing !important;
-      transform: scale(1.08) !important;
     }
-    
+    #jobos-wrapper.dragging #jobos-fab { transform: scale(1.07); }
+    .jobos-ring, .jobos-spin-ring { pointer-events: none; }
+
     /* Notification Badge */
     .badge {
       position: absolute;
-      top: -4px;
-      right: -4px;
-      background: #10B981; /* Green */
+      top: -5px;
+      right: -5px;
+      background: linear-gradient(135deg, #10B981, #059669);
       color: white;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: 10px;
       font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 10px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      box-shadow: 0 2px 8px rgba(16,185,129,0.5);
       border: 2px solid #0A0E1A;
       opacity: 0;
-      transform: scale(0.5);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: scale(0.4);
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 10;
     }
-    
     .badge.show {
       opacity: 1;
       transform: scale(1);
     }
   `;
 
-  // FAB HTML (Hex Icon)
+  // ── Wrapper (handles floating + drag) ──
+  const wrapper = document.createElement('div');
+  wrapper.id = 'jobos-wrapper';
+
+  // Three staggered pulse rings
+  for (let i = 0; i < 3; i++) {
+    const ring = document.createElement('div');
+    ring.className = 'jobos-ring';
+    wrapper.appendChild(ring);
+  }
+
+  // Spinning conic border ring
+  const spinRing = document.createElement('div');
+  spinRing.className = 'jobos-spin-ring';
+  wrapper.appendChild(spinRing);
+
+  // ── FAB button ──
   const fab = document.createElement('div');
   fab.id = 'jobos-fab';
   fab.innerHTML = `
+    <div id="jobos-fab-glow"></div>
     <svg viewBox="0 0 96 96" fill="none">
       <defs>
         <linearGradient id="fabHexG" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#FFFFFF" />
-          <stop offset="100%" stop-color="#C8D2FF" />
+          <stop offset="0%"   stop-color="#FFFFFF" />
+          <stop offset="100%" stop-color="#C7D2FE" />
         </linearGradient>
       </defs>
-      <polygon points="48,6 84,27 84,69 48,90 12,69 12,27" fill="none" stroke="url(#fabHexG)" stroke-width="6" stroke-linejoin="round" />
-      <rect x="43" y="42" width="10" height="30" rx="3" fill="url(#fabHexG)" />
-      <polygon points="48,20 62,44 34,44" fill="url(#fabHexG)" />
+      <!-- Animated hex border: draws itself in on load -->
+      <polygon
+        id="jobos-hex-stroke"
+        points="48,5 85,27 85,69 48,91 11,69 11,27"
+        fill="none"
+        stroke="url(#fabHexG)"
+        stroke-width="5"
+        stroke-linejoin="round"
+      />
+      <!-- Arrow group bobs up/down continuously -->
+      <g id="jobos-arrow-group">
+        <rect x="44" y="44" width="8" height="26" rx="3" fill="url(#fabHexG)" />
+        <polygon points="48,18 64,44 32,44" fill="url(#fabHexG)" />
+      </g>
     </svg>
     <div class="badge" id="jobos-badge">✓</div>
   `;
 
+  wrapper.appendChild(fab);
   shadow.appendChild(style);
-  shadow.appendChild(fab);
+  shadow.appendChild(wrapper);
 
-  // --- Drag and Drop Logic ---
+  // ── Drag Logic (targets wrapper) ──
   let isDragging = false;
   let dragTriggered = false;
   let startX, startY, initialLeft, initialTop;
 
-  fab.addEventListener('mousedown', (e) => {
-    if (e.button !== 0) return; // Only drag on left click
-    const rect = fab.getBoundingClientRect();
+  wrapper.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    const rect = wrapper.getBoundingClientRect();
     startX = e.clientX;
     startY = e.clientY;
     initialLeft = rect.left;
     initialTop = rect.top;
     isDragging = true;
     dragTriggered = false;
-    e.preventDefault(); // Prevent text selection
+    e.preventDefault();
   });
 
   window.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
-    
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
-    
-    // Wait for a small threshold to differentiate click vs drag
-    if (!dragTriggered && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) {
+
+    if (!dragTriggered && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
       dragTriggered = true;
-      fab.classList.add('dragged', 'dragging');
-      // Set absolute positioning from initial bounds to prevent jumping
-      fab.style.left = initialLeft + 'px';
-      fab.style.top = initialTop + 'px';
-      fab.style.right = 'auto'; // Disable right-based positioning
+      wrapper.classList.add('dragged', 'dragging');
+      wrapper.style.left = initialLeft + 'px';
+      wrapper.style.top = initialTop + 'px';
+      wrapper.style.right = 'auto';
     }
-    
+
     if (dragTriggered) {
-      const maxX = window.innerWidth - fab.offsetWidth;
-      const maxY = window.innerHeight - fab.offsetHeight;
-      const newLeft = Math.max(0, Math.min(initialLeft + dx, maxX));
-      const newTop = Math.max(0, Math.min(initialTop + dy, maxY));
-      fab.style.left = newLeft + 'px';
-      fab.style.top = newTop + 'px';
+      const maxX = window.innerWidth - wrapper.offsetWidth;
+      const maxY = window.innerHeight - wrapper.offsetHeight;
+      wrapper.style.left = Math.max(0, Math.min(initialLeft + dx, maxX)) + 'px';
+      wrapper.style.top = Math.max(0, Math.min(initialTop + dy, maxY)) + 'px';
     }
   });
 
   window.addEventListener('mouseup', () => {
     if (isDragging) {
       isDragging = false;
-      fab.classList.remove('dragging');
+      wrapper.classList.remove('dragging');
     }
   });
 
-  // Instead of opening a local DOM panel, tell Chrome to open the Native Side Panel!
-  fab.addEventListener('click', (e) => {
-    // If the user was dragging the button, don't open the side panel
+  // ── Open Side Panel on click (not after drag) ──
+  wrapper.addEventListener('click', (e) => {
     if (dragTriggered) {
       e.preventDefault();
       e.stopPropagation();
@@ -188,30 +342,23 @@
     }
   });
 
-  // Check if job is already saved so we can show the green badge
+  // ── Check if job already saved → show badge ──
   try {
     chrome.runtime.sendMessage({ action: 'checkSavedJob', url: window.location.href }, (response) => {
-      if (chrome.runtime.lastError) {
-        // Ignore "context invalidated" errors dynamically from background
-        return;
-      }
+      if (chrome.runtime.lastError) return;
       if (response?.saved) {
         shadow.getElementById('jobos-badge').classList.add('show');
       }
     });
-  } catch (e) {
-    // Ignore context invalidated
-  }
+  } catch (e) { /* ignore */ }
 
-  // Listen for 'jobSaved' from the background/popup to update badge instantly
+  // ── Relay badge update when popup saves a job ──
   try {
     chrome.runtime.onMessage.addListener((request) => {
       if (request.action === 'jobSavedEvent') {
         shadow.getElementById('jobos-badge').classList.add('show');
       }
     });
-  } catch (e) {
-    // Ignore
-  }
+  } catch (e) { /* ignore */ }
 
 })();
