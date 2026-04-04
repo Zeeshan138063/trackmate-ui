@@ -341,15 +341,39 @@
     }
   });
 
-  // ── Check if job already saved → show badge ──
-  try {
-    chrome.runtime.sendMessage({ action: 'checkSavedJob', url: window.location.href }, (response) => {
-      if (chrome.runtime.lastError) return;
-      if (response?.saved) {
-        shadow.getElementById('jobos-badge').classList.add('show');
-      }
-    });
-  } catch (e) { /* ignore */ }
+  async function checkAndRefreshBadge() {
+    const badge = shadow.getElementById('jobos-badge');
+    if (!badge) return;
+
+    // Reset visibility first to handle transitions
+    badge.classList.remove('show');
+
+    try {
+      chrome.runtime.sendMessage({ action: 'checkSavedJob', url: window.location.href }, (response) => {
+        if (chrome.runtime.lastError) return;
+        if (response?.saved) {
+          badge.classList.add('show');
+        }
+      });
+    } catch (e) { /* ignore */ }
+  }
+
+  // Initial check
+  checkAndRefreshBadge();
+
+  // Listen for navigation events (SPAs like LinkedIn)
+  let lastUrl = window.location.href;
+  const observer = new MutationObserver(() => {
+    if (window.location.href !== lastUrl) {
+      lastUrl = window.location.href;
+      checkAndRefreshBadge();
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // Native navigation listeners
+  window.addEventListener('popstate', checkAndRefreshBadge);
+  window.addEventListener('hashchange', checkAndRefreshBadge);
 
   // ── Relay badge update when popup saves a job ──
   try {
