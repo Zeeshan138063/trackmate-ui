@@ -77,13 +77,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const manifest = chrome.runtime.getManifest();
   if (el('appVersion')) el('appVersion').textContent = `v${manifest.version}`;
 
-  // ── Load saved JobOS URL ──
-  chrome.storage.local.get(['jobosUrl'], result => {
-    if (result.jobosUrl && el('jobosUrl')) {
-      el('jobosUrl').value = result.jobosUrl;
-    }
-  });
-
   // ── Set default date to today ──
   const today = new Date().toISOString().split('T')[0];
   if (el('datePosted')) el('datePosted').value = today;
@@ -100,11 +93,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         s.style.color = sVal <= val ? '#FBBF24' : '#D1D5DB';
       });
     });
-  });
-
-  // ── Save URL on change ──
-  el('jobosUrl')?.addEventListener('change', () => {
-    chrome.storage.local.set({ jobosUrl: el('jobosUrl').value });
   });
 
   // ── Check auth ──
@@ -153,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ── Open JobOS ──
   el('openBtn')?.addEventListener('click', () => {
-    chrome.tabs.create({ url: el('jobosUrl').value || 'https://app.jobos.dev/trackers' });
+    chrome.tabs.create({ url: 'https://app.jobos.dev/trackers' });
   });
 
   // ── Import to Resume ──
@@ -621,7 +609,7 @@ async function handleImportResume() {
   chrome.runtime.sendMessage({
     action:        'sendProfileToJobOS',
     data:          currentJobData,
-    jobosUrl: el('jobosUrl').value || 'https://app.jobos.dev',
+    jobosUrl: 'https://app.jobos.dev',
   }, response => {
     btn.disabled = false;
     if (!response?.success) setStatus('Failed to open Resume Builder', 'error');
@@ -812,7 +800,7 @@ async function saveCompanyDirectly(data) {
 // SESSION SYNC TO JOBOS TABS
 // ────────────────────────────────────────────────────────────────
 async function syncSessionToTabs(session) {
-  const cpUrl       = el('jobosUrl')?.value || 'https://app.jobos.dev';
+  const cpUrl       = 'https://app.jobos.dev';
   const storageKey  = `sb-${SUPABASE_URL.split('//')[1].split('.')[0]}-auth-token`;
 
   let origin;

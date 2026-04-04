@@ -103,7 +103,14 @@ function buildSafeParams(dataId, overrides = {}) {
 async function captureScreenshot(tabId) {
   const tab = await chrome.tabs.get(tabId);
   if (!tab) throw new Error('Tab not found');
-  return chrome.tabs.captureVisibleTab(tab.windowId, { format: 'jpeg', quality: 80 });
+  
+  // Try capturing using the specific window of the tab
+  try {
+    return await chrome.tabs.captureVisibleTab(tab.windowId, { format: 'jpeg', quality: 80 });
+  } catch (err) {
+    // If that fails (e.g. permission or focus lost), try the focused window as a fallback
+    return await chrome.tabs.captureVisibleTab(null, { format: 'jpeg', quality: 80 });
+  }
 }
 
 // ────────────────────────────────────────────────────────────────
