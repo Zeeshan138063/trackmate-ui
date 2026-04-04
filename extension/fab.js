@@ -208,7 +208,7 @@
       position: absolute;
       top: -5px;
       right: -5px;
-      background: linear-gradient(135deg, #10B981, #059669);
+      background: linear-gradient(135deg, #6366F1, #4338CA);
       color: white;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: 10px;
@@ -219,7 +219,7 @@
       align-items: center;
       justify-content: center;
       border-radius: 50%;
-      box-shadow: 0 2px 8px rgba(16,185,129,0.5);
+      box-shadow: 0 2px 8px rgba(99,102,241,0.5);
       border: 2px solid #0A0E1A;
       opacity: 0;
       transform: scale(0.4);
@@ -256,23 +256,23 @@
     <svg viewBox="0 0 96 96" fill="none">
       <defs>
         <linearGradient id="fabHexG" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
-          <stop offset="0%"   stop-color="#FFFFFF" />
-          <stop offset="100%" stop-color="#C7D2FE" />
+          <stop offset="0%"   stop-color="#6366F1" />
+          <stop offset="100%" stop-color="#4F46E5" />
         </linearGradient>
       </defs>
-      <!-- Animated hex border: draws itself in on load -->
+      <!-- Solid Hexagon: matches website -->
       <polygon
         id="jobos-hex-stroke"
         points="48,5 85,27 85,69 48,91 11,69 11,27"
-        fill="none"
-        stroke="url(#fabHexG)"
-        stroke-width="5"
+        fill="url(#fabHexG)"
+        stroke="rgba(255,255,255,0.2)"
+        stroke-width="2"
         stroke-linejoin="round"
       />
-      <!-- Arrow group bobs up/down continuously -->
+      <!-- White Arrow group -->
       <g id="jobos-arrow-group">
-        <rect x="44" y="44" width="8" height="26" rx="3" fill="url(#fabHexG)" />
-        <polygon points="48,18 64,44 32,44" fill="url(#fabHexG)" />
+        <rect x="44" y="44" width="8" height="26" rx="3" fill="white" />
+        <polygon points="48,18 64,44 32,44" fill="white" />
       </g>
     </svg>
     <div class="badge" id="jobos-badge">✓</div>

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "JobOS — AI Job Tracker & Autofill",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Capture jobs from any site. Autofill any ATS. Track everything. Powered by JobOS AI.",
   "permissions": [
     "activeTab",
@@ -55,9 +55,7 @@
         "https://apply.workable.com/*",
         "https://*.taleo.net/*",
         "https://app.jobos.dev/*",
-        "https://*/*",
-        "http://localhost:*/*",
-        "http://127.0.0.1:*/*"
+        "https://*/*"
       ],
       "js": [
         "content.js",
@@ -67,8 +65,6 @@
     },
     {
       "matches": [
-        "http://localhost:*/*",
-        "http://127.0.0.1:*/*",
         "https://job.zeeshare.com/*",
         "https://app.jobos.dev/*",
         "https://*/*"

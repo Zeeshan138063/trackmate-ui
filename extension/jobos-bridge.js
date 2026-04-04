@@ -27,24 +27,34 @@ window.addEventListener('message', event => {
       return;
     }
 
-    chrome.runtime.sendMessage({ action: 'getJobData', dataId }, response => {
-      if (chrome.runtime.lastError) {
-        _reply({ action: 'dataResponse', success: false, error: chrome.runtime.lastError.message });
-        return;
-      }
-      _reply({
-        action:  'dataResponse',
-        dataId,
-        success: response?.success || false,
-        data:    response?.data    || null,
-        error:   response?.error   || null,
+    try {
+      if (!chrome.runtime?.id) throw new Error('Context invalidated');
+      chrome.runtime.sendMessage({ action: 'getJobData', dataId }, response => {
+        if (chrome.runtime.lastError) {
+          _reply({ action: 'dataResponse', success: false, error: chrome.runtime.lastError.message });
+          return;
+        }
+        _reply({
+          action:  'dataResponse',
+          dataId,
+          success: response?.success || false,
+          data:    response?.data    || null,
+          error:   response?.error   || null,
+        });
       });
-    });
+    } catch (err) {
+      _reply({ action: 'dataResponse', success: false, error: 'Extension context invalidated. Please refresh.' });
+    }
   }
 
   // ── Extension presence check (web app can verify extension is installed) ──
   if (msg.action === 'ping') {
-    _reply({ action: 'pong', version: chrome.runtime.getManifest().version });
+    try {
+      if (!chrome.runtime?.id) throw new Error('Context invalidated');
+      _reply({ action: 'pong', version: chrome.runtime.getManifest().version });
+    } catch (e) {
+      _reply({ action: 'pong', error: 'Context invalidated' });
+    }
   }
 });
 
@@ -59,7 +69,11 @@ function _checkSession() {
       console.log('[JobOS Bridge] Active portal session found — syncing.');
       chrome.runtime.sendMessage({ action: 'portalLogin', session });
     } catch (e) {
-      console.warn('[JobOS Bridge] Failed to parse session:', e);
+      if (e.message.includes('context invalidated')) {
+        console.warn('[JobOS Bridge] Extension context invalidated. Please refresh the page.');
+      } else {
+        console.warn('[JobOS Bridge] Failed to parse/sync session:', e);
+      }
     }
   }
 }
@@ -69,17 +83,23 @@ setTimeout(_checkSession, 1000);
 
 window.addEventListener('storage', event => {
   if (event.key === AUTH_KEY) {
-    if (!event.newValue) {
-      console.log('[JobOS Bridge] Portal logout detected — clearing extension session.');
-      chrome.runtime.sendMessage({ action: 'portalLogout' });
-    } else {
-      try {
-        const session = JSON.parse(event.newValue);
-        console.log('[JobOS Bridge] Portal login/update detected — syncing.');
-        chrome.runtime.sendMessage({ action: 'portalLogin', session });
-      } catch (e) {
-        console.warn('[JobOS Bridge] Failed to parse session on storage event:', e);
+    try {
+      if (!chrome.runtime?.id) return; // Silent exit if invalidated
+
+      if (!event.newValue) {
+        console.log('[JobOS Bridge] Portal logout detected — clearing extension session.');
+        chrome.runtime.sendMessage({ action: 'portalLogout' });
+      } else {
+        try {
+          const session = JSON.parse(event.newValue);
+          console.log('[JobOS Bridge] Portal login/update detected — syncing.');
+          chrome.runtime.sendMessage({ action: 'portalLogin', session });
+        } catch (e) {
+          console.warn('[JobOS Bridge] Failed to parse session on storage event:', e);
+        }
       }
+    } catch (err) {
+       console.warn('[JobOS Bridge] Extension context invalidated during storage sync. Please refresh.');
     }
   }
 });
