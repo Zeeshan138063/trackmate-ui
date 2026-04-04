@@ -26,24 +26,145 @@
 
     /* ── Header ── */
     .header {
-      background: linear-gradient(135deg, #0A0E1A 0%, #12172B 100%);
+      background: linear-gradient(160deg, #0D1123 0%, #111827 100%);
       color: white;
-      padding: 16px 20px;
+      padding: 14px 18px 13px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 2px solid #6366F1;
+      border-bottom: 1px solid rgba(99, 102, 241, 0.35);
+      position: relative;
+      overflow: hidden;
     }
 
-    .header-left h1 {
-      font-size: 18px;
-      font-weight: 700;
+    /* Subtle top glow line */
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, #6366F1 40%, #818CF8 60%, transparent 100%);
+      opacity: 0.6;
     }
 
-    .header-left p {
-      font-size: 11px;
-      opacity: 0.85;
-      margin-top: 2px;
+    /* Bottom accent line */
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(99,102,241,0.5), transparent);
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    /* Icon container with glow ring */
+    .header-icon-wrap {
+      position: relative;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .header-icon-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      background: conic-gradient(
+        from 0deg,
+        transparent 0%,
+        #6366F1 25%,
+        #818CF8 45%,
+        transparent 65%
+      );
+      animation: header-spin 3.5s linear infinite;
+      opacity: 0.7;
+    }
+
+    .header-icon-wrap::after {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 50%;
+      background: #0D1123;
+    }
+
+    @keyframes header-spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    .header-icon-wrap svg {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Arrow inside icon bobs */
+    @keyframes header-bob {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-2px); }
+    }
+
+    #hdr-arrow {
+      animation: header-bob 2.5s ease-in-out infinite;
+    }
+
+    .header-text h1 {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1;
+      display: flex;
+      align-items: baseline;
+      gap: 0px;
+    }
+
+    .header-text h1 .word-job {
+      color: #F9FAFB;
+    }
+
+    .header-text h1 .word-os {
+      background: linear-gradient(135deg, #818CF8 0%, #6366F1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-tagline {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 3px;
+    }
+
+    .header-tagline .pulse-dot {
+      width: 5px;
+      height: 5px;
+      background: #10B981;
+      border-radius: 50%;
+      animation: pulse-dot 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1;   transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    .header-tagline span {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(148, 163, 184, 0.85);
     }
 
     .header-right {
@@ -436,34 +557,56 @@
 
   <!-- Header -->
   <div class="header">
-    <div class="header-left" style="display: flex; align-items: center; gap: 10px;">
-      <!-- Hex Icon -->
-      <svg width="28" height="28" viewBox="0 0 96 96" fill="none" style="filter: drop-shadow(0 0 5px rgba(102,120,255,0.4));">
-        <defs>
-          <linearGradient id="hexG" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#7B8FFF" />
-            <stop offset="100%" stopColor="#4A5AE8" />
-          </linearGradient>
-          <linearGradient id="arrG" x1="48" y1="18" x2="48" y2="78" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#FFFFFF" />
-            <stop offset="100%" stopColor="#C8D2FF" />
-          </linearGradient>
-        </defs>
-        <polygon points="48,6 84,27 84,69 48,90 12,69 12,27" fill="none" stroke="url(#hexG)" strokeWidth="5" strokeLinejoin="round" />
-        <rect x="43" y="42" width="10" height="30" rx="3" fill="url(#arrG)" />
-        <polygon points="48,20 62,44 34,44" fill="url(#arrG)" />
-      </svg>
-      <div>
-        <h1 style="font-family: 'DM Sans', sans-serif; font-size:22px; font-weight:700; letter-spacing:-1px; line-height: 1; display: flex; align-items: baseline;">
-          <span>Job</span>
-          <span style="background: linear-gradient(135deg, #6678FF, #4A5AE8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">OS</span>
+    <div class="header-brand">
+
+      <!-- Animated hex icon -->
+      <div class="header-icon-wrap">
+        <svg width="28" height="28" viewBox="0 0 96 96" fill="none">
+          <defs>
+            <linearGradient id="hHexG" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+              <stop offset="0%"   stop-color="#818CF8" />
+              <stop offset="100%" stop-color="#4F46E5" />
+            </linearGradient>
+            <linearGradient id="hArrG" x1="48" y1="16" x2="48" y2="80" gradientUnits="userSpaceOnUse">
+              <stop offset="0%"   stop-color="#FFFFFF" />
+              <stop offset="100%" stop-color="#C7D2FE" />
+            </linearGradient>
+            <filter id="hGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <!-- Hex outline -->
+          <polygon
+            points="48,6 84,27 84,69 48,90 12,69 12,27"
+            fill="rgba(99,102,241,0.12)"
+            stroke="url(#hHexG)"
+            stroke-width="5"
+            stroke-linejoin="round"
+            filter="url(#hGlow)"
+          />
+          <!-- Animated arrow -->
+          <g id="hdr-arrow">
+            <rect x="44" y="43" width="8" height="26" rx="3" fill="url(#hArrG)" />
+            <polygon points="48,19 64,44 32,44" fill="url(#hArrG)" />
+          </g>
+        </svg>
+      </div>
+
+      <!-- Brand text -->
+      <div class="header-text">
+        <h1>
+          <span class="word-job">Job</span><span class="word-os">OS</span>
         </h1>
-        <p id="headerSubtitle" style="font-family: 'DM Mono', monospace; font-size:8px; text-transform: uppercase; letter-spacing: 2px; color: rgba(102,120,255,0.7); margin-top: 4px;">Career Operating System</p>
+        <div class="header-tagline">
+          <div class="pulse-dot"></div>
+          <span>Career Operating System</span>
+        </div>
       </div>
     </div>
-    
+
     <!-- Sidebar Close Button (Hidden by default) -->
-    <div id="sidebarCloseBtn" style="display:none; cursor: pointer; padding: 4px; border-radius: 4px; transition: background 0.2s;">
+    <div id="sidebarCloseBtn" style="display:none; cursor: pointer; padding: 4px; border-radius: 4px; transition: background 0.2s; opacity: 0.6;">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="18" y1="6" x2="6" y2="18"></line>
         <line x1="6" y1="6" x2="18" y2="18"></line>
