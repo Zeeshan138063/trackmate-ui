@@ -543,6 +543,74 @@
       }
     }
 
+    /* ── Top Skills Card ── */
+    #topSkillsCard {
+      display: none;
+      background: white;
+      border-radius: 10px;
+      padding: 13px 14px;
+      margin-bottom: 14px;
+      border: 1px solid #e5e7eb;
+      animation: slideUpFade 0.35s ease-out forwards;
+    }
+
+    #topSkillsCard .skills-header {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 10px;
+    }
+
+    #topSkillsCard .skills-header h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1E293B;
+      margin: 0;
+    }
+
+    #topSkillsCard .skills-header .skills-badge {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      background: #EEF2FF;
+      color: #6366F1;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    #topSkillsChips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .skill-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1;
+      border: 1px solid transparent;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      cursor: default;
+    }
+
+    .skill-chip:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .skill-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
     /* ── Sidebar Mode Overrides ── */
     body.sidebar-mode {
       width: 100% !important;
@@ -645,7 +713,17 @@
     <!-- ── App View ── -->
     <div id="appView" style="display:none">
 
-      <!-- Status bar -->
+      <!-- ── Top Skills Card (populated by skills-db.js) ── -->
+      <div id="topSkillsCard">
+        <div class="skills-header">
+          <span>🔥</span>
+          <h3>Top Skills</h3>
+          <span class="skills-badge">from job description</span>
+        </div>
+        <div id="topSkillsChips"></div>
+      </div>
+
+      <!-- ── Status bar ── -->
       <div id="status" class="status">
         <span id="statusText"></span>
       </div>
@@ -768,6 +846,7 @@
 
   </div><!-- /content -->
 
+  <script src="skills-db.js"></script>
   <script src="supabase-js.js"></script>
   <script src="popup.js"></script>
 </body>

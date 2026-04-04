@@ -307,16 +307,68 @@ function _renderExtractedData(data) {
     if (el('saveBtn')) { el('saveBtn').style.display = 'block'; el('saveBtn').querySelector('span').textContent = '💾 Save Contact'; }
     if (el('importResumeBtn')) el('importResumeBtn').style.display = 'block';
     setStatus('Profile ready ✓', 'success');
+    renderTopSkills(null); // hide skills card for profiles
   } else if (data.type === 'company') {
     displayCompanyData(data);
     if (el('saveBtn')) { el('saveBtn').style.display = 'block'; el('saveBtn').querySelector('span').textContent = '💾 Save Company'; }
     setStatus('Company ready ✓', 'success');
+    renderTopSkills(null);
   } else {
     displayJobData(data);
     if (el('saveBtn')) { el('saveBtn').style.display = 'block'; el('saveBtn').querySelector('span').textContent = '💾 Save Job'; }
     setStatus('Job ready ✓', 'success');
+    // ── Extract top skills from description (client-side, instant) ──
+    renderTopSkills(data.description || '');
   }
   if (el('openBtn')) el('openBtn').style.display = 'block';
+}
+
+// ────────────────────────────────────────────────────────────────
+// TOP SKILLS CARD
+// Client-side extraction via skills-db.js — zero API calls
+// ────────────────────────────────────────────────────────────────
+function renderTopSkills(description) {
+  const card = el('topSkillsCard');
+  if (!card) return;
+
+  if (!description || description.length < 50 || typeof JobOSSkillsDB === 'undefined') {
+    card.style.display = 'none';
+    return;
+  }
+
+  const skills = JobOSSkillsDB.extractSkills(description, 8);
+  if (!skills.length) { card.style.display = 'none'; return; }
+
+  const chipsEl = el('topSkillsChips');
+  if (!chipsEl) return;
+
+  // Category color map
+  const catColors = {
+    languages:        { bg: '#EEF2FF', text: '#4338CA', dot: '#6366F1' },
+    frontend:         { bg: '#F0FDF4', text: '#166534', dot: '#22C55E' },
+    backend:          { bg: '#FFF7ED', text: '#9A3412', dot: '#F97316' },
+    cloud:            { bg: '#ECFEFF', text: '#155E75', dot: '#06B6D4' },
+    devops:           { bg: '#FDF4FF', text: '#7E22CE', dot: '#A855F7' },
+    databases:        { bg: '#FFF1F2', text: '#9F1239', dot: '#F43F5E' },
+    ai_ml:            { bg: '#FFFBEB', text: '#92400E', dot: '#F59E0B' },
+    data_engineering: { bg: '#F0F9FF', text: '#0C4A6E', dot: '#0EA5E9' },
+    mobile:           { bg: '#F0FDF4', text: '#14532D', dot: '#16A34A' },
+    security:         { bg: '#FFF1F2', text: '#881337', dot: '#E11D48' },
+    design:           { bg: '#FDF4FF', text: '#6B21A8', dot: '#C026D3' },
+    soft_skills:      { bg: '#F8FAFC', text: '#475569', dot: '#94A3B8' },
+    discovered:       { bg: '#FDF4FF', text: '#86198F', dot: '#D946EF' }, // magenta style for new tech
+    other:            { bg: '#F9FAFB', text: '#374151', dot: '#9CA3AF' },
+  };
+
+  chipsEl.innerHTML = skills.map(({ skill, category }) => {
+    const c = catColors[category] || catColors.other;
+    return `<span class="skill-chip" style="background:${c.bg}; color:${c.text};">
+      <span class="skill-dot" style="background:${c.dot};"></span>
+      ${skill}
+    </span>`;
+  }).join('');
+
+  card.style.display = 'block';
 }
 
 function showATSBanner(ats) {
