@@ -64,6 +64,19 @@
       filter: drop-shadow(0 0 4px rgba(102,120,255,0.6));
     }
     
+    /* Dragging classes */
+    #jobos-fab.dragged {
+      transform: none;
+    }
+    #jobos-fab.dragged:hover {
+      transform: scale(1.08); /* Kept scale effect without translateY */
+    }
+    #jobos-fab.dragging {
+      transition: none !important;
+      cursor: grabbing !important;
+      transform: scale(1.08) !important;
+    }
+    
     /* Notification Badge */
     .badge {
       position: absolute;
@@ -110,11 +123,67 @@
   shadow.appendChild(style);
   shadow.appendChild(fab);
 
+  // --- Drag and Drop Logic ---
+  let isDragging = false;
+  let dragTriggered = false;
+  let startX, startY, initialLeft, initialTop;
+
+  fab.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return; // Only drag on left click
+    const rect = fab.getBoundingClientRect();
+    startX = e.clientX;
+    startY = e.clientY;
+    initialLeft = rect.left;
+    initialTop = rect.top;
+    isDragging = true;
+    dragTriggered = false;
+    e.preventDefault(); // Prevent text selection
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    
+    // Wait for a small threshold to differentiate click vs drag
+    if (!dragTriggered && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) {
+      dragTriggered = true;
+      fab.classList.add('dragged', 'dragging');
+      // Set absolute positioning from initial bounds to prevent jumping
+      fab.style.left = initialLeft + 'px';
+      fab.style.top = initialTop + 'px';
+      fab.style.right = 'auto'; // Disable right-based positioning
+    }
+    
+    if (dragTriggered) {
+      const maxX = window.innerWidth - fab.offsetWidth;
+      const maxY = window.innerHeight - fab.offsetHeight;
+      const newLeft = Math.max(0, Math.min(initialLeft + dx, maxX));
+      const newTop = Math.max(0, Math.min(initialTop + dy, maxY));
+      fab.style.left = newLeft + 'px';
+      fab.style.top = newTop + 'px';
+    }
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      fab.classList.remove('dragging');
+    }
+  });
+
   // Instead of opening a local DOM panel, tell Chrome to open the Native Side Panel!
-  fab.addEventListener('click', () => {
+  fab.addEventListener('click', (e) => {
+    // If the user was dragging the button, don't open the side panel
+    if (dragTriggered) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     try {
       chrome.runtime.sendMessage({ action: 'openNativeSidePanel' });
-    } catch (e) {
+    } catch (err) {
       console.warn('JobOS: Extension context invalidated. Please refresh the page.');
     }
   });
