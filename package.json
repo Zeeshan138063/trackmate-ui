@@ -5,7 +5,7 @@
   "type": "module",
   "author": "CareerPilot AI",
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "vite",
