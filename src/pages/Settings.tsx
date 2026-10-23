@@ -12,8 +12,12 @@ import { User, Bell, Shield, CreditCard, Download, Trash2, Sparkles, Link } from
 import { AIHelper } from "@/utils/ai-helper";
 import { PROVIDERS, AIProviderId } from "@/utils/ai-providers/registry";
 import { IntegrationsSettings } from "@/components/Settings/IntegrationsSettings";
+import { FollowUpSettings } from "@/components/Settings/FollowUpSettings";
+import { useSearchParams } from "react-router-dom";
 
 export default function Settings() {
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("followups") ? "integrations" : searchParams.get("tab") ?? "profile";
   const [notifications, setNotifications] = useState({
     email: true,
     push: false,
@@ -105,7 +109,7 @@ export default function Settings() {
         </p>
       </div>
 
-      <Tabs defaultValue="profile" className="space-y-6">
+      <Tabs defaultValue={initialTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-6 lg:grid-cols-7">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
@@ -405,6 +409,7 @@ export default function Settings() {
         </TabsContent>
 
         <TabsContent value="integrations" className="space-y-6">
+          <FollowUpSettings />
           <IntegrationsSettings />
         </TabsContent>
 
