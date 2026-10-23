@@ -29,6 +29,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, FileText, CheckCircle2, AlertCircle } from "lucide-react";
 import { JobChecklist } from "@/components/JobChecklist";
+import { FollowUpsTab } from "@/components/followups/FollowUpsTab";
 import { JobChecklist as JobChecklistType } from "@/types/job";
 import { useContacts } from "@/hooks/useContacts";
 import { ContactCard } from "@/components/ContactCard";
@@ -596,12 +597,12 @@ ${matchResult.explanation}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
           <div className="px-6">
-            <TabsList className="grid w-full grid-cols-6 sm:grid-cols-7">
-              {/* Added sm:grid-cols-7 because we have 7 items now */}
+            <TabsList className="grid w-full grid-cols-4 sm:grid-cols-8 h-auto">
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="notes">Notes</TabsTrigger>
               <TabsTrigger value="checklist">Check List</TabsTrigger>
               <TabsTrigger value="contacts">Contacts</TabsTrigger>
+              <TabsTrigger value="followups">Follow-ups</TabsTrigger>
               <TabsTrigger value="match">Match</TabsTrigger>
               <TabsTrigger value="cover-letter">Letter</TabsTrigger>
               <TabsTrigger value="resume">Resume</TabsTrigger>
@@ -901,6 +902,10 @@ ${matchResult.explanation}
                 onSave={editingContact ? handleUpdateContact : handleAddContact}
                 initialData={editingContact}
               />
+            </TabsContent>
+
+            <TabsContent value="followups" className="mt-0">
+              <FollowUpsTab jobId={job.id} appliedOn={job.dateApplied} />
             </TabsContent>
 
             <TabsContent value="match" className="mt-0 space-y-6">

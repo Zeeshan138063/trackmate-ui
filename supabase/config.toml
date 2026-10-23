@@ -1,1 +1,19 @@
 project_id = "jdplobgtxzncwxhordah"
+
+# Follow-up agent: these functions authenticate callers themselves
+# (Supabase user JWT, shared secrets, or provider signatures), so the gateway
+# JWT check is off. Do not add functions here that skip their own auth.
+[functions.followups-tick]
+verify_jwt = false
+
+[functions.followups-api]
+verify_jwt = false
+
+[functions.followups-oauth]
+verify_jwt = false
+
+[functions.followups-telegram]
+verify_jwt = false
+
+[functions.followups-mail-webhook]
+verify_jwt = false
