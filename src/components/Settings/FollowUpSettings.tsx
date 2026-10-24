@@ -129,17 +129,17 @@ export function FollowUpSettings() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="p-4 sm:p-6">
         <CardTitle className="flex items-center gap-2"><Send className="h-5 w-5" /> Follow-up agent</CardTitle>
         <CardDescription>
           Drafts follow-ups for your applications. Nothing is sent until you approve it.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-8">
+      <CardContent className="space-y-8 p-4 pt-0 sm:p-6 sm:pt-0">
         <section className="space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <Label className="text-base">Inboxes</Label>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex">
               <Button size="sm" variant="outline" disabled={!!busy} onClick={() => connect("gmail")}>
                 {busy === "gmail" ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Mail className="mr-1 h-4 w-4" />} Connect Gmail
               </Button>
@@ -156,13 +156,13 @@ export function FollowUpSettings() {
           ) : (
             <ul className="divide-y rounded-md border">
               {accounts.map((a) => (
-                <li key={a.id} className="flex items-center justify-between gap-3 p-3 text-sm">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <Badge variant="outline">{a.provider === "gmail" ? "Gmail" : "Outlook"}</Badge>
-                    <span className="truncate">{a.address}</span>
-                    {a.status !== "active" && <Badge variant="destructive">Reconnect needed</Badge>}
+                <li key={a.id} className="flex flex-col gap-2 p-3 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <Badge variant="outline" className="shrink-0">{a.provider === "gmail" ? "Gmail" : "Outlook"}</Badge>
+                    <span className="min-w-0 break-all sm:truncate sm:break-normal" title={a.address}>{a.address}</span>
+                    {a.status !== "active" && <Badge variant="destructive" className="shrink-0 whitespace-nowrap">Reconnect needed</Badge>}
                   </div>
-                  <div className="flex shrink-0 gap-2">
+                  <div className="flex shrink-0 items-center justify-end gap-2">
                     {a.status !== "active" && (
                       <Button size="sm" variant="outline" onClick={() => connect(a.provider)}>Reconnect</Button>
                     )}
@@ -176,21 +176,21 @@ export function FollowUpSettings() {
           )}
         </section>
 
-        <section className="flex items-center justify-between gap-4">
-          <div>
+        <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="min-w-0">
             <Label className="text-base">Telegram approvals</Label>
             <p className="text-sm text-muted-foreground">
               {telegramLinked ? "Linked. Drafts arrive in Telegram with Approve, Edit, Snooze and Skip." : "Approve drafts from your phone in one tap."}
             </p>
           </div>
-          <Button size="sm" variant={telegramLinked ? "outline" : "default"} disabled={!!busy} onClick={linkTelegram}>
+          <Button size="sm" className="w-full sm:w-auto sm:shrink-0" variant={telegramLinked ? "outline" : "default"} disabled={!!busy} onClick={linkTelegram}>
             {busy === "telegram" && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
             {telegramLinked ? "Relink" : "Connect Telegram"}
           </Button>
         </section>
 
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <Label htmlFor="fu-enabled" className="text-base">Plan follow-ups automatically</Label>
             <Switch id="fu-enabled" checked={prefs.enabled} onCheckedChange={(v) => setPrefs((p) => ({ ...p, enabled: v }))} />
           </div>
@@ -218,7 +218,7 @@ export function FollowUpSettings() {
               <Input id="fu-tz" value={prefs.timezone} onChange={(e) => setPrefs((p) => ({ ...p, timezone: e.target.value }))} placeholder="Asia/Karachi" />
             </div>
           </div>
-          <Button onClick={savePrefs} disabled={!!busy}>
+          <Button onClick={savePrefs} disabled={!!busy} className="w-full sm:w-auto">
             {busy === "prefs" && <Loader2 className="mr-1 h-4 w-4 animate-spin" />} Save
           </Button>
         </section>
