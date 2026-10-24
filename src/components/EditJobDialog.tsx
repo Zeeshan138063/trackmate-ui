@@ -41,7 +41,8 @@ import { ResumeAIHelper as ResumeAI } from "@/utils/resume-ai-helper";
 import { ResumePreview } from "@/components/resume/ResumePreview";
 import { MasterProfileEditor } from "./resume/MasterProfileEditor";
 import { MasterProfile } from "@/types/resume";
-import { s3Helper } from "@/utils/s3-helper";
+import { latestTailored, saveTailoredResume } from "@/lib/resumeFiles";
+import { ApplicationResumes } from "@/components/resume/ApplicationResumes";
 
 import {
   Command,
@@ -89,6 +90,7 @@ export function EditJobDialog({ job, open, onOpenChange, onUpdateJob, onAutoSave
   const [isTailoring, setIsTailoring] = useState(false);
   const [isEditingResume, setIsEditingResume] = useState(false);
   const [tailoringInstructions, setTailoringInstructions] = useState("");
+  const [resumeRefresh, setResumeRefresh] = useState(0);
 
   // Update instructions when match result is found
   useEffect(() => {
@@ -180,27 +182,11 @@ ${matchResult.explanation}
           }
         }
 
-        // 2. Check S3
-        if (job.resumeS3Key) {
-          try {
-            const resumeData = await s3Helper.getResume(job.resumeS3Key);
-            setTailoredResume(resumeData);
-            return;
-          } catch (e) {
-            console.error("Failed to load resume from S3", e);
-            // Fallthrough to attachedResume
-          }
-        }
-
-        // 3. Check attachedResume
-        if (job.attachedResume) {
-          try {
-            setTailoredResume(JSON.parse(job.attachedResume));
-          } catch (e) {
-            console.error("Failed to parse attached resume", e);
-            setTailoredResume(null);
-          }
-        } else {
+        // 2. Latest saved tailored version for this application
+        try {
+          setTailoredResume(await latestTailored(job.id));
+        } catch (e) {
+          console.error("Failed to load saved resume", e);
           setTailoredResume(null);
         }
       };
@@ -249,7 +235,6 @@ ${matchResult.explanation}
           excitement: formData.excitement,
           checklist: formData.checklist,
           notes: formData.notes,
-          attachedResume: job.attachedResume // Persist existing attached resume
         };
         onAutoSave(updatedJob);
         setSaveStatus('saved');
@@ -294,7 +279,6 @@ ${matchResult.explanation}
       excitement: formData.excitement,
       checklist: formData.checklist,
       notes: formData.notes,
-      attachedResume: job.attachedResume // Persist existing attached resume
     };
 
     onUpdateJob(updatedJob);
@@ -457,42 +441,16 @@ ${matchResult.explanation}
   const handlePrintResume = async () => {
     if (!tailoredResume && !masterProfile) return;
 
-    // Auto-save the used resume to the job record
+    // Keep the exact version you printed on the application (no duplicate if unchanged).
     if (job && tailoredResume) {
-      const resumeJson = JSON.stringify(tailoredResume);
-      let updatedJob: Job = { ...job };
-
       try {
-        // Try S3 upload first
-        const s3Key = await s3Helper.uploadResume(job.id, resumeJson);
-        updatedJob.resumeS3Key = s3Key;
-        // If S3 succeeds, we can opt to clear attachedResume or keep it as backup. 
-        // For now, let's keep attachedResume empty to save DB space if S3 is used.
-        updatedJob.attachedResume = undefined;
-        toast.success("Resume saved to S3 and attached to job");
-      } catch (error: any) {
-        // Fallback to local storage
-        console.error("S3 Upload failed:", error);
-
-        let errorMessage = "Unknown error";
-        if (typeof error === 'object' && error !== null) {
-          if (error.name === 'NetworkingError' || error.message?.includes('Network Error')) {
-            errorMessage = "Network Error (CORS? Check bucket settings)";
-          } else if (error.name === 'InvalidAccessKeyId' || error.name === 'SignatureDoesNotMatch') {
-            errorMessage = "Invalid Credentials";
-          } else {
-            errorMessage = error.message || error.name;
-          }
-        }
-
-        toast.warning(`S3 Upload Failed: ${errorMessage}. Saved locally instead.`);
-        updatedJob.attachedResume = resumeJson;
-        // CRITICAL: Clear the S3 key so we don't load stale data from S3 next time
-        // since we now have the latest version in local storage.
-        updatedJob.resumeS3Key = undefined;
+        const { created } = await saveTailoredResume(job.id, tailoredResume, job.company);
+        if (created) toast.success("Resume saved and attached to this application");
+        setResumeRefresh((n) => n + 1);
+      } catch (error) {
+        console.error("Saving the resume failed", error);
+        toast.warning("Printed, but the resume could not be saved to this application.");
       }
-
-      onAutoSave?.(updatedJob);
     }
 
     setTimeout(() => {
@@ -905,7 +863,7 @@ ${matchResult.explanation}
             </TabsContent>
 
             <TabsContent value="followups" className="mt-0">
-              <FollowUpsTab jobId={job.id} appliedOn={job.dateApplied} />
+              <FollowUpsTab jobId={job.id} appliedOn={formData.dateApplied || job.dateApplied} status={formData.status} />
             </TabsContent>
 
             <TabsContent value="match" className="mt-0 space-y-6">
@@ -1079,14 +1037,12 @@ ${matchResult.explanation}
             </TabsContent>
 
             <TabsContent value="resume" className="mt-0 space-y-6">
-              <div className="flex justify-between items-center mb-4">
-                {(job.resumeS3Key || job.attachedResume) && (
-                  <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                    <CheckCircle2 className="h-3 w-3" />
-                    Resume Attached {job.resumeS3Key ? "(S3)" : "(Local)"}
-                  </div>
-                )}
-              </div>
+              <ApplicationResumes
+                jobId={job.id}
+                company={job.company}
+                tailoredResume={tailoredResume}
+                refreshKey={resumeRefresh}
+              />
 
               {!masterProfile ? (
                 <div className="text-center py-12">

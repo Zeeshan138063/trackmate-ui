@@ -40,12 +40,19 @@ export interface ReplyTarget {
   subject: string | null;
 }
 
+export interface EmailAttachment {
+  fileName: string;
+  mimeType: string;
+  content: Uint8Array;
+}
+
 export interface OutgoingEmail {
   to: string;
   subject: string;
   bodyText: string;
   followUpId: string;
   replyTo: ReplyTarget | null;
+  attachment?: EmailAttachment | null;
 }
 
 export interface SentEmail {
@@ -85,6 +92,11 @@ export interface TokenProvider {
   accessToken(acct: MailAccount): Promise<string>;
 }
 
+/** Private resume files (Supabase Storage, read with the service role, never via public URLs). */
+export interface FileStore {
+  download(storagePath: string): Promise<Uint8Array>;
+}
+
 // ------------------------------------------------------------- notifier ----
 
 export interface ApprovalCard {
@@ -112,6 +124,8 @@ export interface DraftContext {
   thread: { from: string; date: string; subject: string; text: string }[];
   previousValuePoints: string[];
   editNotes: string[];
+  /** True only when the attached resume really goes out with this message. */
+  hasAttachment: boolean;
 }
 
 export interface Draft {
@@ -158,6 +172,7 @@ export interface FollowUpRow {
   retryCount: number;
   lockedUntil: Date | null;
   createdAt: Date;
+  attachResume: boolean;
 }
 
 export interface FollowUpView extends FollowUpRow {
@@ -166,6 +181,8 @@ export interface FollowUpView extends FollowUpRow {
   user: { name: string | null; facts: string[]; signature: string; timeZone: string };
   replyTarget: ReplyTarget | null;
   previousValuePoints: string[];
+  /** The resume attached to this application, if any. */
+  resume: { storagePath: string; fileName: string; mimeType: string; sizeBytes: number } | null;
 }
 
 export interface Transition {
@@ -195,6 +212,7 @@ export interface PlanningCandidate {
     followupsPaused: boolean;
     responsePromisedBy: string | null;
     mailAccountId: string | null;
+    hasResume: boolean;
   };
   contact: {
     relationshipStage: "active" | "nurture" | "dormant" | "do_not_contact";
@@ -235,7 +253,7 @@ export interface Repo {
   updateMailAccount(id: string, patch: Partial<Pick<MailAccount, "syncCursor" | "subscriptionId" | "watchExpiresAt" | "status">>): Promise<void>;
 
   planningCandidates(): Promise<PlanningCandidate[]>;
-  insertPlanned(p: { userId: string; jobId: string; contactId: string; kind: string; attemptNo: number; channel: string; dueAt: Date; mailAccountId: string | null }): Promise<boolean>;
+  insertPlanned(p: { userId: string; jobId: string; contactId: string; kind: string; attemptNo: number; channel: string; dueAt: Date; mailAccountId: string | null; attachResume: boolean }): Promise<boolean>;
   moveToNurture(p: { userId: string; contactId: string; nextTouchAt: Date; reason: string }): Promise<void>;
 
   claim(from: FollowUpState, to: FollowUpState, dueBefore: Date, limit: number): Promise<FollowUpRow[]>;
@@ -250,7 +268,7 @@ export interface Repo {
     userId: string; contactId: string; jobId: string | null; type: "email" | "linkedin"; direction: "inbound" | "outbound";
     kind: string; date: Date; notes: string | null; provider?: MailProvider | null; mailAccountId?: string | null;
     threadId?: string | null; messageId?: string | null; rfc822MessageId?: string | null; subject?: string | null;
-    classification?: string | null;
+    classification?: string | null; attachmentName?: string | null;
   }): Promise<boolean>;
   inboundSince(contactId: string, since: Date): Promise<number>;
   openFollowUps(userId: string, contactId: string, jobIds: string[] | null): Promise<FollowUpRow[]>;

@@ -1,5 +1,5 @@
 import { localParts } from "../calendar.ts";
-import type { Classifier, Drafter, EmailProvider, MailAccount, MailProvider, Notifier, Repo, TelegramLink } from "../ports.ts";
+import type { Classifier, Drafter, EmailProvider, FileStore, MailAccount, MailProvider, Notifier, Repo, TelegramLink } from "../ports.ts";
 
 export interface Logger {
   info(msg: string, data?: Record<string, unknown>): void;
@@ -19,6 +19,7 @@ export interface Deps {
   drafter: Drafter;
   classifier: Classifier;
   notifier: Notifier | null;
+  files: FileStore;
   now: () => Date;
   log: Logger;
   appUrl: string | null;

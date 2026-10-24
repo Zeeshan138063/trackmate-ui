@@ -29,6 +29,7 @@ export interface AgentFollowUp {
   last_error: string | null;
   sent_at: string | null;
   mail_account_id: string | null;
+  attach_resume: boolean;
   created_at: string;
   updated_at: string;
 }

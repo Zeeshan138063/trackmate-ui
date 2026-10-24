@@ -10,7 +10,7 @@ import {
   type TimelineItem,
 } from "@/types/followup";
 
-type ApiAction = "approve" | "redraft" | "snooze" | "skip" | "mark_sent" | "retry";
+type ApiAction = "approve" | "redraft" | "snooze" | "skip" | "mark_sent" | "retry" | "set_attachment";
 
 /** Call followups-api; surfaces the server's message without leaking anything else. */
 export async function callFollowUpsApi(action: ApiAction | "telegram_link", payload: Record<string, unknown> = {}) {
@@ -56,6 +56,7 @@ export function useJobFollowUps(jobId: string | undefined) {
   const [engagements, setEngagements] = useState<TimelineEngagement[]>([]);
   const [contacts, setContacts] = useState<TimelineContact[]>([]);
   const [mailAccounts, setMailAccounts] = useState<MailAccountSummary[]>([]);
+  const [attachedResume, setAttachedResume] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
@@ -77,7 +78,7 @@ export function useJobFollowUps(jobId: string | undefined) {
       }));
     const contactIds = people.map((p) => p.id);
 
-    const [fu, eng, accts] = await Promise.all([
+    const [fu, eng, accts, resume] = await Promise.all([
       supabase.from("follow_ups" as never).select("*").eq("job_id", jobId).not("state", "is", null),
       contactIds.length
         ? supabase
@@ -88,7 +89,9 @@ export function useJobFollowUps(jobId: string | undefined) {
           .order("date", { ascending: true })
         : Promise.resolve({ data: [] }),
       supabase.from("mail_accounts" as never).select("id, provider, address, status"),
+      supabase.from("application_resumes" as never).select("file_name").eq("job_id", jobId).eq("is_attached", true).maybeSingle(),
     ]);
+    setAttachedResume(((resume.data as { file_name?: string } | null)?.file_name) ?? null);
 
     setContacts(people);
     setFollowUps((fu.data ?? []) as unknown as AgentFollowUp[]);
@@ -106,6 +109,7 @@ export function useJobFollowUps(jobId: string | undefined) {
       .channel(`followups-${jobId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "follow_ups", filter: `job_id=eq.${jobId}` }, () => refresh())
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "engagements" }, () => refresh())
+      .on("postgres_changes", { event: "*", schema: "public", table: "application_resumes", filter: `job_id=eq.${jobId}` }, () => refresh())
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
@@ -123,5 +127,5 @@ export function useJobFollowUps(jobId: string | undefined) {
 
   const waitingCount = followUps.filter((f) => NEEDS_YOU.includes(f.state)).length;
 
-  return { loading, branches, followUps, contacts, nextUp, waitingCount, mailAccounts, refresh };
+  return { loading, branches, followUps, contacts, nextUp, waitingCount, mailAccounts, attachedResume, refresh };
 }

@@ -1,6 +1,7 @@
 import { outcomeLine } from "../cards.ts";
 import { CHASER_WINDOW, nextSlot } from "../sendWindow.ts";
 import {
+  type EmailAttachment,
   type FollowUpRow,
   type FollowUpView,
   type MailAccount,
@@ -95,6 +96,17 @@ export async function sendOne(deps: Deps, row: FollowUpRow): Promise<void> {
     return await requeue(deps, v, tomorrow, {}, "daily send cap reached");
   }
 
+  // The approved message may say "I've attached my resume", so never send it without the file.
+  let attachment: EmailAttachment | null = null;
+  if (v.attachResume) {
+    if (!v.resume) return await fail(deps, v, "the resume was removed from this application; attach one or turn off 'Attach resume'");
+    try {
+      attachment = { fileName: v.resume.fileName, mimeType: v.resume.mimeType, content: await deps.files.download(v.resume.storagePath) };
+    } catch (e) {
+      return await fail(deps, v, `could not load the attached resume (${errorMessage(e)})`);
+    }
+  }
+
   try {
     const sent = await providerFor(deps, acct).send(acct, {
       to: v.contact.email,
@@ -102,6 +114,7 @@ export async function sendOne(deps: Deps, row: FollowUpRow): Promise<void> {
       bodyText: v.draftBody,
       followUpId: v.id,
       replyTo: v.replyTarget,
+      attachment,
     });
     await deps.repo.transition(v.id, null, {
       to: "sent",
@@ -124,8 +137,14 @@ export async function sendOne(deps: Deps, row: FollowUpRow): Promise<void> {
       messageId: sent.messageId,
       rfc822MessageId: sent.rfc822MessageId,
       subject: v.draftSubject,
+      attachmentName: attachment?.fileName ?? null,
     });
-    await notify(deps, v.userId, outcomeLine(v, `Sent from ${acct.address}.`), v.telegramMessageId);
+    await notify(
+      deps,
+      v.userId,
+      outcomeLine(v, `Sent from ${acct.address}${attachment ? ` with ${attachment.fileName}` : ""}.`),
+      v.telegramMessageId,
+    );
     deps.log.info("follow-up sent", { followUpId: v.id, provider: acct.provider });
   } catch (e) {
     if (e instanceof MailAuthError) {

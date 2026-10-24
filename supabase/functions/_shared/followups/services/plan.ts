@@ -54,6 +54,8 @@ export async function planAll(deps: Deps): Promise<{ planned: number; nurtured: 
           channel: decision.channel,
           dueAt: decision.dueAt,
           mailAccountId: c.job.mailAccountId,
+          // First chaser by email carries the attached resume; later messages don't repeat it.
+          attachResume: c.job.hasResume && decision.channel === "email" && decision.kind === "chaser" && decision.attemptNo === 1,
         });
         if (inserted) planned++;
       } else if (decision.type === "move_to_nurture") {

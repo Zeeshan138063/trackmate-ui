@@ -60,6 +60,9 @@ export function validateDraft(draft: Draft, ctx: DraftContext): ValidationResult
   const roleHit = overlap(ctx.job.position, body) >= 0.5 || lower.includes(ctx.job.company.toLowerCase().trim());
   if (!roleHit) problems.push(`mention the ${ctx.job.position} role or ${ctx.job.company}`);
   if (ctx.channel === "email" && !draft.subject.trim()) problems.push("email needs a subject");
+  if (!ctx.hasAttachment && /\b(attached|attaching|attachment|enclosed)\b/i.test(body)) {
+    problems.push("nothing is attached to this message, so do not say a file is attached");
+  }
 
   if (ctx.you.facts.length > 0) {
     const grounded = ctx.you.facts.some((f) => overlap(draft.valuePoint, f) >= 0.6);

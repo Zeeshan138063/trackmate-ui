@@ -17,8 +17,6 @@ export interface Job {
   excitement: number; // 1-5 stars
   checklist?: JobChecklist;
   notes?: string;
-  attachedResume?: string; // Legacy: JSON snapshot
-  resumeS3Key?: string; // New: S3 Key
   createdAt?: string;
   updatedAt?: string;
 }

@@ -20,6 +20,10 @@ By kind:
 - deadline_checkin: they gave a date and it has passed; ask kindly whether there is an update.
 - nurture: no ask at all; a short, useful, friendly note.
 
+Attachments:
+- If the task says a resume is attached, you may mention it once, briefly ("I've attached my resume for convenience").
+- If it does not, never say that anything is attached or enclosed.
+
 Channel:
 - email: give a subject. For replies in an existing thread the subject is ignored.
 - linkedin: no subject needed, even shorter, conversational.

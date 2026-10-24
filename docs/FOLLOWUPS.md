@@ -9,6 +9,7 @@ LinkedIn messages are handed to you to send yourself. Nothing is ever sent witho
 | Piece | Where |
 | --- | --- |
 | Data model + state machine (DB trigger) | `supabase/migrations/20261024120000_followup_agent.sql` |
+| Resume attachments (private bucket, versions) | `supabase/migrations/20261024140000_application_resumes.sql` |
 | RPCs, token vault, scheduler | `supabase/migrations/20261024130000_followup_agent_runtime.sql` |
 | Domain logic (cadence, send window, state) | `supabase/functions/_shared/followups/*.ts` |
 | Adapters (Gmail, Outlook, Claude, Telegram, Supabase) | `supabase/functions/_shared/followups/adapters/` |
@@ -91,6 +92,22 @@ Settings → Integrations → **Follow-up agent**: connect your inbox, connect T
 For each application: link the recruiter or hiring manager under **Contacts** (with an email and/or LinkedIn URL),
 set **Date Applied**, and the first follow-up is planned 6 business days later.
 
+## Resume attachments
+
+Each application can keep resume versions (PDF or DOCX, up to 2 MB) and have one **attached**:
+
+- **Attach tailored resume** (Resume tab) turns the tailored resume into a text-based, ATS-readable PDF and attaches it.
+  Printing a tailored resume also saves that exact version. Identical versions are not saved twice.
+- **Upload PDF or DOCX** stores the exact file you submitted. The type is checked from the file's bytes, not its name.
+- The **first email chaser** is planned with the attached resume. Toggle it per follow-up on the next-up card; a waiting
+  draft is rewritten so its wording matches. Drafts may only say "attached" when a file really goes out, and a
+  follow-up whose file was removed after approval is stopped rather than sent without it.
+- LinkedIn follow-ups never carry files (attach it yourself in LinkedIn if you want).
+
+Storage: private Supabase Storage bucket `resumes`, path `<user_id>/<job_id>/<random>.<ext>`. Storage policies only
+let you read, upload or delete in your own folder, for your own applications. Downloads in the app use signed URLs
+that expire after 60 seconds; the sender reads files with the service role on the server. No file is ever public.
+
 ## Rules the cadence engine follows
 
 - Chaser 1: 6 business days after applying. Chaser 2: 8 business days after chaser 1. Never more than two.
@@ -120,6 +137,9 @@ set **Date Applied**, and the first follow-up is planned 6 business days later.
   drafter has no tools that send or change anything; drafts are validated in code and approved by you.
 - **Browser**: CORS limited to `APP_URL` (+ `ALLOWED_ORIGINS`); OAuth and Telegram links are host-checked before redirecting;
   errors return generic messages.
+- **Files**: private bucket, per-user folder policies, PDF/DOCX only, 2 MB cap enforced by the bucket, the table and
+  the sender; 60-second signed URLs; attachment names sanitised. The old browser-side S3 upload (which needed AWS keys
+  in `VITE_` variables, i.e. shipped to every visitor) is removed.
 - **Duplicates**: idempotency key per (application, contact, kind, attempt), row leases with `SKIP LOCKED`, a sweeper that
   checks the Sent folder before retrying a crashed send, and a re-check for replies immediately before every send.
 

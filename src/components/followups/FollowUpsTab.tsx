@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useJobFollowUps } from "@/hooks/useJobFollowUps";
+import { idleReason } from "@/lib/followupHints";
 import { HistoryTree } from "./HistoryTree";
 import { NextUpCard } from "./NextUpCard";
 
@@ -19,9 +20,10 @@ interface JobFollowUpSettings {
   response_promised_by: string | null;
 }
 
-export function FollowUpsTab({ jobId, appliedOn }: { jobId: string; appliedOn?: string | null }) {
-  const { loading, branches, contacts, nextUp, mailAccounts, refresh } = useJobFollowUps(jobId);
+export function FollowUpsTab({ jobId, appliedOn, status }: { jobId: string; appliedOn?: string | null; status?: string }) {
+  const { loading, branches, contacts, nextUp, mailAccounts, attachedResume, refresh } = useJobFollowUps(jobId);
   const [settings, setSettings] = useState<JobFollowUpSettings | null>(null);
+  const [setupMissing, setSetupMissing] = useState(false);
 
   useEffect(() => {
     supabase
@@ -29,7 +31,11 @@ export function FollowUpsTab({ jobId, appliedOn }: { jobId: string; appliedOn?: 
       .select("applied_via, mail_account_id, do_not_followup, followups_paused, response_promised_by")
       .eq("id", jobId)
       .single()
-      .then(({ data }) => setSettings(data as unknown as JobFollowUpSettings));
+      .then(({ data, error }) => {
+        // Missing columns mean the follow-up migrations aren't applied on this database yet.
+        setSetupMissing(!!error);
+        setSettings(error ? null : (data as unknown as JobFollowUpSettings));
+      });
   }, [jobId]);
 
   const save = async (patch: Partial<JobFollowUpSettings>) => {
@@ -55,12 +61,10 @@ export function FollowUpsTab({ jobId, appliedOn }: { jobId: string; appliedOn?: 
   return (
     <div className="space-y-6">
       {nextUp ? (
-        <NextUpCard followUp={nextUp} contact={contacts.find((c) => c.id === nextUp.contact_id)} onChanged={refresh} />
+        <NextUpCard followUp={nextUp} contact={contacts.find((c) => c.id === nextUp.contact_id)} attachedResume={attachedResume} onChanged={refresh} />
       ) : (
         <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-          {contacts.length === 0
-            ? "Link a recruiter or hiring manager in the Contacts tab, and set the Date Applied, so follow-ups can be planned."
-            : "No follow-up due right now. The next one is planned automatically from this application's history."}
+          {idleReason({ setupMissing, status, appliedOn, contacts })}
         </div>
       )}
 

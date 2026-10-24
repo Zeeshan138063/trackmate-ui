@@ -9,6 +9,7 @@ import {
   type DraftContext,
   type Drafter,
   type EmailProvider,
+  type FileStore,
   type FollowUpRow,
   type FollowUpView,
   type MailAccount,
@@ -74,6 +75,7 @@ export class FakeRepo implements Repo {
   nurtured: string[] = [];
   heartbeats = new Map<string, Date>();
   facts: string[] = [];
+  resumes = new Map<string, { storagePath: string; fileName: string; mimeType: string; sizeBytes: number }>(); // by jobId
   now: () => Date = () => new Date();
 
   addJob(j: Partial<FakeJob> & { userId: string }): FakeJob {
@@ -101,7 +103,7 @@ export class FakeRepo implements Repo {
     const row: FollowUpRow = {
       id: uuid(), kind: "chaser", attemptNo: 1, channel: "email", dueAt: this.now(), sendAt: null,
       draftSubject: "Following up", draftBody: "Hi Sara, ...", draftVersion: 1, editNotes: [], mailAccountId: null,
-      telegramMessageId: null, retryCount: 0, lockedUntil: null, createdAt: new Date(this.now().getTime() - 86_400_000), ...f,
+      telegramMessageId: null, retryCount: 0, lockedUntil: null, createdAt: new Date(this.now().getTime() - 86_400_000), attachResume: false, ...f,
     };
     this.followUps.set(row.id, row);
     return row;
@@ -130,7 +132,7 @@ export class FakeRepo implements Repo {
           contactId: cid,
           job: {
             status: job.status, dateApplied: job.dateApplied, appliedVia: "email", doNotFollowup: false,
-            followupsPaused: false, responsePromisedBy: null, mailAccountId: job.mailAccountId,
+            followupsPaused: false, responsePromisedBy: null, mailAccountId: job.mailAccountId, hasResume: this.resumes.has(job.id),
           },
           contact: { relationshipStage: c.stage, timeZone: c.timeZone, country: null, hasEmail: !!c.email, hasLinkedIn: !!c.linkedinUrl },
           touchpoints: this.engagements.filter((e) => e.contactId === cid).map((e) => ({
@@ -145,7 +147,7 @@ export class FakeRepo implements Repo {
     return out;
   }
 
-  async insertPlanned(p: { userId: string; jobId: string; contactId: string; kind: string; attemptNo: number; channel: string; dueAt: Date; mailAccountId: string | null }) {
+  async insertPlanned(p: { userId: string; jobId: string; contactId: string; kind: string; attemptNo: number; channel: string; dueAt: Date; mailAccountId: string | null; attachResume: boolean }) {
     const dup = [...this.followUps.values()].some((f) =>
       f.jobId === p.jobId && f.contactId === p.contactId && f.kind === p.kind && f.attemptNo === p.attemptNo
     );
@@ -153,7 +155,7 @@ export class FakeRepo implements Repo {
     const row = this.seedFollowUp({
       userId: p.userId, jobId: p.jobId, contactId: p.contactId, state: "planned", kind: p.kind as FollowUpRow["kind"],
       attemptNo: p.attemptNo, channel: p.channel as "email", dueAt: p.dueAt, draftSubject: null, draftBody: null,
-      draftVersion: 0, mailAccountId: p.mailAccountId, createdAt: this.now(),
+      draftVersion: 0, mailAccountId: p.mailAccountId, createdAt: this.now(), attachResume: p.attachResume,
     });
     this.events.push({ id: row.id, from: null, to: "planned", actor: "system", detail: {} });
     return true;
@@ -191,6 +193,7 @@ export class FakeRepo implements Repo {
       user: { name: "Zeeshan", facts: this.facts, signature: "Zeeshan", timeZone: "Asia/Karachi" },
       replyTarget: mail ? { threadId: mail.threadId!, providerMessageId: mail.messageId ?? null, rfc822MessageId: null, subject: "Application" } : null,
       previousValuePoints: [],
+      resume: this.resumes.get(f.jobId) ?? null,
     };
   }
 
@@ -213,6 +216,7 @@ export class FakeRepo implements Repo {
     if ("due_date" in patch) next.dueAt = new Date(patch.due_date as string);
     if ("send_at" in patch) next.sendAt = new Date(patch.send_at as string);
     if ("mail_account_id" in patch) next.mailAccountId = patch.mail_account_id as string;
+    if ("attach_resume" in patch) next.attachResume = patch.attach_resume as boolean;
     if ("telegram_message_id" in patch) next.telegramMessageId = patch.telegram_message_id as number;
     if ("retry_count" in patch) next.retryCount = patch.retry_count as number;
     if ("last_error" in patch) next.lastError = patch.last_error as string | null;
@@ -307,6 +311,15 @@ export class FakeEmail implements EmailProvider {
   async ensureSubscription() { return { expiresAt: null, subscriptionId: null }; }
 }
 
+export class FakeFiles implements FileStore {
+  files = new Map<string, Uint8Array>();
+  async download(path: string) {
+    const f = this.files.get(path);
+    if (!f) throw new Error("not found");
+    return f;
+  }
+}
+
 export class FakeDrafter implements Drafter {
   calls: { ctx: DraftContext; fixes?: string[] }[] = [];
   queue: (Draft | Error)[] = [];
@@ -357,15 +370,17 @@ export function makeDeps(now: Date) {
   const drafter = new FakeDrafter();
   const classifier = new FakeClassifier();
   const notifier = new FakeNotifier();
+  const files = new FakeFiles();
   const deps: Deps = {
     repo,
     providers: { gmail: email },
     drafter,
     classifier,
     notifier,
+    files,
     now: () => now,
     log: { info() {}, warn() {}, error() {} },
     appUrl: "https://jobos.dev",
   };
-  return { deps, repo, email, drafter, classifier, notifier };
+  return { deps, repo, email, drafter, classifier, notifier, files };
 }

@@ -64,6 +64,7 @@ export class ClaudeDrafter implements Drafter {
     const user = [
       `Kind: ${ctx.kind} (attempt ${ctx.attemptNo})`,
       `Channel: ${ctx.channel}`,
+      `Resume attached to this message: ${ctx.hasAttachment ? "yes" : "no"}`,
       `Word limit: ${min} to ${max} words`,
       `Role: ${ctx.job.position} at ${ctx.job.company}${ctx.job.appliedOn ? `, applied on ${ctx.job.appliedOn}` : ""}`,
       ctx.job.jdSummary ? `Role summary: ${ctx.job.jdSummary}` : "",

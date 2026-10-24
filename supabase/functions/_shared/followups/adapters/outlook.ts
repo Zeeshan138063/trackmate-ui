@@ -1,6 +1,7 @@
 import type { EmailProvider, MailAccount, MailMessage, OutgoingEmail, SentEmail, TokenProvider } from "../ports.ts";
 import { headerSafe } from "../security.ts";
 import { type FetchFn, requestJson } from "./http.ts";
+import { assertAttachment, attachmentName, bytesToBase64 } from "./mime.ts";
 
 const API = "https://graph.microsoft.com/v1.0/me";
 const SELECT = "id,conversationId,internetMessageId,from,toRecipients,subject,receivedDateTime,sentDateTime,bodyPreview";
@@ -60,6 +61,15 @@ export class OutlookProvider implements EmailProvider {
   }
 
   async send(acct: MailAccount, email: OutgoingEmail): Promise<SentEmail> {
+    if (email.attachment) assertAttachment(email.attachment);
+    const fileAttachment = email.attachment
+      ? {
+        "@odata.type": "#microsoft.graph.fileAttachment",
+        name: attachmentName(email.attachment.fileName),
+        contentType: email.attachment.mimeType,
+        contentBytes: bytesToBase64(email.attachment.content),
+      }
+      : null;
     let draft: GraphMessage;
     if (email.replyTo?.providerMessageId) {
       // createReply keeps the conversation and quotes the original below our text.
@@ -68,6 +78,13 @@ export class OutlookProvider implements EmailProvider {
         `/messages/${encodeURIComponent(email.replyTo.providerMessageId)}/createReply`,
         { method: "POST", body: JSON.stringify({ comment: email.bodyText }) },
       );
+      if (fileAttachment) {
+        // Files under 3 MB can be added to a draft in one request.
+        await this.call(acct, `/messages/${encodeURIComponent(draft.id)}/attachments`, {
+          method: "POST",
+          body: JSON.stringify(fileAttachment),
+        });
+      }
     } else {
       draft = await this.call<GraphMessage>(acct, "/messages", {
         method: "POST",
@@ -76,6 +93,7 @@ export class OutlookProvider implements EmailProvider {
           body: { contentType: "Text", content: email.bodyText },
           toRecipients: [{ emailAddress: { address: email.to } }],
           internetMessageHeaders: [{ name: "X-JobOS-Followup-Id", value: email.followUpId }],
+          ...(fileAttachment ? { attachments: [fileAttachment] } : {}),
         }),
       });
     }

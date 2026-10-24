@@ -1,7 +1,7 @@
 // Browser-facing actions for the Follow-ups tab and Settings.
 // Every call is tied to the signed-in user; ownership is re-checked on every row.
 
-import { approve, markSent, redraft, retry, skip, snooze } from "../_shared/followups/services/approvals.ts";
+import { approve, markSent, redraft, retry, setAttachResume, skip, snooze } from "../_shared/followups/services/approvals.ts";
 import {
   buildDeps,
   corsHeaders,
@@ -21,9 +21,10 @@ type Body = {
   body?: string;
   instruction?: string;
   until?: string;
+  attach?: boolean;
 };
 
-const ACTIONS = new Set(["approve", "redraft", "snooze", "skip", "mark_sent", "retry", "telegram_link"]);
+const ACTIONS = new Set(["approve", "redraft", "snooze", "skip", "mark_sent", "retry", "set_attachment", "telegram_link"]);
 
 Deno.serve(async (req) => {
   const cors = corsHeaders(req);
@@ -70,6 +71,10 @@ Deno.serve(async (req) => {
         break;
       case "retry":
         row = await retry(deps, userId, b.id, "web");
+        break;
+      case "set_attachment":
+        if (typeof b.attach !== "boolean") throw new HttpError(400, "attach must be true or false");
+        row = await setAttachResume(deps, userId, b.id, "web", b.attach);
         break;
     }
     return json({ ok: true, state: row?.state ?? null }, 200, cors);
