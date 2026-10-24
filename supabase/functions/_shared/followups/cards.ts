@@ -28,6 +28,9 @@ export function approvalCardText(v: FollowUpView, warnings: string[] = []): stri
     "",
   ];
   if (v.channel === "email" && v.draftSubject && !v.replyTarget) lines.push(`<b>Subject:</b> ${e(v.draftSubject)}`);
+  if (v.channel === "email" && v.attachResume) {
+    lines.push(v.resume ? `<b>Attachment:</b> ${e(v.resume.fileName)}` : "<b>Attachment:</b> <i>no resume attached to this application</i>");
+  }
   lines.push(e(v.draftBody ?? ""));
   if (warnings.length) lines.push("", `<i>Check before approving: ${e(warnings.join("; "))}</i>`);
   return lines.join("\n");

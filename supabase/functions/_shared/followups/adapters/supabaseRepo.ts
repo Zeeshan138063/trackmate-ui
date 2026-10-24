@@ -23,7 +23,7 @@ type Row = Record<string, any>;
 const OPEN: FollowUpState[] = ["planned", "drafting", "awaiting_approval", "approved", "sending", "awaiting_manual_send", "failed"];
 const ACTIVE_JOB = ["Applied", "Interviewing", "Negotiating"];
 const FU_COLUMNS =
-  "id,user_id,job_id,contact_id,kind,attempt_no,channel,state,due_date,send_at,draft_subject,draft_body,draft_version,edit_notes,mail_account_id,telegram_message_id,retry_count,locked_until,created_at";
+  "id,user_id,job_id,contact_id,kind,attempt_no,channel,state,due_date,send_at,draft_subject,draft_body,draft_version,edit_notes,mail_account_id,telegram_message_id,retry_count,locked_until,created_at,attach_resume";
 
 const d = (v: string | null | undefined) => (v ? new Date(v) : null);
 
@@ -48,6 +48,7 @@ export function toFollowUp(r: Row): FollowUpRow {
     retryCount: r.retry_count ?? 0,
     lockedUntil: d(r.locked_until),
     createdAt: new Date(r.created_at),
+    attachResume: !!r.attach_resume,
   };
 }
 
@@ -135,6 +136,7 @@ export class SupabaseRepo implements Repo {
         followupsPaused: r.job.followups_paused,
         responsePromisedBy: r.job.response_promised_by,
         mailAccountId: r.job.mail_account_id,
+        hasResume: !!r.job.has_resume,
       },
       contact: {
         relationshipStage: r.contact.relationship_stage,
@@ -154,7 +156,7 @@ export class SupabaseRepo implements Repo {
     }));
   }
 
-  async insertPlanned(p: { userId: string; jobId: string; contactId: string; kind: string; attemptNo: number; channel: string; dueAt: Date; mailAccountId: string | null }) {
+  async insertPlanned(p: { userId: string; jobId: string; contactId: string; kind: string; attemptNo: number; channel: string; dueAt: Date; mailAccountId: string | null; attachResume: boolean }) {
     const res = await this.db.from("follow_ups").insert({
       user_id: p.userId,
       job_id: p.jobId,
@@ -166,6 +168,7 @@ export class SupabaseRepo implements Repo {
       state: "planned",
       due_date: p.dueAt.toISOString(),
       mail_account_id: p.mailAccountId,
+      attach_resume: p.attachResume,
     });
     if (res.error?.code === "23505") return false; // already planned: the idempotency key did its job
     check(res);
@@ -211,7 +214,7 @@ export class SupabaseRepo implements Repo {
     const f = await this.followUp(id);
     if (!f) return null;
 
-    const [job, contact, settings, profile, userSettings, lastMail, siblings] = await Promise.all([
+    const [job, contact, settings, profile, userSettings, lastMail, siblings, resume] = await Promise.all([
       this.db.from("jobs").select("position,company,date_applied,description,mail_account_id").eq("id", f.jobId).eq("user_id", f.userId).single(),
       this.db.from("contacts").select("*").eq("id", f.contactId).eq("user_id", f.userId).single(),
       this.db.from("followup_settings").select("facts,signature,timezone").eq("user_id", f.userId).maybeSingle(),
@@ -222,7 +225,10 @@ export class SupabaseRepo implements Repo {
         .eq("user_id", f.userId).eq("contact_id", f.contactId).not("thread_id", "is", null)
         .order("date", { ascending: false }).limit(5),
       this.db.from("follow_ups").select("id").eq("job_id", f.jobId).eq("contact_id", f.contactId).eq("state", "sent").neq("id", f.id),
+      this.db.from("application_resumes").select("storage_path,file_name,mime_type,size_bytes")
+        .eq("job_id", f.jobId).eq("user_id", f.userId).eq("is_attached", true).maybeSingle(),
     ]);
+    const r = resume.error ? null : resume.data as Row | null;
     const j = check(job) as Row | null;
     const c = check(contact) as Row | null;
     if (!j || !c) return null; // job or contact deleted since planning
@@ -271,6 +277,7 @@ export class SupabaseRepo implements Repo {
       },
       replyTarget,
       previousValuePoints,
+      resume: r ? { storagePath: r.storage_path, fileName: r.file_name, mimeType: r.mime_type, sizeBytes: r.size_bytes } : null,
     };
   }
 
@@ -348,6 +355,7 @@ export class SupabaseRepo implements Repo {
       rfc822_message_id: e.rfc822MessageId ?? null,
       subject: e.subject ?? null,
       classification: e.classification ?? null,
+      attachment_name: e.attachmentName ?? null,
     });
     if (res.error?.code === "23505") return false;
     check(res);

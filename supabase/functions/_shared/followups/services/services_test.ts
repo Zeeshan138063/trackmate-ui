@@ -2,7 +2,7 @@ import { assert, assertEquals, assertRejects } from "jsr:@std/assert@1";
 import { zonedTimeToUtc } from "../calendar.ts";
 import { ConflictError, MailAuthError, TransientMailError } from "../ports.ts";
 import { makeDeps, uuid } from "../testing/fakes.ts";
-import { approve, ApprovalError, markSent, redraft, skip, snooze } from "./approvals.ts";
+import { approve, ApprovalError, markSent, redraft, setAttachResume, skip, snooze } from "./approvals.ts";
 import { draftOne } from "./draft.ts";
 import { ingestAccount } from "./ingest.ts";
 import { sendOne, sweepStuck } from "./send.ts";
@@ -289,4 +289,79 @@ Deno.test("tick end to end: plan, draft, approve, send, and never a duplicate", 
   const r4 = await runTick(w.deps);
   assertEquals(w.email.sent.length, 1);
   assertEquals(r4.errors, []);
+});
+
+// ---------------------------------------------------------------- resume ----
+
+const PDF_BYTES = new TextEncoder().encode("%PDF-1.7 fake resume");
+
+function withResume(w: ReturnType<typeof world>) {
+  const path = `${USER}/${w.job.id}/abc.pdf`;
+  w.repo.resumes.set(w.job.id, { storagePath: path, fileName: "Zeeshan Iqbal - Acme.pdf", mimeType: "application/pdf", sizeBytes: PDF_BYTES.length });
+  w.files.files.set(path, PDF_BYTES);
+  return path;
+}
+
+Deno.test("resume: the first email chaser is planned with the resume attached; later ones are not", async () => {
+  const w = world();
+  withResume(w);
+  w.repo.engagements.push({ userId: USER, contactId: w.contact.id, jobId: w.job.id, type: "email", direction: "outbound", kind: "application", date: new Date("2026-10-16T09:00:00Z"), threadId: "thr-app", messageId: "m0", provider: "gmail" });
+  await runTick(w.deps);
+  const [first] = [...w.repo.followUps.values()];
+  assertEquals([first.kind, first.attemptNo, first.attachResume], ["chaser", 1, true]);
+  assert(w.drafter.calls[0].ctx.hasAttachment);
+  assert(w.notifier.cards[0].card.text.includes("Attachment:</b> Zeeshan Iqbal - Acme.pdf"));
+});
+
+Deno.test("resume: no resume on the application means no attachment and no 'attached' claim", async () => {
+  const w = world();
+  w.repo.engagements.push({ userId: USER, contactId: w.contact.id, jobId: w.job.id, type: "email", direction: "outbound", kind: "application", date: new Date("2026-10-16T09:00:00Z"), threadId: "thr-app", messageId: "m0", provider: "gmail" });
+  w.drafter.queue.push({ subject: "s", body: `Hi Sara, I've attached my resume for the AI Engineer role at Acme. ${"word ".repeat(45)}`, valuePoint: "" });
+  await runTick(w.deps);
+  const [f] = [...w.repo.followUps.values()];
+  assertEquals(f.attachResume, false);
+  assertEquals(w.drafter.calls[0].ctx.hasAttachment, false);
+  assert(w.drafter.calls[1].fixes!.some((p) => p.includes("nothing is attached")));
+});
+
+Deno.test("resume: an approved email is sent with the file and logged", async () => {
+  const w = world();
+  withResume(w);
+  const f = w.repo.seedFollowUp({ userId: USER, jobId: w.job.id, contactId: w.contact.id, state: "sending", attachResume: true, telegramMessageId: 5 });
+  await sendOne(w.deps, f);
+  assertEquals(w.repo.followUps.get(f.id)!.state, "sent");
+  assertEquals(w.email.sent[0].attachment?.fileName, "Zeeshan Iqbal - Acme.pdf");
+  assertEquals(w.email.sent[0].attachment?.content, PDF_BYTES);
+  assert(w.notifier.updates.some((u) => u.text.includes("with Zeeshan Iqbal - Acme.pdf")));
+});
+
+Deno.test("resume: if the file was removed after approval, nothing is sent", async () => {
+  const w = world();
+  const f = w.repo.seedFollowUp({ userId: USER, jobId: w.job.id, contactId: w.contact.id, state: "sending", attachResume: true });
+  await sendOne(w.deps, f);
+  assertEquals(w.repo.followUps.get(f.id)!.state, "failed");
+  assertEquals(w.email.sent.length, 0);
+
+  const w2 = world();
+  const path = withResume(w2);
+  w2.files.files.delete(path); // row exists, file gone from storage
+  const f2 = w2.repo.seedFollowUp({ userId: USER, jobId: w2.job.id, contactId: w2.contact.id, state: "sending", attachResume: true });
+  await sendOne(w2.deps, f2);
+  assertEquals(w2.repo.followUps.get(f2.id)!.state, "failed");
+  assertEquals(w2.email.sent.length, 0);
+});
+
+Deno.test("resume: toggling on a waiting draft rewrites it; LinkedIn and missing resume are refused", async () => {
+  const w = world();
+  const f = w.repo.seedFollowUp({ userId: USER, jobId: w.job.id, contactId: w.contact.id, state: "awaiting_approval" });
+  await assertRejects(() => setAttachResume(w.deps, USER, f.id, "web", true), ApprovalError); // no resume yet
+  withResume(w);
+  await assertRejects(() => setAttachResume(w.deps, OTHER, f.id, "web", true), ApprovalError); // not the owner
+  await setAttachResume(w.deps, USER, f.id, "web", true);
+  const row = w.repo.followUps.get(f.id)!;
+  assertEquals([row.state, row.attachResume], ["awaiting_approval", true]);
+  assertEquals(w.drafter.calls.at(-1)!.ctx.hasAttachment, true);
+
+  const li = w.repo.seedFollowUp({ userId: USER, jobId: w.job.id, contactId: w.contact.id, state: "awaiting_approval", channel: "linkedin", kind: "thank_you" });
+  await assertRejects(() => setAttachResume(w.deps, USER, li.id, "web", true), ApprovalError);
 });

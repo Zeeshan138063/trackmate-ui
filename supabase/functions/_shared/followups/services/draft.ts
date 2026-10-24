@@ -41,6 +41,7 @@ export function buildContext(v: FollowUpView, thread: DraftContext["thread"]): D
     thread,
     previousValuePoints: v.previousValuePoints,
     editNotes: v.editNotes,
+    hasAttachment: v.attachResume && v.channel === "email" && !!v.resume,
   };
 }
 

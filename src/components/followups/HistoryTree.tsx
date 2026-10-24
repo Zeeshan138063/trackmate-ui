@@ -105,7 +105,7 @@ export function HistoryTree({ branches, appliedOn }: { branches: ContactBranch[]
 
             {items.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Nothing yet. {contact.email || contact.linkedin_url ? "The first follow-up is planned after you apply." : "Add an email or LinkedIn URL to this contact so follow-ups can be planned."}
+                Nothing yet. {contact.email ? "Follow-ups to this person go by email." : contact.linkedin_url ? "LinkedIn only: you'll get drafts to send yourself." : "Add an email or LinkedIn URL so follow-ups can be planned."}
               </p>
             ) : (
               <ol className="relative ml-2 border-l-2 border-muted">

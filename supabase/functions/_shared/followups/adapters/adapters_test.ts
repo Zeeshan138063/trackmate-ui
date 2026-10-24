@@ -1,4 +1,4 @@
-import { assert, assertEquals, assertRejects } from "jsr:@std/assert@1";
+import { assert, assertEquals, assertRejects, assertThrows } from "jsr:@std/assert@1";
 import { MailAuthError, type MailAccount, TransientMailError } from "../ports.ts";
 import { base64urlDecode, escapeHtml, isEmail, pkceChallenge, pkceVerifier, redact, safeEqual, signState, verifyState } from "../security.ts";
 import { validateDraft } from "../validators.ts";
@@ -66,6 +66,27 @@ Deno.test("MIME: header injection is neutralised and threading headers are set",
   assert(headerBlock.includes("X-JobOS-Followup-Id: fu-1"));
   assertEquals(encodeHeader("Bewerbung für Sie"), "=?UTF-8?B?QmV3ZXJidW5nIGbDvHIgU2ll?=");
   assertEquals(parseAddress('"Sara K" <Sara@Acme.com>'), { address: "sara@acme.com", name: "Sara K" });
+});
+
+Deno.test("MIME: attachment goes in multipart/mixed with a safe file name", () => {
+  const raw = buildRawMessage({
+    to: "sara@acme.com", subject: "Re: Application", bodyText: "Hi Sara", followUpId: "fu-1",
+    attachment: { fileName: 'CV"\r\nBcc: x@y.com/../Zeeshan.pdf', mimeType: "application/pdf", content: new TextEncoder().encode("%PDF-1.7") },
+  });
+  const text = new TextDecoder().decode(base64urlDecode(raw));
+  const boundary = text.match(/boundary="([^"]+)"/)![1];
+  assert(text.includes(`--${boundary}--`));
+  assert(text.includes("Content-Type: application/pdf"));
+  assert(!/^Bcc:/m.test(text), "header injection via file name");
+  const disp = text.match(/Content-Disposition: attachment; (.*)/)![1];
+  assert(!disp.includes("/") && !disp.slice(10, -1).includes('"'), disp);
+  assert(text.includes(btoa("%PDF-1.7")));
+});
+
+Deno.test("MIME: refuses executables and oversized files", () => {
+  const base = { to: "a@b.co", subject: "s", bodyText: "b", followUpId: "f" };
+  assertThrows(() => buildRawMessage({ ...base, attachment: { fileName: "x.exe", mimeType: "application/x-msdownload", content: new Uint8Array(5) } }));
+  assertThrows(() => buildRawMessage({ ...base, attachment: { fileName: "x.pdf", mimeType: "application/pdf", content: new Uint8Array(2 * 1024 * 1024 + 1) } }));
 });
 
 // ------------------------------------------------------------- providers ----
@@ -138,6 +159,21 @@ Deno.test("Outlook: reply uses createReply then send; OData strings are escaped"
   assert(f.calls[0].url.includes(encodeURIComponent("orig'1")));
   assertEquals(JSON.parse(f.calls[0].body), { comment: "Hi" });
   await outlook.thread(acct("outlook"), "it's", 3);
+
+  // With an attachment: added to the draft before sending.
+  const g = fakeFetch([
+    [/POST .*createReply/, () => json({ id: "d2", conversationId: "c1" })],
+    [/POST .*messages\/d2\/attachments/, () => json({ id: "att" }, 201)],
+    [/POST .*messages\/d2\/send/, () => new Response(null, { status: 202 })],
+  ]);
+  await new OutlookProvider(tokens, {}, g.fn).send(acct("outlook"), {
+    to: "sara@acme.com", subject: "x", bodyText: "Hi", followUpId: "fu-2",
+    replyTo: { threadId: "c1", providerMessageId: "orig", rfc822MessageId: null, subject: "Application" },
+    attachment: { fileName: "Zeeshan.pdf", mimeType: "application/pdf", content: new TextEncoder().encode("%PDF-1.7") },
+  });
+  assertEquals(g.calls.map((c) => c.url.split("/").at(-1)), ["createReply", "attachments", "send"]);
+  const att = JSON.parse(g.calls[1].body);
+  assertEquals([att["@odata.type"], att.name, att.contentBytes], ["#microsoft.graph.fileAttachment", "Zeeshan.pdf", btoa("%PDF-1.7")]);
   assert(decodeURIComponent(f.calls.at(-1)!.url).includes("conversationId eq 'it''s'"));
 });
 
@@ -193,7 +229,7 @@ Deno.test("validators catch invented facts and template phrases", () => {
     job: { position: "AI Engineer", company: "Acme", appliedOn: null, jdSummary: null },
     contact: { name: "Sara Khan", firstName: "Sara", role: null },
     you: { name: "Z", facts: ["Shipped RAG in production for a German healthtech company"], signature: "" },
-    thread: [], previousValuePoints: [], editNotes: [],
+    thread: [], previousValuePoints: [], editNotes: [], hasAttachment: false,
   };
   const body = `Hi Sara, I hope this email finds you well. Following up on the AI Engineer role at Acme. ${"word ".repeat(45)}`;
   const r = validateDraft({ subject: "s", body, valuePoint: "Led a team of 50 at Google" }, ctx);

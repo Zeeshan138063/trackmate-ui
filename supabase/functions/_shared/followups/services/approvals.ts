@@ -116,6 +116,26 @@ export async function markSent(deps: Deps, userId: string, id: string, via: Via)
   return row;
 }
 
+/** Turn "attach resume" on or off. A waiting draft is rewritten so its wording matches. */
+export async function setAttachResume(deps: Deps, userId: string, id: string, via: Via, on: boolean) {
+  const f = await load(deps, userId, id);
+  if (f.channel !== "email") throw new ApprovalError("files can only be attached to email follow-ups");
+  if (f.attachResume === on) return f;
+  if (on) {
+    const v = await deps.repo.view(id);
+    if (!v?.resume) throw new ApprovalError("attach a resume to this application first (Resume tab)");
+  }
+  if (f.state === "planned" || f.state === "failed") {
+    return await move(deps, userId, id, via, { to: null, expect: [f.state], patch: { attach_resume: on } });
+  }
+  if (f.state === "awaiting_approval") {
+    const row = await move(deps, userId, id, via, { to: "drafting", expect: ["awaiting_approval"], patch: { attach_resume: on } });
+    await draftOne(deps, row);
+    return await deps.repo.followUp(id);
+  }
+  throw new ApprovalError("this follow-up can no longer be changed");
+}
+
 export async function retry(deps: Deps, userId: string, id: string, via: Via) {
   await load(deps, userId, id);
   return await move(deps, userId, id, via, {

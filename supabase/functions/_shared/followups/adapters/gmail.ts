@@ -69,6 +69,7 @@ export class GmailProvider implements EmailProvider {
       bodyText: email.bodyText,
       followUpId: email.followUpId,
       inReplyTo: email.replyTo?.rfc822MessageId ?? null,
+      attachment: email.attachment ?? null,
     });
     const sent = await this.call<{ id: string; threadId: string }>(acct, "/messages/send", {
       method: "POST",

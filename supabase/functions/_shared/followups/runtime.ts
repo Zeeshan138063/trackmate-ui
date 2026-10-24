@@ -4,6 +4,7 @@ import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { ClaudeClassifier, ClaudeClient, ClaudeDrafter, DEFAULT_CLASSIFY_MODEL, DEFAULT_DRAFT_MODEL } from "./adapters/claude.ts";
 import { GmailProvider } from "./adapters/gmail.ts";
 import { OutlookProvider } from "./adapters/outlook.ts";
+import { SupabaseFileStore } from "./adapters/fileStore.ts";
 import { SupabaseRepo } from "./adapters/supabaseRepo.ts";
 import { TelegramNotifier } from "./adapters/telegram.ts";
 import { RefreshingTokenProvider } from "./adapters/tokens.ts";
@@ -76,6 +77,7 @@ export function buildDeps(db: SupabaseClient = serviceClient()): Deps {
     drafter: new ClaudeDrafter(claude, Deno.env.get("FOLLOWUPS_DRAFT_MODEL") || DEFAULT_DRAFT_MODEL),
     classifier: new ClaudeClassifier(claude, Deno.env.get("FOLLOWUPS_CLASSIFY_MODEL") || DEFAULT_CLASSIFY_MODEL),
     notifier: botToken ? new TelegramNotifier(botToken, appUrl()) : null,
+    files: new SupabaseFileStore(db),
     now: () => new Date(),
     log: consoleLogger,
     appUrl: appUrl(),
