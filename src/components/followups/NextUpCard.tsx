@@ -66,7 +66,7 @@ export function NextUpCard({ followUp: f, contact, attachedResume, onChanged }: 
   const sendAt = f.send_at ? new Date(f.send_at) : new Date(f.due_date);
 
   return (
-    <div className="rounded-xl border-2 border-primary/60 bg-primary/5 p-4 space-y-3">
+    <div className="rounded-xl border-2 border-primary/60 bg-primary/5 p-3 sm:p-4 space-y-3 min-w-0">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="space-y-1">
           <div className="flex items-center gap-2 font-semibold">
@@ -74,27 +74,27 @@ export function NextUpCard({ followUp: f, contact, attachedResume, onChanged }: 
             Next up: {KIND[f.kind] ?? f.kind}{f.kind === "chaser" ? ` ${f.attempt_no} of 2` : ""} to {name}
           </div>
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            {f.channel === "email" ? <Mail className="h-3.5 w-3.5" /> : <Linkedin className="h-3.5 w-3.5" />}
-            <span>{f.channel === "email" ? "Email" : "LinkedIn, sent by you"}</span>
-            <span>·</span>
-            <span>{STATUS[f.state] ?? f.state}</span>
-            {f.state !== "failed" && <span>· {formatDistanceToNow(sendAt, { addSuffix: true })}</span>}
+            {f.channel === "email" ? <Mail className="h-3.5 w-3.5 shrink-0" /> : <Linkedin className="h-3.5 w-3.5 shrink-0" />}
+            <span>
+              {[f.channel === "email" ? "Email" : "LinkedIn, sent by you", STATUS[f.state] ?? f.state,
+                f.state !== "failed" ? formatDistanceToNow(sendAt, { addSuffix: true }) : null].filter(Boolean).join(" · ")}
+            </span>
           </div>
         </div>
         {f.edit_notes.length > 0 && <Badge variant="outline">Draft v{f.draft_version}</Badge>}
       </div>
 
       {f.channel === "email" && ["planned", "awaiting_approval", "failed"].includes(f.state) && (attachedResume || f.attach_resume) && (
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-start gap-2 text-sm sm:items-center">
           <Switch
             checked={f.attach_resume}
             disabled={!!busy || (!attachedResume && !f.attach_resume)}
             onCheckedChange={(on) =>
               run("attach", "set_attachment", { attach: on }, on ? "Resume will be attached. The draft was updated to match." : "Resume won't be attached.")}
           />
-          <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
+          <Paperclip className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground sm:mt-0" />
           {attachedResume
-            ? <span>Attach <span className="font-medium">{attachedResume}</span></span>
+            ? <span className="min-w-0 break-all">Attach <span className="font-medium">{attachedResume}</span></span>
             : <span className="text-destructive">Resume removed from this application. Attach one in the Resume tab or turn this off.</span>}
           {busy === "attach" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
         </label>
@@ -108,7 +108,7 @@ export function NextUpCard({ followUp: f, contact, attachedResume, onChanged }: 
         editing ? (
           <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={8} maxLength={5000} className="bg-background" />
         ) : (
-          <div className="rounded-md border bg-background p-3 text-sm whitespace-pre-wrap">
+          <div className="rounded-md border bg-background p-3 text-sm whitespace-pre-wrap break-words">
             {f.channel === "email" && f.draft_subject && (
               <div className="mb-2 text-xs text-muted-foreground">Subject: {f.draft_subject}</div>
             )}
