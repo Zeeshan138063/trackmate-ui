@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contactsAtCompany, countContactable, matchCompany, normalizeCompany } from "./company-match";
+import { contactsAtCompany, countContactable, matchCompany, normalizeCompany, referralCandidates } from "./company-match";
 
 describe("AC-2 normalising", () => {
   it("ignores case, punctuation, a leading 'the' and legal suffixes", () => {
@@ -64,5 +64,28 @@ describe("AC-1 and AC-4 contactsAtCompany", () => {
     expect(countContactable(contactsAtCompany("Acme Robotics", contacts))).toBe(1);
     expect(countContactable(contactsAtCompany("Initech", contacts))).toBe(0);
     expect(contactsAtCompany("", contacts)).toEqual([]);
+  });
+});
+
+describe("REQ-007 referralCandidates", () => {
+  const contacts = [
+    { id: "1", name: "Connected", company: "Acme", warmth_stage: "connected" as const },
+    { id: "2", name: "Talking", company: "Acme Inc", warmth_stage: "in_conversation" as const },
+    { id: "3", name: "Advocate", company: "ACME", warmth_stage: "advocate" as const },
+    { id: "4", name: "Blocked", company: "Acme", warmth_stage: "advocate" as const, relationship_stage: "do_not_contact" },
+    { id: "5", name: "Possible", company: "Acme Robotics", warmth_stage: "advocate" as const },
+    { id: "6", name: "Elsewhere", company: "Globex", warmth_stage: "advocate" as const },
+    { id: "7", name: "Old row", company: "Acme" },
+  ];
+
+  it("returns exact, contactable matches at In conversation or Advocate, advocates first", () => {
+    expect(referralCandidates("Acme", contacts).map((c) => c.name)).toEqual(["Advocate", "Talking"]);
+  });
+
+  it("returns nobody for lower stages, possible matches, other companies or no company", () => {
+    expect(referralCandidates("Acme Robotics", contacts).map((c) => c.name)).toEqual(["Possible"]);
+    expect(referralCandidates("Initech", contacts)).toEqual([]);
+    expect(referralCandidates("", contacts)).toEqual([]);
+    expect(referralCandidates("Acme", contacts.filter((c) => c.id === "1" || c.id === "7"))).toEqual([]);
   });
 });

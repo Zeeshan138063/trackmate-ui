@@ -86,3 +86,16 @@ export function contactsAtCompany<T extends MatchableContact>(company: string | 
 export function countContactable<T extends MatchableContact>(matches: CompanyMatch<T>[]): number {
   return matches.filter((m) => m.kind === "exact" && !m.doNotContact).length;
 }
+
+/** Stages warm enough to ask for a referral (DEC-007): the threshold the strategy spec names. */
+const REFERRAL_STAGES: ReadonlySet<WarmthStage> = new Set(["in_conversation", "advocate"]);
+
+/**
+ * People the user could ask before applying cold (REQ-007): definitely at the company, may be
+ * contacted, and already In conversation or an Advocate. Advocates first.
+ */
+export function referralCandidates<T extends MatchableContact>(company: string | null | undefined, contacts: T[]): T[] {
+  return contactsAtCompany(company, contacts)
+    .filter((m) => m.kind === "exact" && !m.doNotContact && REFERRAL_STAGES.has(m.contact.warmth_stage ?? "identified"))
+    .map((m) => m.contact);
+}
