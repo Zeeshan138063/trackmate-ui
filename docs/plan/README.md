@@ -63,6 +63,9 @@ restated in the repo where the code depends on it, so the repo is enough on its 
 - Default 10, range 3 to 30. Replaced by campaign capacity when REQ-001 is built.
 - Affects: REQ-004; `src/hooks/useDailyQueue.ts`.
 
+- Update, 2026-11-26 (REQ-001): once a campaign is saved the limit is its daily capacity, stored
+  in `campaigns`. The browser number is only the fallback for a user with no campaign.
+
 ### DEC-007 The referral prompt fires only for contacts at In conversation or Advocate
 - Decided by: Zee, 2026-11-26, by approving the REQ-007 plan
 - Words given (strategy spec 5H): "if a contact at the company is at 'In conversation' or
