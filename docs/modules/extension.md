@@ -18,8 +18,7 @@ Capture jobs, contacts and companies from the page the user is on, and fill appl
 
 - [ ] OQ-01: LinkedIn page readers.
 - [ ] Narrow `https://*/*` permissions and bridge injection.
-- [ ] Fix the hand-off: the app and `jobos-bridge.js` use different message names.
-- [ ] `background.js::baseUrl` still falls back to `http://localhost:8080`.
+- [x] Hand-off fixed and bridge limited to the app (3.1.1, 2026-11-26). Not yet tested in Chrome or published.
 
 ## Next step  <- start here
 

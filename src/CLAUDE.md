@@ -65,9 +65,10 @@ huggingface, openrouter), `<PROVIDER>_API_KEY`, `<PROVIDER>_MODEL_NAME`.
 `Trackers.tsx`, `Connections.tsx` and `components/resume/ResumeImporter.tsx` read
 `?action=addJob|addContact|importProfile&dataId=...` from the URL, then ask the extension for the
 record with `window.postMessage({ type: 'CAREERPILOT_FETCH_JOB_DATA', dataId })` and wait for
-`type: 'CAREERPILOT_JOB_DATA_RESPONSE'`. `extension/jobos-bridge.js` listens for a different
-message, so today the request times out and only the short values in the URL are used. The
-strings are a contract: change both sides in one pull request and test by hand.
+`type: 'CAREERPILOT_JOB_DATA_RESPONSE'`, which `extension/jobos-bridge.js` sends (extension
+3.1.1 and later). With an older extension, or none, the request times out and only the short
+values in the URL are used. The strings are a contract: change both sides in one pull request
+and test by hand.
 
 ## UI rules
 

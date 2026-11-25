@@ -29,6 +29,14 @@ keep the last line of each section the next step.
 - [ ] Check the site's privacy page matches: export is JSON, deletion is immediate.
 - [ ] PR into rebranding-jobos.
 
+## 2026-11-26 - Extension 3.1.1 (branch jobos/extension-handoff, into rebranding-jobos)
+
+- [x] Bridge answers `CAREERPILOT_FETCH_JOB_DATA`; replies to its own origin only.
+- [x] Bridge injected only on `app.jobos.dev` and `job.zeeshare.com`; default URL fixed.
+- [ ] Manual test in Chrome (not done in the build session): capture a job, a contact and a profile and confirm the app dialog shows the full description, not just the URL values.
+- [ ] Publish 3.1.1.
+- [ ] PR into rebranding-jobos.
+
 ## 2026-11-26 - Agent setup: CLAUDE.md files, spec-driven-kit files, code graphs (no ticket, working tree on main, uncommitted)
 
 - [x] Root and scoped `CLAUDE.md` (src, supabase, followups, extension) and `AGENTS.md`.
