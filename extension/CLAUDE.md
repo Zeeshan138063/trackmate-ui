@@ -69,10 +69,11 @@ and `saveCompanyDirectly`. A migration that renames or adds a required column mu
   no scrolling to load more, no background fetch of a job board or of LinkedIn, no crawling
   through search results or profiles. Extraction happens on the page the user opened, and saving
   happens when the user presses Save.
-- **LinkedIn is frozen** (OQ-01). The extension reads LinkedIn job, profile and company pages
-  today. LinkedIn's terms cover extensions that scrape, so until OQ-01 is answered: fix nothing
-  and add nothing in `_linkedInJob`, `_linkedInProfile`, `_linkedInCompany`, and add no new
-  LinkedIn page types or fields.
+- **LinkedIn stays as it is** (DEC-001). The extension reads LinkedIn job, profile and company
+  pages the user has open, and that is kept. LinkedIn's terms cover extensions that scrape, so
+  the limit is firm: selector fixes in `_linkedInJob`, `_linkedInProfile`, `_linkedInCompany`
+  are fine, but no new LinkedIn page types, no new fields, no reading of search results or
+  feeds, without a new decision.
 - **Autofill uses only the user's own `profiles` row and resume** (P3). Never guess a field.
   Leave it empty and report which fields were skipped.
 - **Selectors**: prefer `aria-*`, `data-*`, roles and structure over class names, which sites
