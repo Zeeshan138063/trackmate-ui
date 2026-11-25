@@ -10,6 +10,15 @@ keep the last line of each section the next step.
 - [x] `src/services/AccountDataService.ts`, `src/components/Settings/DataManagement.tsx`, wired into Settings.
 - [ ] Zee: `supabase functions deploy delete-account`, then test both buttons with a throwaway account. Not tested against the live project.
 - [ ] Check the site's privacy page matches: export is JSON, deletion is immediate.
+## 2026-11-26 - Honest results (audit stage 0, branch fix/honest-results)
+
+- [x] No invented match scores: `src/pages/JobSearch.tsx`, `src/pages/ApplicationCopilot.tsx`; mock scan deleted.
+- [x] Growth: simulated publish replaced by copy and open LinkedIn (`PostGenerator.tsx`, `GrowthEngine.ts`).
+- [x] Connection note: no template fallback; cover letter prompt has truth rules.
+- [x] Calendar connector: no stand-in calendars. Strategy Guide: unsourced 80% figure removed.
+- [ ] Manual check in the browser (not done: no login in the build session): Job Search list, Copilot header, Growth button, contact note with and without an AI key.
+- [ ] After merge: remove the stale `GrowthEngine.publishToLinkedIn` lines from `CLAUDE.md` and `src/CLAUDE.md`.
+- [ ] Still open: Settings > Integrations asks for a LinkedIn client secret for a publishing feature that no longer exists.
 ## 2026-11-26 - Security hardening (audit stage 0, branch fix/security-hardening)
 
 - [x] `manage-calendar`, `sync-calendar`: caller taken from the session (`supabase/functions/_shared/auth.ts`).
