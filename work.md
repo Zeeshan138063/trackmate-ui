@@ -51,7 +51,7 @@ keep the last line of each section the next step.
 ## 2026-11-26 - "Who do I know here?" (REQ-006, branch jobos/who-do-i-know, into rebranding-jobos)
 ## 2026-11-26 - Daily queue (REQ-004, branch jobos/daily-queue, into rebranding-jobos)
 ## 2026-11-26 - Referral-first prompt (REQ-007, branch jobos/referral-first, into rebranding-jobos)
-## 2026-11-26 - Invitation limits tracker (REQ-009, branch feat/invitation-limits, stacked on feat/referral-first)
+## 2026-11-26 - Invitation limits tracker (REQ-009, branch jobos/invitation-limits, into rebranding-jobos)
 
 - [x] Plan approved by Zee; DEC-008.
 - [x] `src/utils/invitation-limits.ts` (5 tests); engine rules (3 tests); migration `20261126140000_contact_invitation_sent.sql`.
@@ -61,7 +61,7 @@ keep the last line of each section the next step.
 - [ ] Known limit: only invitations marked in JobOS are counted, and one date is kept per contact.
 - [ ] After merge: set REQ-007 and REQ-009 to "exists" in `docs/prd/requirements.md`.
 - [ ] Next P0s: REQ-005 (drafting from notes), REQ-001 (campaign setup), REQ-008 (fit caps and freshness), REQ-002 (consistency checker).
-- [ ] PR into main, after feat/referral-first.
+- [ ] PR into rebranding-jobos.
 
 ## 2026-11-26 - Referral-first prompt (REQ-007, branch feat/referral-first, stacked on feat/daily-queue)
 
