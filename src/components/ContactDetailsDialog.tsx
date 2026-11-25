@@ -117,7 +117,7 @@ export function ContactDetailsDialog({
             setInvitationNote(note);
             toast({ title: "Note Generated", description: "You can edit it before saving." });
         } catch (error) {
-            toast({ variant: "destructive", title: "Generation Failed", description: "Could not generate note." });
+            toast({ variant: "destructive", title: "Note not generated", description: error instanceof Error ? error.message : "Could not generate note." });
         } finally {
             setIsGenerating(false);
         }

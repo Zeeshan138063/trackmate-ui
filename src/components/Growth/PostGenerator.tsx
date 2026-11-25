@@ -76,24 +76,17 @@ export function PostGenerator() {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    const handlePublish = async () => {
+    // JobOS drafts; the user posts (P1, P2). Copy the draft and open LinkedIn so they can
+    // paste, edit and publish it themselves.
+    const copyAndOpenLinkedIn = async () => {
         if (!generatedPost) return;
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
-            toast.info("Publishing to LinkedIn...");
-            await GrowthEngine.publishToLinkedIn(generatedPost, user.id);
-            toast.success("Published successfully! (Simulation Mode)");
-        } catch (error: any) {
-            if (error.message === "LINKEDIN_NOT_CONNECTED") {
-                toast.error("Please connect LinkedIn in Settings > Integrations first.");
-            } else if (error.message === "MISSING_MANUAL_TOKEN") {
-                toast.error("Developer Mode: Please paste a valid Access Token in Settings > Integrations.");
-            } else {
-                toast.error("Publish failed: " + error.message);
-            }
+            await navigator.clipboard.writeText(generatedPost);
+            toast.success("Draft copied. Paste it into a new LinkedIn post.");
+        } catch {
+            toast.error("Could not copy the draft. Use the Copy button, then open LinkedIn.");
         }
+        window.open("https://www.linkedin.com/feed/", "_blank", "noopener,noreferrer");
     };
 
     return (
@@ -186,8 +179,8 @@ export function PostGenerator() {
                             {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
                             {copied ? "Copied" : "Copy"}
                         </Button>
-                        <Button onClick={handlePublish}>
-                            Publish to LinkedIn
+                        <Button onClick={copyAndOpenLinkedIn}>
+                            Copy and open LinkedIn
                         </Button>
                     </CardFooter>
                 )}

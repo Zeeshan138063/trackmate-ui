@@ -11,6 +11,16 @@ keep the last line of each section the next step.
 - [ ] Zee: `supabase secrets set NOVU_API_KEY=...`, deploy `manage-calendar sync-calendar notify-reminder`.
 - [ ] Zee: remove `VITE_NOVU_API_KEY` from the build environment and rotate the key.
 - [ ] PR into rebranding-jobos.
+## 2026-11-26 - Honest results (audit stage 0, branch jobos/honest-results, into rebranding-jobos)
+
+- [x] No invented match scores: `src/pages/JobSearch.tsx`, `src/pages/ApplicationCopilot.tsx`; mock scan deleted.
+- [x] Growth: simulated publish replaced by copy and open LinkedIn (`PostGenerator.tsx`, `GrowthEngine.ts`).
+- [x] Connection note: no template fallback; cover letter prompt has truth rules.
+- [x] Calendar connector: no stand-in calendars. Strategy Guide: unsourced 80% figure removed.
+- [ ] Manual check in the browser (not done: no login in the build session): Job Search list, Copilot header, Growth button, contact note with and without an AI key.
+- [ ] After merge: remove the stale `GrowthEngine.publishToLinkedIn` lines from `CLAUDE.md` and `src/CLAUDE.md`.
+- [ ] Still open: Settings > Integrations asks for a LinkedIn client secret for a publishing feature that no longer exists.
+- [ ] PR into rebranding-jobos.
 
 ## 2026-11-26 - Agent setup: CLAUDE.md files, spec-driven-kit files, code graphs (no ticket, working tree on main, uncommitted)
 
@@ -27,4 +37,4 @@ keep the last line of each section the next step.
 
 - [x] Done, with the file or test that shows it.
 - [ ] Left to do.
-- [ ] PR into main.
+- [ ] PR into rebranding-jobos.
