@@ -41,6 +41,8 @@ export interface QueueJob {
   status: string;
   deadline?: string | null;
   followUp?: string | null;
+  /** REQ-007: someone the user is already talking to at this company, if any. */
+  referralName?: string | null;
 }
 
 export interface QueueAgentFollowUp {
@@ -96,6 +98,10 @@ export function effectiveUntil(action: QueueEventAction, today: string, snoozeDa
 
 const jobLabel = (j: QueueJob) => `${j.position} at ${j.company}`;
 
+/** Adds the referral-first note (REQ-007) to an application's reason. */
+const withReferral = (reason: string, j: QueueJob) =>
+  j.referralName ? `${reason} · ${j.referralName} at ${j.company} could refer you` : reason;
+
 function deadlineReason(deadline: string, today: string): string {
   const days = daysBetween(dayOf(deadline), today) * -1;
   if (days < 0) return `Deadline passed on ${dayOf(deadline)}`;
@@ -115,7 +121,7 @@ export function collectItems(input: QueueInput, today: string): QueueItem[] {
         key: `job:${job.id}:apply`,
         group: "applications",
         title: `Finish your application: ${jobLabel(job)}`,
-        reason: deadlineDay ? deadlineReason(deadlineDay, today) : "You started this application",
+        reason: withReferral(deadlineDay ? deadlineReason(deadlineDay, today) : "You started this application", job),
         dueDate: deadlineDay ?? today,
         target: { type: "job", id: job.id },
         source: "job",
@@ -127,7 +133,7 @@ export function collectItems(input: QueueInput, today: string): QueueItem[] {
           key: `job:${job.id}:deadline`,
           group: "applications",
           title: `Apply: ${jobLabel(job)}`,
-          reason: deadlineReason(deadlineDay, today),
+          reason: withReferral(deadlineReason(deadlineDay, today), job),
           dueDate: deadlineDay,
           target: { type: "job", id: job.id },
           source: "job",

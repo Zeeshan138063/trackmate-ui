@@ -107,6 +107,8 @@ for a UI change lists the manual checks.
   `hooks/useDailyQueue.ts`. A new kind of due item is a new branch in `collectItems()` with a
   stable `key` and a test. Only real data goes in: no placeholder items (DEC-005). What the user
   did with an item is appended to `daily_queue_events`, never updated.
+- The referral-first prompt uses `referralCandidates()` (exact match, In conversation or Advocate,
+  DEC-007) and never blocks applying: it reminds, the user decides.
 - "Who do I know at this company" is `contactsAtCompany()` in `utils/company-match.ts`, shown by
   `components/contacts/KnownContacts.tsx`. A number on a job counts exact, contactable matches
   only (DEC-004). Match on the user's own contacts; never look a company or person up elsewhere.
