@@ -33,6 +33,20 @@ import { FollowUpsTab } from "@/components/followups/FollowUpsTab";
 import { JobChecklist as JobChecklistType } from "@/types/job";
 import { useContacts } from "@/hooks/useContacts";
 import { KnownContacts } from "@/components/contacts/KnownContacts";
+import { ReferralPrompt } from "@/components/contacts/ReferralPrompt";
+import { dismissReferral, isReferralDismissed } from "@/utils/referral-dismiss";
+import { referralCandidates } from "@/utils/company-match";
+import { useNavigate } from "react-router-dom";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ContactCard } from "@/components/ContactCard";
 import { AddContactDialog } from "@/components/AddContactDialog";
 import { Contact, JobContact } from "@/types/contact";
@@ -139,6 +153,20 @@ ${matchResult.explanation}
     checklist: {} as JobChecklistType,
     notes: "",
   });
+
+  // REQ-007 referral-first prompt.
+  const navigate = useNavigate();
+  const jobId = job?.id;
+  const [referralDismissed, setReferralDismissed] = useState(false);
+  const [confirmApplyOpen, setConfirmApplyOpen] = useState(false);
+  useEffect(() => {
+    setReferralDismissed(jobId ? isReferralDismissed(jobId) : false);
+    setConfirmApplyOpen(false);
+  }, [jobId]);
+  const referralCompany = formData.company || job?.company || "";
+  const notYetApplied = job?.status === "Bookmarked" || job?.status === "Applying";
+  const referrals = notYetApplied && !referralDismissed ? referralCandidates(referralCompany, allContacts) : [];
+
 
   useEffect(() => {
     if (job && job.id !== prevJobId) {
@@ -261,6 +289,15 @@ ${matchResult.explanation}
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // REQ-007 AC-4: ask once before a cold application to a company where a referral is close.
+    if (job && referrals.length > 0 && formData.status === "Applied") {
+      setConfirmApplyOpen(true);
+      return;
+    }
+    saveJob();
+  };
+
+  const saveJob = () => {
     if (!job) return;
 
     const updatedJob: Job = {
@@ -553,6 +590,42 @@ ${matchResult.explanation}
             </div>
           )}
         </DialogHeader>
+
+        <ReferralPrompt
+          company={referralCompany}
+          candidates={referrals}
+          onOpenContact={(contact) => {
+            onOpenChange(false);
+            navigate(`/connections?contact=${contact.id}`);
+          }}
+          onDismiss={() => {
+            dismissReferral(job.id);
+            setReferralDismissed(true);
+          }}
+        />
+
+        <AlertDialog open={confirmApplyOpen} onOpenChange={setConfirmApplyOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Apply without asking {referrals[0]?.name ?? "your contact"} first?</AlertDialogTitle>
+              <AlertDialogDescription>
+                You are already in touch with {referrals.length === 1 ? referrals[0]?.name : `${referrals.length} people`} at {referralCompany}.
+                A referral usually does more than a cold application. This is only a reminder: the choice is yours.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setActiveTab("contacts")}>Ask first</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  setConfirmApplyOpen(false);
+                  saveJob();
+                }}
+              >
+                Apply anyway
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
           <div className="px-6">
