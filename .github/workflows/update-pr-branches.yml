@@ -1,0 +1,40 @@
+# After every push to main, merge main into each open pull request's branch.
+#
+# WHY. Every pull request appends to the same trackers (work.md, CHANGELOG.md, STATUS.md). When one
+# merges, the rest conflict on lines nobody disagrees about. .gitattributes marks those files
+# merge=union, so a plain `git merge` keeps both sides' lines. A real conflict anywhere else is
+# left for a person, with a comment on the pull request. Nothing is dropped, nothing doubled.
+name: Update PR branches
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Merge main into every open pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          gh pr list --base main --state open --json number,headRefName,isCrossRepository \
+            -q '.[] | select(.isCrossRepository | not) | "\(.number) \(.headRefName)"' |
+          while read -r number branch; do
+            git checkout -q -B "$branch" "origin/$branch"
+            if git merge --no-edit origin/main >/dev/null 2>&1; then
+              git push -q origin "$branch" && echo "updated #$number"
+            else
+              git merge --abort
+              gh pr comment "$number" --body "Merging main into this branch conflicts outside the trackers. Please merge main and resolve it."
+            fi
+          done
