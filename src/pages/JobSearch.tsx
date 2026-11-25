@@ -14,6 +14,8 @@ import { initialMasterProfile } from "@/types/resume";
 import { JobService, ScannedJob } from "@/services/JobService";
 import { JobQueryManager } from "@/components/JobQueryManager";
 import { useJobs } from "@/hooks/useJobs";
+import { useContacts } from "@/hooks/useContacts";
+import { KnownContacts, KnownContactsMarker } from "@/components/contacts/KnownContacts";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -33,6 +35,7 @@ const sourceLabel = (source?: string | null) => (source ? SOURCE_LABELS[source] 
 export default function JobSearch() {
   const { masterProfile, loading: profileLoading } = useResume();
   const { addJob } = useJobs();
+  const { contacts } = useContacts(); // REQ-006: who do I know at each company
   const [activeConfig, setActiveConfig] = useState<SearchConfig>({
     query: "",
     location: "Remote",
@@ -444,6 +447,7 @@ export default function JobSearch() {
                             <Badge variant="secondary" className="text-xs font-normal bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-100 dark:border-indigo-900/50">
                               {job.matchScore === null ? "Not scored" : `${job.matchScore}% Match`}
                             </Badge>
+                            <KnownContactsMarker company={job.company} contacts={contacts} />
                             {job.source && (
                               <Badge variant="outline" className="text-[10px] text-slate-500 border-slate-200">
                                 {job.source}
@@ -525,6 +529,8 @@ export default function JobSearch() {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
+            {selectedJob && <KnownContacts company={selectedJob.company} contacts={contacts} />}
+
             <div className="flex gap-2 flex-wrap">
               {selectedJob?.skills.map(s => (
                 <Badge key={s} variant="outline" className="bg-slate-50 dark:bg-slate-900">{s}</Badge>
