@@ -75,6 +75,9 @@ export const AIHelper = {
       - Keep it concise (under 300 words).
       - Highlight 2-3 key matches between my resume and the job description.
       - Use a professional but enthusiastic tone.
+      - Use ONLY facts that appear in my resume details above. Do not invent experience, employers,
+        dates, skills, results, location or visa status, and do not overstate what is there.
+      - If the job asks for something my resume does not show, leave it out rather than claim it.
       - Output ONLY the body of the letter (No placeholders like [Your Name], I will add that).
     `;
 
