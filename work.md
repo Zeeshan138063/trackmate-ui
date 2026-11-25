@@ -4,6 +4,16 @@ What is true now, per branch of work. Newest section at the top. Every push that
 updates this file (the `push-tracker-gate` hook checks). Tick what is done, add what is left, and
 keep the last line of each section the next step.
 
+## 2026-11-26 - Fit caps and fresh jobs (REQ-008, branch jobos/fit-caps, into rebranding-jobos)
+
+- [x] Spec and plan approved by Zee; DEC-010.
+- [x] `src/utils/job-fit.ts`, 15 tests; fresh jobs in the daily queue, 3 tests.
+- [x] Jobs: cap badges, reasons with the posting's words, "Hide jobs that rule me out".
+- [ ] Zee: browser check with a saved campaign and real found jobs (needs `fetch-jobs` deployed and run).
+- [ ] Known limits: English patterns only; no cap on region, pay or start date.
+- [ ] Next: REQ-002 consistency checker.
+- [ ] PR into rebranding-jobos.
+
 ## 2026-11-26 - Campaign setup (REQ-001, branch jobos/campaign-setup, into rebranding-jobos)
 
 - [x] Spec and plan approved by Zee.

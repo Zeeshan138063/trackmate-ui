@@ -15,5 +15,5 @@ below were re-checked against `rebranding-jobos` and are the same there)
 | REQ-005 | Message drafting from the user's notes about the contact; never identical across contacts | 5E | P0 | built on `jobos/message-drafting` (not merged): drafts from notes, ask ladder, duplicate check, Mark as sent |
 | REQ-006 | "Who do I know here?" on every job: contacts at that company and their stage | 5C | P0 | partial: manual job-contact links only |
 | REQ-007 | Referral-first prompt before applying where a contact is "In conversation" or above | 5H | P0 | missing |
-| REQ-008 | Freshness alert: high-fit jobs posted in the last 48 hours go to the top of today's queue | 5C | P0 | missing: no fit threshold or queue yet |
+| REQ-008 | Freshness alert: high-fit jobs posted in the last 48 hours go to the top of today's queue | 5C | P0 | built on `jobos/fit-caps` (not merged): caps from the posting text, fresh matching jobs lead the Today list; title and constraint match, not AI similarity |
 | REQ-009 | Limits tracker: invitations marked sent in a rolling 7 days, warn at 80, stop queuing at 100 | 5E | P0 | missing |
