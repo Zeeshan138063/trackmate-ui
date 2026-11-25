@@ -103,6 +103,9 @@ for a UI change lists the manual checks.
 - Do-not-contact is `contacts.relationship_stage = 'do_not_contact'`, the field the follow-up
   agent checks. Do not add a second flag.
 - Next steps are prompts. Nothing here may act on LinkedIn or send anything (P1, P2).
+- "Who do I know at this company" is `contactsAtCompany()` in `utils/company-match.ts`, shown by
+  `components/contacts/KnownContacts.tsx`. A number on a job counts exact, contactable matches
+  only (DEC-004). Match on the user's own contacts; never look a company or person up elsewhere.
 
 ## Handoff
 

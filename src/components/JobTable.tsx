@@ -1,3 +1,5 @@
+import { KnownContactsMarker } from "@/components/contacts/KnownContacts";
+import type { Contact } from "@/types/contact";
 import { useState } from "react";
 import {
   Table,
@@ -32,6 +34,8 @@ interface JobTableProps {
   sortConfig?: SortConfig | null;
   onSort?: (key: string) => void;
   grouping?: string;
+  /** REQ-006: the user's contacts, to mark jobs at companies where they know someone. */
+  contacts?: Contact[];
 }
 
 export function JobTable({
@@ -45,7 +49,8 @@ export function JobTable({
   visibleColumns,
   sortConfig,
   onSort,
-  grouping = "none"
+  grouping = "none",
+  contacts = []
 }: JobTableProps) {
   const isAllSelected = jobs.length > 0 && selectedJobs.length === jobs.length;
   const isIndeterminate = selectedJobs.length > 0 && selectedJobs.length < jobs.length;
@@ -228,7 +233,12 @@ export function JobTable({
           job.position
         )}
       </TableCell>
-      <TableCell>{job.company}</TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <span>{job.company}</span>
+          <KnownContactsMarker company={job.company} contacts={contacts} />
+        </div>
+      </TableCell>
       {isColumnVisible('minSalary') && (
         <TableCell>
           {job.minSalary ? `$${job.minSalary.toLocaleString()}` : "$0.00"}
