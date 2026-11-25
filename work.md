@@ -15,6 +15,17 @@ keep the last line of each section the next step.
 - [ ] Still open: Settings > Integrations asks for a LinkedIn client secret for a publishing feature that no longer exists.
 - [ ] PR into main.
 
+## 2026-11-26 - Job intake on allowed sources (DEC-001, branch feat/job-intake-allowed-sources, stacked on fix/honest-results)
+
+- [x] Removed `fetch-linkedin-jobs` and `parse-linkedin`; OQ-01 closed as DEC-001.
+- [x] `fetch-jobs` reads Greenhouse, Lever and Ashby feeds for watchlist companies; `feeds.ts` with tests in `feeds_test.ts`.
+- [x] Migration `20261126110000`: unschedule LinkedIn cron, `first_seen_at`, `match_jobs`, `archive_old_jobs`.
+- [x] UI: "First seen" label and real source names.
+- [ ] Zee, in this order: `supabase db push`; `supabase functions deploy fetch-jobs`; `supabase functions delete fetch-linkedin-jobs parse-linkedin`.
+- [ ] Not run against the live project or a real feed from the build session (no network to those hosts). Check the first hourly run in the function logs.
+- [ ] Follow-ups: Workable feed; paste-a-URL capture into `discovered_jobs`; the public `/jobs` page still lists rows collected from LinkedIn before this change until they archive (15 days).
+- [ ] PR into main, after fix/honest-results.
+
 ## 2026-11-26 - Agent setup: CLAUDE.md files, spec-driven-kit files, code graphs (no ticket, working tree on main, uncommitted)
 
 - [x] Root and scoped `CLAUDE.md` (src, supabase, followups, extension) and `AGENTS.md`.
