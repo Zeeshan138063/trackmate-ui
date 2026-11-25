@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { errorResponse, requireUserId } from "../_shared/auth.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,14 +18,18 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    // P5: the caller is the signed-in user; they may only use their own calendar accounts.
+    const userId = await requireUserId(req, supabaseClient);
+
     const { action, accountId } = await req.json();
 
     if (action === 'list-calendars' && accountId) {
-      // 1. Fetch Account
+      // 1. Fetch Account (scoped to the caller)
       const { data: account, error: accountError } = await supabaseClient
         .from('calendar_accounts')
         .select('*')
         .eq('id', accountId)
+        .eq('user_id', userId)
         .single();
 
       if (accountError || !account) throw new Error('Account not found');
@@ -84,10 +89,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return errorResponse(error, corsHeaders);
   }
 });
 
