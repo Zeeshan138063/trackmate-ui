@@ -11,7 +11,6 @@ export const USER_TABLES = [
   "daily_queue_events",
   "application_resumes", // their files are removed from the resumes bucket first
   "follow_up_events",
-  "follow_up_events",
   "follow_ups",
   "followup_settings",
   "telegram_links",
