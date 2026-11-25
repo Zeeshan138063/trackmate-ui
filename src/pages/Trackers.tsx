@@ -29,6 +29,7 @@ import { AddJobDialog } from "@/components/AddJobDialog";
 import { EditJobDialog } from "@/components/EditJobDialog";
 import { ColumnsDropdown, ColumnOption } from "@/components/ColumnsDropdown";
 import { useJobs } from "@/hooks/useJobs";
+import { useContacts } from "@/hooks/useContacts";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { JobStats, Job } from "@/types/job";
@@ -53,6 +54,7 @@ const defaultColumns: ColumnOption[] = [
 
 export default function Trackers() {
   const { jobs, loading, addJob, updateJob, deleteJob } = useJobs();
+  const { contacts } = useContacts(); // REQ-006: "N contacts" marker on each job
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
   const [visibleColumns, setVisibleColumns] = useState<ColumnOption[]>(defaultColumns);
@@ -692,6 +694,7 @@ export default function Trackers() {
             onUpdateJob={updateJob}
             onDeleteJob={handleDeleteClick}
             onEditJob={handleEditJob}
+            contacts={contacts}
             visibleColumns={visibleColumns}
             sortConfig={sortConfig}
             onSort={handleSort}
@@ -702,6 +705,7 @@ export default function Trackers() {
             jobs={filteredJobs}
             onUpdateJob={updateJob}
             onEditJob={handleEditJob}
+            contacts={contacts}
           />
         )}
 

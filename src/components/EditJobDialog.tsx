@@ -32,6 +32,7 @@ import { JobChecklist } from "@/components/JobChecklist";
 import { FollowUpsTab } from "@/components/followups/FollowUpsTab";
 import { JobChecklist as JobChecklistType } from "@/types/job";
 import { useContacts } from "@/hooks/useContacts";
+import { KnownContacts } from "@/components/contacts/KnownContacts";
 import { ContactCard } from "@/components/ContactCard";
 import { AddContactDialog } from "@/components/AddContactDialog";
 import { Contact, JobContact } from "@/types/contact";
@@ -781,6 +782,13 @@ ${matchResult.explanation}
             </TabsContent>
 
             <TabsContent value="contacts" className="mt-0 space-y-6">
+              <KnownContacts
+                company={formData.company || job.company}
+                contacts={allContacts}
+                linkedIds={jobContacts.map(jc => jc.contact_id)}
+                onLink={(contact) => handleLinkContact(contact.id)}
+              />
+
               <div className="flex flex-col space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
