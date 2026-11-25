@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CareerGoalSection } from "@/components/CareerGoalSection";
+import { DailyQueue } from "@/components/DailyQueue";
 import { JobApplicationsChart } from "@/components/JobApplicationsChart";
 import { JobSearchPipeline } from "@/components/JobSearchPipeline";
 import { RecentActivity } from "@/components/RecentActivity";
@@ -150,6 +151,9 @@ export default function Index() {
             Here's where your job search stands today.
           </p>
         </div>
+
+        {/* Today: the daily queue comes right after the greeting (REQ-004) */}
+        <DailyQueue jobs={jobs} contacts={contacts} />
 
         {/* ── 3 Clean Stat Cards ── */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

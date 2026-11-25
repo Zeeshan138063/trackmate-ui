@@ -49,6 +49,19 @@ keep the last line of each section the next step.
 - [ ] PR into rebranding-jobos.
 ## 2026-11-26 - Contact stages and next actions (REQ-003, branch jobos/contact-stages, into rebranding-jobos)
 ## 2026-11-26 - "Who do I know here?" (REQ-006, branch jobos/who-do-i-know, into rebranding-jobos)
+## 2026-11-26 - Daily queue (REQ-004, branch jobos/daily-queue, into rebranding-jobos)
+
+- [x] Spec and plan approved by Zee; DEC-005, DEC-006.
+- [x] `src/utils/daily-queue.ts`, 10 tests.
+- [x] Migration `20261126130000_daily_queue_events.sql` (RLS, append-only); in export and delete lists.
+- [x] Today card on Home; deep links to a job and a contact.
+- [ ] Zee: `supabase db push`, then redeploy `delete-account` (its table list changed). Until the push, the list shows but Done, Snooze and Skip show an error.
+- [ ] Zee: browser check (list in the pull request) and a user A / user B check on `daily_queue_events`.
+- [ ] After merge: set REQ-004 to "partial: no fresh-job, practice or content items yet" in `docs/prd/requirements.md`.
+- [ ] Next: REQ-007 (referral-first prompt) and REQ-009 (limits tracker), both small rules on top of REQ-003.
+- [ ] PR into rebranding-jobos.
+
+## 2026-11-26 - "Who do I know here?" (REQ-006, branch feat/who-do-i-know, stacked on REQ-003 and job intake)
 
 - [x] Spec and plan approved by Zee; DEC-004.
 - [x] `src/utils/company-match.ts`, 7 tests.
