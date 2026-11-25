@@ -168,6 +168,18 @@ export function ContactCard({ contact, onEdit, onDelete, interactionType, action
                                     <span className="text-muted-foreground"> · due {action.dueDate}</span>
                                 </p>
                             )}
+                            {action.kind === "connect" && onUpdate && (
+                                <button
+                                    type="button"
+                                    className="text-primary hover:underline block"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onUpdate(contact.id, { invitation_sent_at: new Date().toISOString() });
+                                    }}
+                                >
+                                    Mark invitation sent
+                                </button>
+                            )}
                             {suggested && onUpdate && (
                                 <button
                                     type="button"
