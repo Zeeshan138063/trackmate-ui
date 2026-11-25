@@ -107,6 +107,10 @@ for a UI change lists the manual checks.
   `hooks/useDailyQueue.ts`. A new kind of due item is a new branch in `collectItems()` with a
   stable `key` and a test. Only real data goes in: no placeholder items (DEC-005). What the user
   did with an item is appended to `daily_queue_events`, never updated.
+- Message drafts: `utils/message-draft.ts` picks the ask (`availableAsks`, DEC-009), builds the
+  prompt from the user's notes and checks the result (`checkDraft`). `AIGenerator.draftMessage`
+  only calls the model. A new rule for drafts goes in `checkDraft` with a test, not in the prompt
+  alone. JobOS never sends the message (P2).
 - Invitation limits: `invitationUsage()` in `utils/invitation-limits.ts` counts
   `contacts.invitation_sent_at` over seven days (DEC-008). The date is set only by the user's
   "Mark invitation sent" click; JobOS never reads or sends invitations on LinkedIn (P1).

@@ -4,6 +4,16 @@ What is true now, per branch of work. Newest section at the top. Every push that
 updates this file (the `push-tracker-gate` hook checks). Tick what is done, add what is left, and
 keep the last line of each section the next step.
 
+## 2026-11-26 - Message drafting (REQ-005, branch jobos/message-drafting, into rebranding-jobos)
+
+- [x] Spec and plan approved by Zee; DEC-009 in `docs/plan/README.md`.
+- [x] `src/utils/message-draft.ts`, 12 tests (`npm test`).
+- [x] `MessageDrafter` in the contact dialog; `AIGenerator.draftMessage` replaces the old note generator.
+- [ ] Zee: browser check with an AI key: draft, edit, Copy, Mark as sent (AC-7), and no key (AC-9).
+- [ ] Known limit: the duplicate check only sees drafts saved on other contacts.
+- [ ] Next: REQ-001 campaign setup.
+- [ ] PR into rebranding-jobos.
+
 ## 2026-11-26 - Security hardening (branch jobos/security-hardening, into rebranding-jobos)
 
 - [x] `manage-calendar`, `sync-calendar`: caller taken from the session (`supabase/functions/_shared/auth.ts`).
