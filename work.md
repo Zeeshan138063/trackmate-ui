@@ -4,6 +4,12 @@ What is true now, per branch of work. Newest section at the top. Every push that
 updates this file (the `push-tracker-gate` hook checks). Tick what is done, add what is left, and
 keep the last line of each section the next step.
 
+## 2026-11-26 - Data export and account deletion (audit stage 0, branch feat/data-export-delete)
+
+- [x] `delete-account` edge function; helper tests in `supabase/functions/delete-account/tables_test.ts`.
+- [x] `src/services/AccountDataService.ts`, `src/components/Settings/DataManagement.tsx`, wired into Settings.
+- [ ] Zee: `supabase functions deploy delete-account`, then test both buttons with a throwaway account. Not tested against the live project.
+- [ ] Check the site's privacy page matches: export is JSON, deletion is immediate.
 ## 2026-11-26 - Honest results (audit stage 0, branch fix/honest-results)
 
 - [x] No invented match scores: `src/pages/JobSearch.tsx`, `src/pages/ApplicationCopilot.tsx`; mock scan deleted.

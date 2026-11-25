@@ -18,6 +18,8 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 
 ### Added
 
+- Settings > Data: Export All Data downloads your data as a JSON file, and Delete Account permanently removes your data and account.
+
 ### Changed
 
 - Job discovery now reads the public job feeds of the companies on your watchlist (Greenhouse, Lever, Ashby) and no longer fetches LinkedIn or scrapes search results.
