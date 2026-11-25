@@ -29,3 +29,6 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 - The Growth page no longer says a post was published when it was not; it copies the draft and opens LinkedIn for you to post.
 - Connection notes and cover letters no longer state things that are not in your profile; a failed AI call now shows an error instead of a canned note.
 - A failed calendar load shows an error instead of a made-up calendar list.
+- Calendar functions now check who is calling and only touch that user's calendar accounts.
+- AWS keys are no longer in the browser; the resume attached to a job is stored on the job and survives a reload.
+- The notification key is no longer in the browser; reminders go to the signed-in user instead of one shared inbox.
