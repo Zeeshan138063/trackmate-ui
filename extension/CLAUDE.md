@@ -75,9 +75,12 @@ replies with `source: 'jobos-extension'`.
   navigation, no scrolling to load more, no background fetch of a job board or of LinkedIn, no
   crawling through search results or profiles. Extraction happens on the page the user opened,
   and saving happens when the user presses Save.
-- **LinkedIn is frozen** (OQ-01). The extension reads LinkedIn job, profile and company pages and
-  draws its floating button on them. LinkedIn's terms cover extensions that scrape or change the
-  appearance of its pages, so until OQ-01 is answered add no new LinkedIn page types or fields.
+- **LinkedIn stays as it is** (DEC-001). The extension reads LinkedIn job, profile and company
+  pages the user has open, and that is kept. LinkedIn's terms cover extensions that scrape or
+  change the appearance of its pages, so the limit is firm: selector fixes are fine, but no new
+  LinkedIn page types, no new fields, no reading of search results or feeds, without a new
+  decision. Note the floating button is also drawn on LinkedIn pages; DEC-001 did not consider
+  it, so do not make it more prominent there.
 - **Autofill uses only the user's own `profiles` row and resume** (P3). Never guess a field.
 - **Selectors**: prefer `aria-*`, `data-*`, roles and structure over class names. Every
   extractor returns the same shape with empty strings for what it could not find.

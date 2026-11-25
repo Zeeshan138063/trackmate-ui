@@ -28,7 +28,7 @@
     {
       "files": "supabase/functions/**/*.ts",
       "pattern": "linkedin\\.com/(jobs|in|search|voyager)",
-      "message": "a server-side request to linkedin.com (P1): JobOS does not fetch or scrape LinkedIn. See docs/questions/ OQ-01 before touching this."
+      "message": "a server-side request to linkedin.com (P1): JobOS servers never fetch LinkedIn (DEC-001 in docs/plan/README.md)."
     }
   ]
 }
