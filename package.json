@@ -12,6 +12,9 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "test:followups": "cd supabase/functions && deno test --no-config --node-modules-dir=none --allow-read _shared/followups/",
+    "verify": "npm run typecheck && npm run lint && npm run build",
     "preview": "vite preview"
   },
   "dependencies": {
