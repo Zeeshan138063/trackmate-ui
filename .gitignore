@@ -23,3 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Code graphs (see CLAUDE.md, "Finding code"). .codegraph/ ignores itself.
+# graphify: keep the report in git, rebuild the rest with `graphify update .`
+graphify-out/*
+!graphify-out/GRAPH_REPORT.md

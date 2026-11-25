@@ -1,0 +1,5 @@
+# Trackers that many pull requests append to: keep both sides' lines instead of conflicting.
+# Used by the update-pr-branches workflow and by any local `git merge`.
+work.md merge=union
+CHANGELOG.md merge=union
+docs/modules/STATUS.md merge=union
