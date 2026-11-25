@@ -16,7 +16,7 @@ const strategies = [
     },
     {
         title: "Phase 2: Networking Mastery",
-        description: "80% of roles are filled through the 'Hidden Job Market'.",
+        description: "Referred candidates are hired at a much higher rate than cold applicants, so build relationships before you apply.",
         steps: [
             "Connect with 5 people at your Dream Companies.",
             "Ask for 2 informational interviews per week.",
