@@ -103,6 +103,10 @@ for a UI change lists the manual checks.
 - Do-not-contact is `contacts.relationship_stage = 'do_not_contact'`, the field the follow-up
   agent checks. Do not add a second flag.
 - Next steps are prompts. Nothing here may act on LinkedIn or send anything (P1, P2).
+- The daily queue on Home is `buildDailyQueue()` in `utils/daily-queue.ts`, fed by
+  `hooks/useDailyQueue.ts`. A new kind of due item is a new branch in `collectItems()` with a
+  stable `key` and a test. Only real data goes in: no placeholder items (DEC-005). What the user
+  did with an item is appended to `daily_queue_events`, never updated.
 - "Who do I know at this company" is `contactsAtCompany()` in `utils/company-match.ts`, shown by
   `components/contacts/KnownContacts.tsx`. A number on a job counts exact, contactable matches
   only (DEC-004). Match on the user's own contacts; never look a company or person up elsewhere.

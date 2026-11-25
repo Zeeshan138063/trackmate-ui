@@ -51,3 +51,14 @@ restated in the repo where the code depends on it, so the repo is enough on its 
 - Words given: approved "possible matches are listed separately and labelled" and "exact
   matches are counted".
 - Affects: REQ-006; `src/utils/company-match.ts::countContactable`.
+
+### DEC-005 The daily queue shows only what real features produce
+- Decided by: Zee, 2026-11-26
+- Words given: approved leaving out fresh high-fit jobs, the practice task and the content task
+  "rather than show placeholders", to be added when those features are built.
+- Affects: REQ-004; `src/utils/daily-queue.ts::collectItems`.
+
+### DEC-006 The daily limit is a number of items kept in the browser, for now
+- Decided by: Zee, 2026-11-26, by approving the REQ-004 spec
+- Default 10, range 3 to 30. Replaced by campaign capacity when REQ-001 is built.
+- Affects: REQ-004; `src/hooks/useDailyQueue.ts`.
