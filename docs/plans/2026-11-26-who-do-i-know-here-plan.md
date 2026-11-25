@@ -1,6 +1,6 @@
 # Plan: "Who do I know here?"
 
-Spec: `docs/specs/2026-11-26-who-do-i-know-here-design.md`. Approved by: <pending>.
+Spec: `docs/specs/2026-11-26-who-do-i-know-here-design.md`. Approved by: Zee, 2026-11-26 (possible matches shown, labelled, not counted).
 
 Branch `feat/who-do-i-know`, stacked on `feat/contact-stages-next-actions` and
 `feat/job-intake-allowed-sources` (it edits `JobSearch.tsx`, which that branch also changes).
@@ -24,9 +24,10 @@ Branch `feat/who-do-i-know`, stacked on `feat/contact-stages-next-actions` and
 
 ## How we will know it is done
 
-| AC | Evidence |
-|---|---|
-| AC-1 to AC-4 | `npm test` |
-| AC-5 to AC-8 | manual checks in the pull request |
-| AC-9 | no new query: uses `useContacts`, which reads through RLS |
-| All | type and lint counts no worse than baseline; build passes |
+| AC | Evidence | Result, 2026-11-26 |
+|---|---|---|
+| AC-1 to AC-4 | `npm test`: `src/utils/company-match.test.ts` | 7 of 7 pass (27 in total) |
+| AC-5 to AC-8 rendering | one-off server render of `KnownContacts` and the marker | listed exact, possible, do-not-contact and linked rows correctly; marker counted 1 and rendered nothing for zero; not kept as a test |
+| AC-5 to AC-8 in the browser | manual checks in the pull request | **not done** |
+| AC-9 | no new query: uses `useContacts`, which reads through RLS | by design |
+| All | typecheck, lint, build | 28 type errors (baseline); lint 196, no increase on this stack; build passes |
