@@ -67,7 +67,8 @@ export function DataManagement() {
                 <h4 className="font-medium mb-4">Export Data</h4>
                 <p className="text-sm text-muted-foreground mb-4">
                     Download a copy of your data as a JSON file: applications, contacts, companies, resumes,
-                    meetings and settings. Saved passwords, tokens and API keys are left out.
+                    meetings and settings. Saved passwords, tokens and API keys are left out. Resume files are
+                    listed but not included: download those from each application.
                 </p>
                 <Button variant="outline" onClick={handleExport} disabled={exporting}>
                     {exporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
@@ -99,7 +100,7 @@ export function DataManagement() {
                         <AlertDialogHeader>
                             <AlertDialogTitle>Delete your account?</AlertDialogTitle>
                             <AlertDialogDescription>
-                                This removes your applications, contacts, companies, resumes, meetings, connected
+                                This removes your applications, contacts, companies, resumes and their files, meetings, connected
                                 inboxes and settings, then closes your account. It cannot be undone.
                             </AlertDialogDescription>
                         </AlertDialogHeader>

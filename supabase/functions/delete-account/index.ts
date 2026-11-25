@@ -7,7 +7,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { errorResponse, requireUserId } from "../_shared/auth.ts";
 import { appCors } from "../_shared/cors.ts";
-import { confirmed, isAbsentTable, USER_TABLES } from "./tables.ts";
+import { confirmed, isAbsentTable, ownResumePaths, RESUME_BUCKET, USER_TABLES } from "./tables.ts";
 
 Deno.serve(async (req) => {
   const cors = appCors(req);
@@ -25,6 +25,24 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => null);
     if (!confirmed(body)) return reply({ error: "confirmation required" }, 400);
+
+    // Resume files first: once the rows are gone nothing points at them any more.
+    const { data: resumes, error: resumeError } = await admin
+      .from("application_resumes")
+      .select("storage_path")
+      .eq("user_id", userId);
+    if (resumeError && !isAbsentTable(resumeError)) {
+      console.error("delete-account: resume list failed", resumeError.code);
+      return reply({ error: "could not delete all data; nothing was removed, please try again" }, 500);
+    }
+    const paths = ownResumePaths(userId, (resumes ?? []).map((r: { storage_path: string }) => r.storage_path));
+    for (let i = 0; i < paths.length; i += 100) {
+      const { error: storageError } = await admin.storage.from(RESUME_BUCKET).remove(paths.slice(i, i + 100));
+      if (storageError) {
+        console.error("delete-account: resume files not removed");
+        return reply({ error: "could not delete your resume files; nothing further was removed, please try again" }, 500);
+      }
+    }
 
     for (const table of USER_TABLES) {
       const { error } = await admin.from(table).delete().eq("user_id", userId);

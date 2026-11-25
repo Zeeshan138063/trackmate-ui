@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const EXPORT_TABLES = [
     "profiles",
     "resumes",
+    "application_resumes",
     "jobs",
     "contacts",
     "engagements",

@@ -8,6 +8,7 @@
 // Adding a table that stores user data? Add it here and to EXPORT_TABLES in
 // src/services/AccountDataService.ts (principle P9).
 export const USER_TABLES = [
+  "application_resumes", // their files are removed from the resumes bucket first
   "follow_up_events",
   "follow_ups",
   "followup_settings",
@@ -43,4 +44,13 @@ export function isAbsentTable(error: { code?: string } | null): boolean {
 
 export function confirmed(body: unknown): boolean {
   return typeof body === "object" && body !== null && (body as { confirm?: unknown }).confirm === "DELETE";
+}
+
+/** The private storage bucket that holds resume files, laid out as <user_id>/<job_id>/<file>. */
+export const RESUME_BUCKET = "resumes";
+
+/** Only paths inside the caller's own folder may be removed, whatever the table says. */
+export function ownResumePaths(userId: string, paths: (string | null | undefined)[]): string[] {
+  const prefix = `${userId}/`;
+  return paths.filter((p): p is string => typeof p === "string" && p.startsWith(prefix) && !p.includes(".."));
 }
