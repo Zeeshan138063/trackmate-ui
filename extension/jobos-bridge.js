@@ -8,6 +8,8 @@
 
 const BRIDGE_SOURCE_WEB = 'jobos-web-app';
 const BRIDGE_SOURCE_EXT = 'jobos-extension';
+const APP_FETCH_TYPE     = 'CAREERPILOT_FETCH_JOB_DATA';
+const APP_RESPONSE_TYPE  = 'CAREERPILOT_JOB_DATA_RESPONSE';
 const SUPABASE_PROJECT_REF = 'jdplobgtxzncwxhordah';
 const AUTH_KEY = `sb-${SUPABASE_PROJECT_REF}-auth-token`;
 
@@ -17,7 +19,32 @@ const AUTH_KEY = `sb-${SUPABASE_PROJECT_REF}-auth-token`;
 window.addEventListener('message', event => {
   if (event.source !== window) return;
   const msg = event.data;
-  if (!msg || msg.source !== BRIDGE_SOURCE_WEB) return;
+  if (!msg) return;
+
+  // ── Hand-off request as the JobOS app actually sends it ──
+  // Trackers, Connections and the resume importer post
+  //   { type: 'CAREERPILOT_FETCH_JOB_DATA', dataId }
+  // and wait for { type: 'CAREERPILOT_JOB_DATA_RESPONSE', data }. The names are historical;
+  // they are a contract with the app (see extension/CLAUDE.md).
+  if (msg.type === APP_FETCH_TYPE) {
+    if (typeof msg.dataId !== 'string' || !msg.dataId) return;
+    try {
+      if (!chrome.runtime?.id) throw new Error('Context invalidated');
+      chrome.runtime.sendMessage({ action: 'getJobData', dataId: msg.dataId }, response => {
+        // Reply only with real data. On a miss the app's own timeout falls back to the URL values.
+        if (chrome.runtime.lastError || !response?.success || !response.data) return;
+        window.postMessage(
+          { type: APP_RESPONSE_TYPE, dataId: msg.dataId, data: response.data },
+          window.location.origin
+        );
+      });
+    } catch (err) {
+      console.warn('[JobOS Bridge] Extension context invalidated. Please refresh the page.');
+    }
+    return;
+  }
+
+  if (msg.source !== BRIDGE_SOURCE_WEB) return;
 
   // ── Fetch stored job/contact/profile data by ID ──
   if (msg.action === 'getJobData' || msg.action === 'getData') {
@@ -108,7 +135,8 @@ window.addEventListener('storage', event => {
 // Private: send reply to web app
 // ────────────────────────────────────────────────────────────────
 function _reply(payload) {
-  window.postMessage({ source: BRIDGE_SOURCE_EXT, ...payload }, '*');
+  // Same origin only: hand-off data and session events are for the JobOS app, not other frames.
+  window.postMessage({ source: BRIDGE_SOURCE_EXT, ...payload }, window.location.origin);
 }
 
 console.log('[JobOS Bridge] v2.0 loaded.');

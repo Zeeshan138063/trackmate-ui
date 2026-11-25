@@ -1,6 +1,6 @@
 # extension/: the JobOS browser extension
 
-Chrome, Manifest V3, version 3.1.0, plain JavaScript, **no build step and no npm**: the files in
+Chrome, Manifest V3, version 3.1.1, plain JavaScript, **no build step and no npm**: the files in
 this folder are what gets loaded. Read the root `CLAUDE.md` first. Older notes for this folder
 are in `.agents/workflows/extension_development.md` and `extension_testing.md`; store packaging
 is the `.agents/skills/extension-deployment` skill.
@@ -21,7 +21,7 @@ always reviews, and the user always clicks submit.
 | `skills-db.js` | side panel | Keyword list used to show "Top skills" for a captured job. Local only |
 | `background.js` | service worker | Opens the side panel, `TabStore` (per-tab state, in memory), badge, screenshots, temporary hand-off storage, session sync |
 | `popup.html`, `popup.js` | the side panel | Sign-in, review and edit, save, autofill, import profile |
-| `jobos-bridge.js` | at `document_start` | Meant for the web app's pages: hand-off data, login and logout sync. Today it is injected on every https page |
+| `jobos-bridge.js` | the web app's pages only (`app.jobos.dev`, `job.zeeshare.com`), at `document_start` | Hand-off data, login and logout sync |
 | `supabase-js.js` | side panel | Vendored Supabase client. Do not edit; replace whole when upgrading |
 | `*.md` | | Older notes; treat as history |
 
@@ -41,16 +41,18 @@ Sent with `chrome.runtime.sendMessage` / `chrome.tabs.sendMessage` as `{ action,
 | `getJobData` | bridge to background | Fetch a stored record by `dataId` |
 | `portalLogin`, `portalLogout` | bridge to background | The app signed in or out: copy or clear the session |
 
-## The app hand-off is broken today
+## The app hand-off contract
 
 The web app asks for hand-off data with
 `window.postMessage({ type: 'CAREERPILOT_FETCH_JOB_DATA', dataId })` and waits for
-`type: 'CAREERPILOT_JOB_DATA_RESPONSE'` (`src/pages/Trackers.tsx`, `src/pages/Connections.tsx`,
-`src/components/resume/ResumeImporter.tsx`). The bridge listens for
-`{ source: 'jobos-web-app', action: 'getJobData' }` and answers with
-`{ source: 'jobos-extension', action: 'dataResponse' }`. Neither side hears the other, so the app
-times out and uses only the short values in the URL. Fix both sides in one pull request and
-test by hand; do not rename one side alone.
+`{ type: 'CAREERPILOT_JOB_DATA_RESPONSE', dataId, data }` (`src/pages/Trackers.tsx`,
+`src/pages/Connections.tsx`, `src/components/resume/ResumeImporter.tsx`). `jobos-bridge.js`
+answers it from the background's one-hour store, once, and only with real data; on a miss the
+app's own timeout falls back to the short values in the URL. The names are historical. They are
+a contract: change both sides in one pull request and test by hand.
+
+The bridge also still accepts `{ source: 'jobos-web-app', action: 'getJobData' | 'ping' }` and
+replies with `source: 'jobos-extension'`.
 
 ## Two ways data is saved
 
@@ -64,8 +66,8 @@ test by hand; do not rename one side alone.
 
 - Supabase URL, project ref and anon key. The anon key is public; no other key may ever be
   added here (P4).
-- The app URL is `https://app.jobos.dev` in `popup.js`. `background.js::baseUrl` still falls
-  back to `http://localhost:8080` when no URL is passed.
+- The app URL is `https://app.jobos.dev` in `popup.js` and as the fallback in `background.js`.
+  A new app domain must also be added to the bridge's `matches` in `manifest.json`.
 
 ## Rules
 

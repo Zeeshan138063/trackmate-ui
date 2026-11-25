@@ -131,8 +131,6 @@ Going against one needs an ADR, not a judgement call in a pull request.
   `VITE_SUPABASE_*` variables in `.env.example` are not read.
 - `src/integrations/supabase/types.ts` covers 13 of the 27 tables, so newer code uses
   `.from('x' as any)`. Do not copy that habit: regenerate the types.
-- The extension-to-app hand-off does not work: the two sides use different message names. See
-  `extension/CLAUDE.md`.
 - `GrowthEngine.publishToLinkedIn` reports success without publishing (breaks P10).
 - The `fetch-linkedin-jobs` cron URL has a typo in the project ref, so that schedule may not be
   running. Do not "fix" it: see OQ-01.
