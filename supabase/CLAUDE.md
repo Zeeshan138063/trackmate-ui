@@ -34,6 +34,8 @@ Rules:
   security`, and select/insert/update/delete policies on `auth.uid() = user_id`, all in the same
   file (P5). A table that is deliberately shared (like `discovered_jobs`, public read, service
   role write) says so in a comment and in the spec.
+- A new table that stores user data is added to `functions/delete-account/tables.ts` and to
+  `EXPORT_TABLES` in `src/services/AccountDataService.ts` (P9).
 - Write migrations so they can run twice: `if not exists`, `create or replace`, `drop ... if
   exists`.
 - After a schema change regenerate the app types and commit them in the same pull request:
@@ -91,6 +93,12 @@ Rules for functions:
   tell Zee the exact `supabase secrets set` command to run. Never invent a value.
 - Anything that sends, posts or submits outside JobOS needs an explicit approval step by the user
   (P2). Anything that fetches another site states in its spec why that site's terms allow it.
+
+## Account data (P9)
+
+`functions/delete-account/` deletes the caller's rows, in the order listed in its `tables.ts`,
+and then their auth user. It stops and keeps the account if any table fails. The matching export
+runs in the browser (`src/services/AccountDataService.ts`). Keep the two table lists in step.
 
 ## Tests
 
