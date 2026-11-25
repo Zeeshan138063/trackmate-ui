@@ -1,0 +1,34 @@
+{
+  "baseBranch": "main",
+  "trackerFile": "work.md",
+  "changelogFile": "CHANGELOG.md",
+  "contract": {
+    "barrel": "@/integrations/supabase/client",
+    "generatedDir": "src/integrations/supabase",
+    "consumerPaths": ["src/hooks/", "src/services/", "src/pages/", "src/components/"],
+    "infraExports": ["supabase"],
+    "regenerate": "npx supabase gen types typescript --project-id jdplobgtxzncwxhordah > src/integrations/supabase/types.ts"
+  },
+  "editWarnings": [
+    {
+      "files": "src/**/*.{ts,tsx}",
+      "pattern": "import\\.meta\\.env\\.VITE_[A-Z_]*(SECRET|API_KEY|ACCESS_KEY)",
+      "message": "a secret read from a VITE_ variable (P4): everything prefixed VITE_ ships to every browser. Move the call into a Supabase edge function."
+    },
+    {
+      "files": "extension/**/*.js",
+      "pattern": "\\.click\\(\\)|new MouseEvent\\(|\\.submit\\(\\)",
+      "message": "the extension clicking or submitting on a page (P1, P2): it may read and fill, the user clicks and submits."
+    },
+    {
+      "files": "supabase/migrations/*.sql",
+      "pattern": "create table",
+      "message": "a new table (P5): enable row level security and add its policies in this same migration, and regenerate src/integrations/supabase/types.ts."
+    },
+    {
+      "files": "supabase/functions/**/*.ts",
+      "pattern": "linkedin\\.com/(jobs|in|search|voyager)",
+      "message": "a server-side request to linkedin.com (P1): JobOS does not fetch or scrape LinkedIn. See docs/questions/ OQ-01 before touching this."
+    }
+  ]
+}
