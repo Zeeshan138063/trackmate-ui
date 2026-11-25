@@ -19,11 +19,13 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 ### Added
 
 - Connections: every contact has a role type and a warmth stage, shows its one next step with a due date, and the page opens on a Today list of people to act on, with snooze, filters and a do-not-contact switch.
+- Settings > Data: Export All Data downloads your data as a JSON file, and Delete Account permanently removes your data and account.
 
 ### Changed
 
 - Job discovery now reads the public job feeds of the companies on your watchlist (Greenhouse, Lever, Ashby) and no longer fetches LinkedIn or scrapes search results.
 - A job with no known posting date now says "First seen" instead of "Posted", and shows its real source.
+- Browser extension 2.0.1: renamed to JobOS, opens app.jobos.dev by default, and its app bridge no longer runs on unrelated sites.
 
 ### Fixed
 
@@ -31,3 +33,6 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 - The Growth page no longer says a post was published when it was not; it copies the draft and opens LinkedIn for you to post.
 - Connection notes and cover letters no longer state things that are not in your profile; a failed AI call now shows an error instead of a canned note.
 - A failed calendar load shows an error instead of a made-up calendar list.
+- Calendar functions now check who is calling and only touch that user's calendar accounts.
+- AWS keys are no longer in the browser; the resume attached to a job is stored on the job and survives a reload.
+- The notification key is no longer in the browser; reminders go to the signed-in user instead of one shared inbox.

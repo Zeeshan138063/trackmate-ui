@@ -34,6 +34,8 @@ Rules:
   security`, and select/insert/update/delete policies on `auth.uid() = user_id`, all in the same
   file (P5). A table that is deliberately shared (like `discovered_jobs`, public read, service
   role write) says so in a comment and in the spec.
+- A new table that stores user data is added to `functions/delete-account/tables.ts` and to
+  `EXPORT_TABLES` in `src/services/AccountDataService.ts` (P9).
 - Write migrations so they can run twice: `if not exists`, `create or replace`, `drop ... if
   exists`.
 - After a schema change regenerate the app types and commit them in the same pull request:
@@ -63,6 +65,7 @@ Deno. Each folder is one function with an `index.ts`.
 | `search-jobs` | app | Embeds the phrase, calls the `match_jobs` RPC | `HF_TOKEN` |
 | `perplexity-search` | app | Asks Perplexity for jobs, upserts `discovered_jobs` | `PERPLEXITY_API_KEY` |
 | `manage-calendar`, `sync-calendar` | app | List calendars; sync Google and Microsoft events into `meetings` | `GOOGLE_CLIENT_ID/SECRET`, `AZURE_*` |
+| `notify-reminder` | app | Sends the caller a Novu in-app reminder about one of their own jobs | `NOVU_API_KEY` |
 | `followups-*` (5) | cron, app, Google/Microsoft, Telegram | The follow-up agent | see `docs/FOLLOWUPS.md` |
 
 Embeddings: Hugging Face hosted `BAAI/bge-small-en-v1.5`, 384 dimensions. Changing the model
@@ -72,12 +75,11 @@ Rules for functions:
 
 - **Authenticate the caller yourself.** Read the `Authorization` header, call
   `auth.getUser(token)`, and use that user's id. Never accept `userId` from the body (P5).
-  `followups/runtime.ts` (`requireUser`) is the reference. `sync-calendar` currently trusts a
-  `userId` in the body while using the service role key: a known defect, do not copy it.
+  Use `requireUserId` from `_shared/auth.ts` (or `requireUser` in `followups/runtime.ts`).
 - The service role key bypasses RLS. Use it only after you know who is calling, and still filter
   by that user in every query.
-- CORS: older functions answer `*`. New functions allow `APP_URL` plus `ALLOWED_ORIGINS`, as
-  `followups/runtime.ts` (`corsHeaders`) does.
+- CORS: older functions answer `*`. New functions use `appCors` from `_shared/cors.ts`, which
+  allows `APP_URL` plus `ALLOWED_ORIGINS`.
 - Vendors sit behind a small adapter with an interface, as in `followups/adapters/`. New
   functions do not call a vendor SDK from the request handler.
 - Errors returned to the browser are generic; details go to `console.error`. Never log tokens,
@@ -92,6 +94,12 @@ Rules for functions:
   no scraping of search results or HTML pages.
 - `discovered_jobs.posted_at` is the employer's date or null. Never write "now" into it;
   `first_seen_at` records when JobOS saw the job.
+
+## Account data (P9)
+
+`functions/delete-account/` deletes the caller's rows, in the order listed in its `tables.ts`,
+and then their auth user. It stops and keeps the account if any table fails. The matching export
+runs in the browser (`src/services/AccountDataService.ts`). Keep the two table lists in step.
 
 ## Tests
 
