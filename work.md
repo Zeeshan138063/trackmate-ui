@@ -21,6 +21,13 @@ keep the last line of each section the next step.
 - [ ] After merge: remove the stale `GrowthEngine.publishToLinkedIn` lines from `CLAUDE.md` and `src/CLAUDE.md`.
 - [ ] Still open: Settings > Integrations asks for a LinkedIn client secret for a publishing feature that no longer exists.
 - [ ] PR into rebranding-jobos.
+## 2026-11-26 - Data export and account deletion (audit stage 0, branch jobos/data-export-delete, into rebranding-jobos)
+
+- [x] `delete-account` edge function; helper tests in `supabase/functions/delete-account/tables_test.ts`.
+- [x] `src/services/AccountDataService.ts`, `src/components/Settings/DataManagement.tsx`, wired into Settings.
+- [ ] Zee: `supabase functions deploy delete-account`, then test both buttons with a throwaway account. Not tested against the live project.
+- [ ] Check the site's privacy page matches: export is JSON, deletion is immediate.
+- [ ] PR into rebranding-jobos.
 
 ## 2026-11-26 - Agent setup: CLAUDE.md files, spec-driven-kit files, code graphs (no ticket, working tree on main, uncommitted)
 
