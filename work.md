@@ -63,7 +63,7 @@ keep the last line of each section the next step.
 - [ ] Next P0s: REQ-005 (drafting from notes), REQ-001 (campaign setup), REQ-008 (fit caps and freshness), REQ-002 (consistency checker).
 - [ ] PR into rebranding-jobos.
 
-## 2026-11-26 - Referral-first prompt (REQ-007, branch feat/referral-first, stacked on feat/daily-queue)
+## 2026-11-26 - Referral-first prompt (REQ-007, branch jobos/referral-first, into rebranding-jobos)
 
 - [x] Plan approved by Zee; DEC-007.
 - [x] `referralCandidates()` with tests; queue reason; `ReferralPrompt` banner and apply confirmation in the job dialog.
@@ -71,7 +71,7 @@ keep the last line of each section the next step.
 - [ ] Known limit: the confirmation only runs when saving from the job dialog, not when dragging a card to Applied on the kanban.
 - [ ] PR into rebranding-jobos.
 
-## 2026-11-26 - Daily queue (REQ-004, branch feat/daily-queue, stacked on feat/who-do-i-know)
+## 2026-11-26 - Daily queue (REQ-004, branch jobos/daily-queue, into rebranding-jobos)
 
 - [x] Spec and plan approved by Zee; DEC-005, DEC-006.
 - [x] `src/utils/daily-queue.ts`, 10 tests.
@@ -83,7 +83,7 @@ keep the last line of each section the next step.
 - [ ] Next: REQ-007 (referral-first prompt) and REQ-009 (limits tracker), both small rules on top of REQ-003.
 - [ ] PR into rebranding-jobos.
 
-## 2026-11-26 - "Who do I know here?" (REQ-006, branch feat/who-do-i-know, stacked on REQ-003 and job intake)
+## 2026-11-26 - "Who do I know here?" (REQ-006, branch jobos/who-do-i-know, into rebranding-jobos)
 
 - [x] Spec and plan approved by Zee; DEC-004.
 - [x] `src/utils/company-match.ts`, 7 tests.
@@ -94,7 +94,7 @@ keep the last line of each section the next step.
 - [ ] Next: REQ-004 (daily queue), then REQ-007 (referral-first prompt), which reads these matches.
 - [ ] PR into rebranding-jobos.
 
-## 2026-11-26 - Contact stages and next actions (REQ-003, branch feat/contact-stages-next-actions)
+## 2026-11-26 - Contact stages and next actions (REQ-003, branch jobos/contact-stages, into rebranding-jobos)
 
 - [x] Spec and plan approved by Zee; DEC-002 and DEC-003 in `docs/plan/README.md`.
 - [x] Engine `src/utils/contact-next-action.ts`, 20 tests (`npm test`).
