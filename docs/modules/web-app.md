@@ -13,6 +13,7 @@ The CRM the user works in every day. Under the strategy spec its centre moves fr
 ## Done
 
 - [x] Scoped `CLAUDE.md` written; code graphs built (2026-11-26). No product code changed.
+- [x] REQ-003 contact stages and next actions (2026-11-26): `src/utils/contact-next-action.ts` with tests, `src/components/contacts/`, Today list on Connections. Awaiting migration and browser check.
 
 ## Remaining
 

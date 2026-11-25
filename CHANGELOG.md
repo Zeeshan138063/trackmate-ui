@@ -18,6 +18,8 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 
 ### Added
 
+- Connections: every contact has a role type and a warmth stage, shows its one next step with a due date, and the page opens on a Today list of people to act on, with snooze, filters and a do-not-contact switch.
+
 ### Changed
 
 ### Fixed

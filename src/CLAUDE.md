@@ -86,9 +86,20 @@ the root `CLAUDE.md`. Do not add callers and do not patch around them in passing
 
 ## Tests
 
-There is no test runner for `src/` yet. Until one is added by its own ticket, the plan for a
-change must list the manual checks, and pure logic should be written as plain functions in
-`utils/` so it can be tested once a runner exists.
+`npm test` runs vitest over `src/**/*.test.ts` in a Node environment (no DOM). Pure logic goes in
+plain functions in `utils/` with a test beside it; `utils/contact-next-action.ts` is the
+reference: no clock, no network, time passed in. Components are not unit-tested yet, so the plan
+for a UI change lists the manual checks.
+
+## Contacts (REQ-003)
+
+- A contact's next step is computed, never stored: `nextAction()` in
+  `utils/contact-next-action.ts`, fed by `hooks/useContactActions.ts`. Change a rule there and in
+  its test, nowhere else. Timings live in `RULES` (DEC-003).
+- Stages change only on a user click (DEC-002). `suggestedStage()` proposes; never auto-apply it.
+- Do-not-contact is `contacts.relationship_stage = 'do_not_contact'`, the field the follow-up
+  agent checks. Do not add a second flag.
+- Next steps are prompts. Nothing here may act on LinkedIn or send anything (P1, P2).
 
 ## Handoff
 
