@@ -12,7 +12,7 @@ export default function GrowthDashboard() {
                 <div>
                     <h1 className="text-3xl font-bold text-foreground">Growth Engine</h1>
                     <p className="text-muted-foreground mt-1">
-                        AI-powered content strategy and LinkedIn automation.
+                        Draft LinkedIn posts from your own experience. You review and publish them yourself.
                     </p>
                 </div>
                 <div className="flex gap-2">
