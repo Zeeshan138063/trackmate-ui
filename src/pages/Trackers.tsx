@@ -321,6 +321,20 @@ export default function Trackers() {
     setEditDialogOpen(true);
   };
 
+  // Deep link from the daily queue (REQ-004): /trackers?job=<id> opens that job once.
+  useEffect(() => {
+    const jobId = searchParams.get('job');
+    if (!jobId || loading) return;
+    const target = jobs.find(j => j.id === jobId);
+    if (target) {
+      setEditingJob(target);
+      setEditDialogOpen(true);
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete('job');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, jobs, loading]);
+
   const handleUpdateJob = (updatedJob: Job) => {
     updateJob(updatedJob);
     setEditingJob(null);

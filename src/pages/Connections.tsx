@@ -36,6 +36,16 @@ export default function Connections() {
     const { addEngagement } = useEngagements();
     const openContact = contacts.find((c) => c.id === openContactId) ?? null;
 
+    // Deep link from the daily queue (REQ-004): /connections?contact=<id> opens that contact once.
+    useEffect(() => {
+        const contactId = searchParams.get('contact');
+        if (!contactId || loading) return;
+        if (contacts.some((c) => c.id === contactId)) setOpenContactId(contactId);
+        const next = new URLSearchParams(searchParams);
+        next.delete('contact');
+        setSearchParams(next, { replace: true });
+    }, [searchParams, setSearchParams, contacts, loading]);
+
     const handleSnooze = (contact: Contact, days: number) =>
         updateContact(contact.id, { next_action_snoozed_until: addDays(localToday(), days) });
 
