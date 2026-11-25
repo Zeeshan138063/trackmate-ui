@@ -15,7 +15,39 @@ Product and business choices, in the words of whoever made them.
 
 Technical decisions that bind the code go in `architecture/decisions/` as ADRs.
 
+## Decisions made
+
+### DEC-001 JobOS takes jobs from job-board feeds, not from LinkedIn or search results
+- Decided by: Zee (product owner), 2026-11-26
+- Words given: "Remove server fetch only": drop the hourly LinkedIn fetch and the LinkedIn URL
+  reader, replace intake with job-board feeds and paste-a-URL, and keep the extension reading
+  pages the user has open, since the site advertises it.
+- Affects: OQ-01 (closed); REQ-008; `supabase/functions/fetch-jobs/`; migration
+  `20261126110000_job_intake_allowed_sources.sql`; principle P1.
+
 ## Open questions: `OQ-##`
 
 A question someone outside engineering must answer. See `questions/README.md`: each one is also
 restated in the repo where the code depends on it, so the repo is enough on its own.
+
+## Decisions: relationship pipeline
+
+### DEC-002 A contact's warmth stage changes only when the user confirms it
+- Decided by: Zee (product owner), 2026-11-26
+- Words given: "Suggest, I confirm": the card shows the suggested stage with one click to
+  accept, and nothing moves until the user clicks, because only they know if an interaction was
+  genuine.
+- Affects: REQ-003; `src/utils/contact-next-action.ts::suggestedStage`.
+
+### DEC-003 Next-action timings are fixed defaults for now
+- Decided by: Zee, 2026-11-26, by approving the REQ-003 spec
+- Words given (strategy spec 5E): "at most two follow-ups, 5-7 days apart, then the contact
+  rests for 30 days". Follow-up after 6 days, at most 2, rest 30; other timings in `RULES`.
+- Affects: REQ-003; `src/utils/contact-next-action.ts::RULES`. Editable cadences per role type
+  are a later feature.
+
+### DEC-004 A contact count on a job only counts people definitely at that company
+- Decided by: Zee, 2026-11-26
+- Words given: approved "possible matches are listed separately and labelled" and "exact
+  matches are counted".
+- Affects: REQ-006; `src/utils/company-match.ts::countContactable`.

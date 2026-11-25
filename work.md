@@ -4,6 +4,28 @@ What is true now, per branch of work. Newest section at the top. Every push that
 updates this file (the `push-tracker-gate` hook checks). Tick what is done, add what is left, and
 keep the last line of each section the next step.
 
+## 2026-11-26 - "Who do I know here?" (REQ-006, branch feat/who-do-i-know, stacked on REQ-003 and job intake)
+
+- [x] Spec and plan approved by Zee; DEC-004.
+- [x] `src/utils/company-match.ts`, 7 tests.
+- [x] `src/components/contacts/KnownContacts.tsx`; job dialog Contacts tab, table, kanban, Job Search.
+- [ ] Zee: browser check (list in the pull request). No migration, no deploy.
+- [ ] After merge: set REQ-006 to "exists" in `docs/prd/requirements.md`.
+- [ ] Known limit: matching is by typed company name, so "FB" will not find "Meta".
+- [ ] Next: REQ-004 (daily queue), then REQ-007 (referral-first prompt), which reads these matches.
+- [ ] PR into main, after feat/contact-stages-next-actions and feat/job-intake-allowed-sources.
+
+## 2026-11-26 - Contact stages and next actions (REQ-003, branch feat/contact-stages-next-actions)
+
+- [x] Spec and plan approved by Zee; DEC-002 and DEC-003 in `docs/plan/README.md`.
+- [x] Engine `src/utils/contact-next-action.ts`, 20 tests (`npm test`).
+- [x] Migration `20261126120000_contact_warmth_stage.sql`.
+- [x] UI: stage badge, relationship controls, card next action and suggestion, Today list, filters.
+- [ ] Zee: `supabase db push`. Until then everyone reads as Identified and changing a stage shows an error.
+- [ ] Zee: browser check of AC-1, AC-2, AC-6 to AC-10, and a user A / user B check (AC-11).
+- [ ] After merge: set REQ-003 to "exists" in `docs/prd/requirements.md`; regenerate Supabase types.
+- [ ] Known limit: turning do-not-contact off sets the follow-up agent's track back to active, even if it was nurture before.
+- [ ] Next: REQ-006 (match contacts to jobs by company), then REQ-004 (daily queue).
 ## 2026-11-26 - Extension 2.0.1 (branch chore/extension-jobos)
 
 - [x] JobOS naming in popup and manifest; default app URL `https://app.jobos.dev`; sign-up link fixed.
@@ -34,6 +56,28 @@ keep the last line of each section the next step.
 - [ ] Zee: `supabase db push`, `supabase secrets set NOVU_API_KEY=...`, deploy `manage-calendar sync-calendar notify-reminder`.
 - [ ] Zee: remove `VITE_AWS_*` and `VITE_NOVU_API_KEY` from the build environment and rotate both keys.
 - [ ] PR into main.
+
+## 2026-11-26 - Honest results (audit stage 0, branch fix/honest-results)
+
+- [x] No invented match scores: `src/pages/JobSearch.tsx`, `src/pages/ApplicationCopilot.tsx`; mock scan deleted.
+- [x] Growth: simulated publish replaced by copy and open LinkedIn (`PostGenerator.tsx`, `GrowthEngine.ts`).
+- [x] Connection note: no template fallback; cover letter prompt has truth rules.
+- [x] Calendar connector: no stand-in calendars. Strategy Guide: unsourced 80% figure removed.
+- [ ] Manual check in the browser (not done: no login in the build session): Job Search list, Copilot header, Growth button, contact note with and without an AI key.
+- [ ] After merge: remove the stale `GrowthEngine.publishToLinkedIn` lines from `CLAUDE.md` and `src/CLAUDE.md`.
+- [ ] Still open: Settings > Integrations asks for a LinkedIn client secret for a publishing feature that no longer exists.
+- [ ] PR into main.
+
+## 2026-11-26 - Job intake on allowed sources (DEC-001, branch feat/job-intake-allowed-sources, stacked on fix/honest-results)
+
+- [x] Removed `fetch-linkedin-jobs` and `parse-linkedin`; OQ-01 closed as DEC-001.
+- [x] `fetch-jobs` reads Greenhouse, Lever and Ashby feeds for watchlist companies; `feeds.ts` with tests in `feeds_test.ts`.
+- [x] Migration `20261126110000`: unschedule LinkedIn cron, `first_seen_at`, `match_jobs`, `archive_old_jobs`.
+- [x] UI: "First seen" label and real source names.
+- [ ] Zee, in this order: `supabase db push`; `supabase functions deploy fetch-jobs`; `supabase functions delete fetch-linkedin-jobs parse-linkedin`.
+- [ ] Not run against the live project or a real feed from the build session (no network to those hosts). Check the first hourly run in the function logs.
+- [ ] Follow-ups: Workable feed; paste-a-URL capture into `discovered_jobs`; the public `/jobs` page still lists rows collected from LinkedIn before this change until they archive (15 days).
+- [ ] PR into main, after fix/honest-results.
 
 ## 2026-11-26 - Agent setup: CLAUDE.md files, spec-driven-kit files, code graphs (no ticket, working tree on main, uncommitted)
 
