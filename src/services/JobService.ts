@@ -13,8 +13,11 @@ export interface ScannedJob {
     logo?: string;
     /** Semantic similarity as a percentage, or null when the job was not scored. Never invented. */
     matchScore: number | null;
+    /** Best date we have: the employer's posting date, else when JobOS first saw the job. */
     foundDate: string;
-    source: 'LinkedIn' | 'Indeed' | 'Company Site';
+    /** Which of the two foundDate is. Shown to the user so a first-seen date is never called "posted". */
+    dateKind: 'posted' | 'first_seen';
+    source: string;
     job_url?: string;
 }
 
