@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useCampaign } from "@/hooks/useCampaign";
 import { useFollowUps } from "@/hooks/useFollowUps";
 import { localToday, useContactActions } from "@/hooks/useContactActions";
 import type { Contact } from "@/types/contact";
@@ -39,7 +40,11 @@ export function useDailyQueue(jobs: Job[], contacts: Contact[]) {
     const { byContact, refresh: refreshInteractions } = useContactActions(contacts, reminders);
     const [agentRows, setAgentRows] = useState<{ id: string; job_id: string; contact_id: string | null; state: string; due_date: string | null }[]>([]);
     const [events, setEvents] = useState<QueueEvent[]>([]);
-    const [limit, setLimitState] = useState<number>(readLimit);
+    // The limit is the campaign's daily capacity once a campaign is saved (REQ-001). Until then
+    // it is the number kept in this browser (DEC-006).
+    const { campaign, saved: campaignSaved, save: saveCampaign } = useCampaign();
+    const [localLimit, setLimitState] = useState<number>(readLimit);
+    const limit = campaignSaved ? campaign.dailyCapacity : localLimit;
 
     const loadExtras = useCallback(async () => {
         if (!user) return;
@@ -101,7 +106,8 @@ export function useDailyQueue(jobs: Job[], contacts: Contact[]) {
         } catch {
             // remembered for this visit only
         }
-    }, []);
+        if (campaignSaved) void saveCampaign({ ...campaign, dailyCapacity: next });
+    }, [campaignSaved, campaign, saveCampaign]);
 
     /** Records what the user did with an item. Returns false, leaving the item in place, on failure (AC-8). */
     const record = useCallback(async (item: QueueItem, action: QueueEventAction, snoozeDays = 1): Promise<boolean> => {

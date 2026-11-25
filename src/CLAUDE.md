@@ -107,6 +107,10 @@ for a UI change lists the manual checks.
   `hooks/useDailyQueue.ts`. A new kind of due item is a new branch in `collectItems()` with a
   stable `key` and a test. Only real data goes in: no placeholder items (DEC-005). What the user
   did with an item is appended to `daily_queue_events`, never updated.
+- The campaign (`utils/campaign.ts`, `hooks/useCampaign.ts`, table `campaigns`, one row per
+  user) is what the user wants and what rules a job out. Read it through `useCampaign()`; clean
+  anything going in with `normalizeCampaign()`. Citizenship and visa need never go into an AI
+  prompt.
 - Message drafts: `utils/message-draft.ts` picks the ask (`availableAsks`, DEC-009), builds the
   prompt from the user's notes and checks the result (`checkDraft`). `AIGenerator.draftMessage`
   only calls the model. A new rule for drafts goes in `checkDraft` with a test, not in the prompt
