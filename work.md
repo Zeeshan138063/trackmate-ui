@@ -11,6 +11,12 @@ keep the last line of each section the next step.
 - [ ] Manual test in Chrome (not done: no browser with the extension in the build session). Run cases 1 to 3 in `docs/EXTENSION_TEST_CASES.md`, both save paths, plus logout sync.
 - [ ] Publish 2.0.1 to the Chrome Web Store; the store listing name changes with it.
 - [ ] Next: narrow `content.js` matches (own spec).
+## 2026-11-26 - Data export and account deletion (audit stage 0, branch feat/data-export-delete)
+
+- [x] `delete-account` edge function; helper tests in `supabase/functions/delete-account/tables_test.ts`.
+- [x] `src/services/AccountDataService.ts`, `src/components/Settings/DataManagement.tsx`, wired into Settings.
+- [ ] Zee: `supabase functions deploy delete-account`, then test both buttons with a throwaway account. Not tested against the live project.
+- [ ] Check the site's privacy page matches: export is JSON, deletion is immediate.
 ## 2026-11-26 - Honest results (audit stage 0, branch fix/honest-results)
 
 - [x] No invented match scores: `src/pages/JobSearch.tsx`, `src/pages/ApplicationCopilot.tsx`; mock scan deleted.

@@ -18,6 +18,8 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 
 ### Added
 
+- Settings > Data: Export All Data downloads your data as a JSON file, and Delete Account permanently removes your data and account.
+
 ### Changed
 
 - Browser extension 2.0.1: renamed to JobOS, opens app.jobos.dev by default, and its app bridge no longer runs on unrelated sites.
