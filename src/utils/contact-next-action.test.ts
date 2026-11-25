@@ -165,3 +165,28 @@ describe("AC-7 today's list", () => {
     expect(dueToday(items, TODAY).map((i) => i.name)).toEqual(["Bilal", "Adam", "Zara", "Today"]);
   });
 });
+
+describe("REQ-009 invitations", () => {
+  const engaged = (over: Partial<ContactForAction> = {}) => contact({ warmthStage: "engaged", ...over });
+
+  it("after an invitation is marked sent, waits 14 days, then asks the user to check on it", () => {
+    const c = engaged({ invitationSentAt: at("2026-11-22") });
+    expect(nextAction(c, [], [], TODAY)).toEqual({ kind: "none", reason: "Invitation sent on 2026-11-22. Mark Connected when they accept" });
+    expect(nextAction(c, [], [], "2026-12-05").kind).toBe("none");
+    expect(nextAction(c, [], [], "2026-12-06")).toMatchObject({ kind: "check_in", label: "Check on your invitation", dueDate: "2026-12-06" });
+  });
+
+  it("at the weekly limit, no connection request is suggested and the next slot is named", () => {
+    const stop = { state: "stop" as const, nextSlotOn: "2026-11-28" };
+    expect(nextAction(engaged(), [], [], TODAY, stop)).toEqual({ kind: "none", reason: "Weekly invitation limit reached. Next slot on 2026-11-28" });
+    expect(nextAction(engaged(), [], [], TODAY, { state: "warn", nextSlotOn: null }).kind).toBe("connect");
+    expect(nextAction(engaged(), [], [], TODAY).kind).toBe("connect");
+  });
+
+  it("the limit only affects connection requests, and a reply still comes first", () => {
+    const stop = { state: "stop" as const, nextSlotOn: "2026-11-28" };
+    expect(nextAction(contact({ warmthStage: "following" }), [], [], TODAY, stop).kind).toBe("engage");
+    expect(nextAction(engaged(), [inb("2026-11-25")], [], TODAY, stop).kind).toBe("reply");
+    expect(nextAction(contact({ warmthStage: "connected", invitationSentAt: at("2026-11-22") }), [], [], TODAY).kind).toBe("ask_advice");
+  });
+});
