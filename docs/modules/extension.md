@@ -18,9 +18,8 @@ Capture jobs, contacts and companies from the page the user is on, and fill appl
 
 - [ ] OQ-01: LinkedIn page readers.
 - [ ] Narrow `https://*/*` permissions and bridge injection.
-- [ ] Default app URL is `http://localhost:8080`; should be `https://app.jobos.dev`.
-- [ ] Rename user-facing text from CareerPilot AI to JobOS.
-- [ ] Delete `extension (Copy)/`.
+- [ ] Fix the hand-off: the app and `jobos-bridge.js` use different message names.
+- [ ] `background.js::baseUrl` still falls back to `http://localhost:8080`.
 
 ## Next step  <- start here
 

@@ -9,9 +9,9 @@ Two tools index this repo so people and agents find code without grepping.
 
 ## State on 2026-11-26
 
-Both indexes were built in a Linux sandbox from commit `553655d` and copied in: CodeGraph 3,942
-nodes and 10,777 edges; graphify 2,168 nodes, 6,620 edges, 92 clusters (code-only pass, cluster
-names not yet labelled, the 39 SQL migrations not parsed). `extension (Copy)/` was left out. The
+`graphify-out/GRAPH_REPORT.md` was rebuilt in a Linux sandbox from `rebranding-jobos` (code-only
+pass, cluster names not labelled, SQL migrations not parsed). The CodeGraph index is local to
+each machine and is not in git: run `codegraph init` once. The
 tools themselves were **not** installed on this Mac in that session, so do the one-time setup.
 
 ## One-time setup on each machine
@@ -41,7 +41,6 @@ reads the docs and names the clusters.
 | `codegraph status` errors on the database | Index copied from another machine does not suit this one | `codegraph index` |
 | Results miss a file you just added | Index is stale | `codegraph sync`; `graphify update .` |
 | `graphify query` says no graph | `graphify-out/graph.json` is ignored by git and absent on a fresh clone | `graphify update .` |
-| Search hits inside `extension (Copy)/` | Stale copy got indexed | Ignore them; `.graphifyignore` already excludes it for graphify |
 | SQLite "disk I/O error" from CodeGraph | Repo is on a network or synced drive | Keep the checkout on a local disk |
 
 ## After

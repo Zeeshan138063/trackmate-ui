@@ -17,8 +17,8 @@ The CRM the user works in every day. Under the strategy spec its centre moves fr
 ## Remaining
 
 - [ ] Audit against the spec.
-- [ ] Clean-up ticket: 28 type errors and 199 lint errors so `npm run verify` is green.
-- [ ] Move S3 and Novu calls behind edge functions (P4).
+- [ ] Clean-up ticket: 28 type errors and 201 lint errors so `npm run verify` is green.
+- [ ] Move the Novu call behind an edge function (P4).
 - [ ] Regenerate `src/integrations/supabase/types.ts` (covers 13 of 27 tables).
 - [ ] Make `GrowthEngine.publishToLinkedIn` stop reporting success it did not have (P10), or remove it (P1).
 

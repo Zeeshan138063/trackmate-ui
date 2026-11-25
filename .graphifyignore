@@ -1,4 +1,3 @@
-extension (Copy)/
 node_modules/
 dist/
 supabase/.temp/

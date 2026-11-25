@@ -22,7 +22,8 @@ import. Import alias: `@/` is `src/`. Dev server: port 8080. The project began i
 | `services/` | Objects that wrap a table or an edge function: `JobService`, `QueryService`, `MeetingService`, `dreamCompanies`, `GrowthEngine`, `AIGenerator`, `NovuService` |
 | `types/` | App-side types in camelCase (`Job`, contact, engagement, followup, meeting, resume, interview) |
 | `integrations/supabase/` | `client.ts` (the one Supabase client) and `types.ts` (generated database types) |
-| `utils/` | `ai-helper.ts`, `resume-ai-helper.ts`, `ai-providers/registry.ts`, file and PDF parsing, `search-intelligence.ts`, `s3-helper.ts` |
+| `utils/` | `ai-helper.ts`, `resume-ai-helper.ts`, `ai-providers/registry.ts`, file and PDF parsing, `search-intelligence.ts` |
+| `lib/` | `resumeFiles.ts` (resume attachments in the private `resumes` bucket), `resumePdf.ts`, `followupHints.ts`, `utils.ts` |
 | `data/mock-jobs.ts` | Mock data. Never ship it as real results |
 
 Sidebar entries are in `components/AppSidebar.tsx`. `/interview`, `/interview-feedback` and
@@ -63,9 +64,10 @@ huggingface, openrouter), `<PROVIDER>_API_KEY`, `<PROVIDER>_MODEL_NAME`.
 
 `Trackers.tsx`, `Connections.tsx` and `components/resume/ResumeImporter.tsx` read
 `?action=addJob|addContact|importProfile&dataId=...` from the URL, then ask the extension for the
-record with `window.postMessage({ source: 'careerpilot-web-app', action: 'getJobData', dataId })`
-and wait for a reply with `source: 'careerpilot-extension'`. These strings are a contract with
-`extension/careerpilot-bridge.js`: change both sides in one pull request and test by hand.
+record with `window.postMessage({ type: 'CAREERPILOT_FETCH_JOB_DATA', dataId })` and wait for
+`type: 'CAREERPILOT_JOB_DATA_RESPONSE'`. `extension/jobos-bridge.js` listens for a different
+message, so today the request times out and only the short values in the URL are used. The
+strings are a contract: change both sides in one pull request and test by hand.
 
 ## UI rules
 
@@ -81,8 +83,8 @@ and wait for a reply with `source: 'careerpilot-extension'`. These strings are a
 
 ## Do not touch without a spec
 
-`s3-helper.ts`, `NovuService.ts` and `GrowthEngine.publishToLinkedIn` are known problems listed in
-the root `CLAUDE.md`. Do not add callers and do not patch around them in passing.
+`NovuService.ts` and `GrowthEngine.publishToLinkedIn` are known problems listed in the root
+`CLAUDE.md`. Do not add callers and do not patch around them in passing.
 
 ## Tests
 

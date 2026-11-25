@@ -14,13 +14,13 @@ has its own file in `functions/_shared/followups/CLAUDE.md`.
 
 ## Migrations (`migrations/`)
 
-39 files, applied in name order, creating 27 tables.
+41 files, applied in name order.
 
 | Area | Tables |
 |---|---|
 | Applications | `jobs`, `interview_feedback`, `interview_practices`, `priorities`, `career_goals`, `work_styles` |
 | People and companies | `contacts`, `engagements`, `dream_companies`, `dream_company_reminders` |
-| Profile and resumes | `profiles`, `resumes` |
+| Profile and resumes | `profiles`, `resumes`, `application_resumes` (files in the private `resumes` storage bucket, `<user_id>/<job_id>/<file>`) |
 | Job discovery (shared across users) | `job_search_queries`, `discovered_jobs` (`embedding vector(384)`), `archived_jobs` |
 | Meetings | `meetings`, `availability_preferences`, `calendar_accounts` |
 | Growth | `profile_growth_settings`, `content_queue`, `integration_tokens` |

@@ -20,10 +20,14 @@ There is no API server. The browser and the extension talk to Supabase directly 
 security scopes every query to the signed-in user. Anything that needs a secret or a schedule runs
 in an edge function.
 
-**Names.** The product is **JobOS**. Older code says "CareerPilot AI" and the repo is still called
-`trackmate-ui`. Use JobOS in all new user-facing text. Do not mass-rename old identifiers
-(`careerPilotUrl`, `careerpilot-bridge.js`, the `sendToCareerPilot` message) without a spec: the
-extension and the web app depend on those strings matching.
+**Branch.** Product work happens on **`rebranding-jobos`**. Branch from it and open pull requests
+into it. `main` is an older line that lacks the rebrand, the side-panel extension and resume
+attachments; do not base work on it.
+
+**Names.** The product is **JobOS** and the rebrand is done in the app and the extension. The repo
+is still called `trackmate-ui`, the package is `careerpilot-ui`, and a few identifiers keep the
+old name (the `CAREERPILOT_FETCH_JOB_DATA` message, `careerpilot_notified_` storage keys). Do not
+rename those without a spec: other code depends on the strings matching.
 
 ## Commands
 
@@ -37,8 +41,8 @@ npm run verify           # typecheck + lint + build: the one command people, CI 
 npm run test:followups   # Deno tests for the follow-up agent (needs deno installed)
 ```
 
-Baseline on 2026-11-26, commit `553655d`: `build` passes, `typecheck` reports 28 errors, `lint`
-reports 199 errors and 22 warnings. So `verify` is red today. Until the clean-up ticket lands, a
+Baseline on 2026-11-26, `rebranding-jobos` at `2809c70`: `build` passes, `typecheck` reports 28
+errors, `lint` reports 201 errors and 23 warnings. So `verify` is red today. Until the clean-up ticket lands, a
 change must not add to either count: run both before and after and put the numbers in the pull
 request. Never get a check to pass by loosening `tsconfig*.json` or `eslint.config.js`.
 
@@ -60,7 +64,10 @@ Two code graphs are set up. Use them before grep; they are faster and cost fewer
   `graphify update .` (no LLM needed).
 
 Neither tool is installed? See `docs/runbooks/code-graphs.md`. Fall back to grep only then.
-`extension (Copy)/` is a stale 1.5.1 copy of the extension: ignore every search hit inside it.
+
+`.agents/workflows/` holds older agent notes for this repo (UI, extension, testing) and
+`.agents/skills/extension-deployment` packages the extension for the store. Where they disagree
+with a `CLAUDE.md`, the `CLAUDE.md` wins; the file paths inside them point at another machine.
 
 ## How work gets done here
 
@@ -124,14 +131,18 @@ Going against one needs an ADR, not a judgement call in a pull request.
   `VITE_SUPABASE_*` variables in `.env.example` are not read.
 - `src/integrations/supabase/types.ts` covers 13 of the 27 tables, so newer code uses
   `.from('x' as any)`. Do not copy that habit: regenerate the types.
-- `src/utils/s3-helper.ts` and `src/services/NovuService.ts` read secrets from `VITE_` variables
-  (breaks P4). Do not add callers. The Novu call also only works in dev, through the Vite proxy.
+- `src/services/NovuService.ts` reads its API key from a `VITE_` variable (breaks P4), and the
+  call only works in dev, through the Vite proxy. Do not add callers.
+- The extension-to-app hand-off does not work: the two sides use different message names. See
+  `extension/CLAUDE.md`.
 - `GrowthEngine.publishToLinkedIn` reports success without publishing (breaks P10).
 - The `fetch-linkedin-jobs` cron URL has a typo in the project ref, so that schedule may not be
   running. Do not "fix" it: see OQ-01.
 - Both `bun.lockb` and `package-lock.json` exist. npm is the package manager; the Dockerfile runs
   `npm ci`.
 - `inspect_db.cjs` and `test_search.ts` in the root are loose scratch files, not part of the app.
+- Resumes attached to an application live in the private `resumes` storage bucket and the
+  `application_resumes` table (`src/lib/resumeFiles.ts`). There is no S3.
 
 ## Definition of done
 

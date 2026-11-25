@@ -1,116 +1,166 @@
-# Graph Report - trackmate-ui  (2026-11-25)
+# Graph Report - trackmate-ui  (2026-11-26)
 
 ## Corpus Check
-- 287 files · ~141,224 words
+- 343 files · ~172,308 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 11 file(s) not represented in the graph (top: (none) 4, .css 2, .example 1)
+- Unclassified: 12 file(s) not represented in the graph (top: (none) 5, .css 2, .code-workspace 1)
 
 ## Summary
-- 2168 nodes · 6620 edges · 92 communities (72 shown, 20 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 72 edges (avg confidence: 0.87)
+- 2536 nodes · 7085 edges · 137 communities (98 shown, 39 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 92 edges (avg confidence: 0.89)
 - Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `9e1b6872`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - supabase-js.js
-- Input
 - react
-- Button
-- J
-- cadence.ts
-- ATSAutofiller
-- cn
-- ports.ts
 - resume.ts
-- MailAccount
+- Button
+- adapters_test.ts
+- Input
+- JobExtractor
+- cn
+- J
+- ATSAutofiller
+- cadence.ts
+- ports.ts
+- runtime.ts
 - sidebar.tsx
-- dependencies
+- popup.js
 - t
-- CareerPilot AI Browser Extension
-- fetch-jobs/index.ts
 - Trackers.tsx
+- devDependencies
+- dependencies
+- services_test.ts
+- fetch-jobs/index.ts
+- backend: handoff
 - log
-- AvailabilitySettings.tsx
-- followups-telegram/index.ts
-- package.json
+- ResumeImporter.tsx
 - SupabaseRepo
 - _debug
-- EditJobDialog.tsx
-- adapters_test.ts
-- devDependencies
-- popup.js
-- constructor
-- hooks/use-toast.ts
 - draft.ts
-- Badge
-- runtime.ts
-- Repo
-- JobExtractor
-- claude.ts
-- JobSearch.tsx
 - FakeRepo
-- CalendarConnector.tsx
-- HistoryTree.tsx
-- DreamCompanies.tsx
-- manifest.json
-- utils.ts
+- constructor
+- EditJobDialog.tsx
+- package.json
+- MeetingService
+- FollowUpSettings.tsx
+- Repo
+- 5. Features
 - tokens.ts
+- HistoryTree.tsx
+- claude.ts
+- manifest.json
 - compilerOptions
+- Badge
+- steps
 - components.json
 - send
+- sheet.tsx
 - Implementation Plan: TrackMate Website Enhancement
 - Common Issues and Solutions
+- dropdown-menu.tsx
 - compilerOptions
-- Installation Guide
-- User Association Flow: Extension → CareerPilot AI → Database
-- form.tsx
 - Setup (once)
+- Installation Guide
+- User Association Flow: Extension → JobOS AI → Database
+- JobTable.tsx
 - n
 - carousel.tsx
 - getClaims
-- JobTable.tsx
+- form.tsx
 - file-parser.ts
 - compilerOptions
+- 🏗 Store-Ready Walkthrough
 - chart.tsx
+- toast.tsx
 - types.ts
+- <module>: handoff
 - _binaryEncodeUserBroadcastPush
+- src/: the CRM web app
 - pagination.tsx
+- JobOS app (repo: trackmate-ui)
+- <Feature>
+- scripts
+- 2. Core Test Missions (LinkedIn)
+- 🛠 Core Project Standards
 - Extension Test Cases
 - Perplexity Job Search Integration
 - Extension Update Changelog
 - The 431 Error Fix Requires Extension Reload
-- S3Helper
-- vite.config.ts
-- sheet.tsx
+- Unreleased
+- 2026-11-26: agent setup and first architecture read
 - Quick Fix: Generate Extension Icons
-- scripts
+- CompanyLogo.tsx
+- supabase/: the backend
+- followups: the follow-up agent
+- JobOS Extension Development Standards
+- JobOS UI Development Standards
+- 0001. Decisions that bind the code are recorded as ADRs
+- NNNN. <Decision, as a statement>
+- <Term>: the definition
+- Runbook: the code graphs are missing, stale or not used
+- Runbook: <symptom as a user or operator reports it>
 - 🎯 CareerPilot AI - AI-Powered Career Growth & Job Tracker
+- interview.ts
+- Plan: <feature>
+- OQ-01: What happens to the code that already collects data from LinkedIn?
+- OQ-##: <the question, as a question>
+- Docs
 - next-themes
-- uuid
+- The plan
+- pull_request_template.md
 - Logger
+- Work tracker
+- Product requirements
+- Open questions
 - @radix-ui/react-aspect-ratio
 - @radix-ui/react-collapsible
+- idleReason
+- AGENTS.md
+- bundle.sh
+- decisions/README.md
+- principles.md
+- context/README.md
+- definitions/README.md
+- requirements.md
+- coverage-matrix.md
+- qa/README.md
+- specs/README.md
 - icons/README.md
-- @ai-sdk/google
-- @radix-ui/react-dropdown-menu
+- skills-db.js
+- @hello-pangea/dnd
+- @hookform/resolvers
+- pdf-lib
+- @radix-ui/react-accordion
+- @radix-ui/react-alert-dialog
+- @radix-ui/react-hover-card
 - @radix-ui/react-popover
 - @radix-ui/react-progress
-- @radix-ui/react-toast
-- @radix-ui/react-tooltip
-- tailwind-merge
-- vaul
+- @radix-ui/react-select
+- @radix-ui/react-switch
+- @radix-ui/react-toggle-group
+- react-day-picker
+- react-resizable-panels
+- recharts
+- tailwindcss-animate@^1.0.7
 - zod
 
 ## God Nodes (most connected - your core abstractions)
-1. `cn()` - 249 edges
-2. `Button` - 116 edges
-3. `react` - 115 edges
+1. `cn()` - 247 edges
+2. `react` - 117 edges
+3. `Button` - 115 edges
 4. `lucide-react` - 88 edges
 5. `Card` - 71 edges
 6. `CardContent` - 68 edges
 7. `Input` - 63 edges
-8. `Badge()` - 57 edges
-9. `CardHeader` - 57 edges
-10. `CardTitle` - 55 edges
+8. `Badge()` - 59 edges
+9. `CardHeader` - 59 edges
+10. `CardTitle` - 57 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `1. **User Authentication in TrackMate UI**` --references--> `useAuth()`  [INFERRED]
@@ -119,219 +169,223 @@
   docs/improvement_plan.md → src/hooks/usePageTitle.ts
 - `Added: ATS Autofiller (new class `ATSAutofiller`)` --references--> `ATSAutofiller`  [INFERRED]
   extension/CHANGES.md → extension/content.js
-- `uploadOrUpdate()` --indirect_call--> `at()`  [INFERRED]
-  extension/supabase-js.js → supabase/functions/_shared/followups/cadence_test.ts
-- `Improved: Data storage` --references--> `buildSafeParams()`  [INFERRED]
-  extension/CHANGES.md → extension/background.js
+- `Files` --references--> `ATSAutofiller`  [INFERRED]
+  extension/CLAUDE.md → extension/content.js
+- `Files` --references--> `JobExtractor`  [INFERRED]
+  extension/CLAUDE.md → extension/content.js
 
 ## Import Cycles
 - None detected.
 
-## Communities (92 total, 20 thin omitted)
+## Communities (137 total, 39 thin omitted)
 
 ### Community 0 - "supabase-js.js"
 Cohesion: 0.02
 Nodes (52): analytics(), catch(), channel(), cloneRequestState(), createNamespace(), createNamespaceIfNotExists(), createTable(), createTableIfNotExists() (+44 more)
 
-### Community 1 - "Input"
-Cohesion: 0.14
-Nodes (49): AddContactDialog(), AddEngagementDialog(), AddInterviewFeedbackDialog(), formSchema, AddJobDialog(), DreamCompanyModal(), DreamCompanySearch(), DreamCompanySearchProps (+41 more)
+### Community 1 - "react"
+Cohesion: 0.07
+Nodes (61): date-fns, react, react-dom, react-router-dom, @supabase/supabase-js, App(), PageTitleHandler(), queryClient (+53 more)
 
-### Community 2 - "react"
-Cohesion: 0.08
-Nodes (45): react, react-dom, react-router-dom, sonner, @supabase/supabase-js, App(), PageTitleHandler(), queryClient (+37 more)
+### Community 2 - "resume.ts"
+Cohesion: 0.05
+Nodes (65): ai@^5.0.113, ai, JobSearchSettingsProps, ApplicationResumes(), kb(), Props, MasterProfileEditorProps, ResumeImporterProps (+57 more)
 
 ### Community 3 - "Button"
-Cohesion: 0.15
-Nodes (41): lucide-react, CareerGoalSection(), DailyStats(), DailyStatsProps, DatesCalendar(), DreamCompaniesStats(), JobApplicationsChart(), JobApplicationsChartProps (+33 more)
+Cohesion: 0.14
+Nodes (45): lucide-react, CareerGoalSection(), cards, DailyStats(), DailyStatsProps, DatesCalendar(), DreamCompaniesStats(), DreamCompanyCard() (+37 more)
 
-### Community 4 - "J"
-Cohesion: 0.08
-Nodes (61): an(), _approveAuthorization(), _createOAuthClient(), createUser(), _deleteFactor(), _deleteOAuthClient(), deleteUser(), _denyAuthorization() (+53 more)
-
-### Community 5 - "cadence.ts"
-Cohesion: 0.07
-Nodes (45): CadenceDecision, CadenceInput, CHASEABLE, CLOSED, ExistingFollowUp, JobStatus, laterOf(), nextFollowUp() (+37 more)
-
-### Community 6 - "ATSAutofiller"
+### Community 4 - "adapters_test.ts"
 Cohesion: 0.06
-Nodes (34): Badge, buildSafeParams(), TabStore, Added: ATS Autofiller (new class `ATSAutofiller`), Added: ATS Banner, Added: ATS detection on popup open, Added: ATS Detector (new class `ATSDetector`), Added: "Autofill" button (+26 more)
+Nodes (38): RFC-2047, RFC-2231, RFC-2822, tokens, GmailHeader, GmailMessage, GmailOptions, GmailProvider (+30 more)
+
+### Community 5 - "Input"
+Cohesion: 0.15
+Nodes (45): AddContactDialog(), AddContactDialogProps, AddEngagementDialog(), AddInterviewFeedbackDialog(), formSchema, AddJobDialog(), ContactCardProps, ContactDetailsDialogProps (+37 more)
+
+### Community 6 - "JobExtractor"
+Cohesion: 0.06
+Nodes (42): 1. **User Authentication in TrackMate UI**, 2. **Job Storage with User Association**, 3. **Extension Data Flow**, 4. **Security & Data Isolation**, 5. **Extension Authentication Check**, 6. **Database Schema**, Best Practices, Extension Authentication & User Association (+34 more)
 
 ### Community 7 - "cn"
 Cohesion: 0.06
-Nodes (49): Breadcrumb, BreadcrumbEllipsis(), BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator(), CommandSeparator (+41 more)
+Nodes (53): Breadcrumb, BreadcrumbEllipsis(), BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator(), CommandSeparator (+45 more)
 
-### Community 8 - "ports.ts"
+### Community 8 - "J"
 Cohesion: 0.08
-Nodes (32): ACTIVE_JOB, OPEN, Row, FollowUpKind, ApprovalCard, Classifier, Draft, DraftContext (+24 more)
+Nodes (61): an(), _approveAuthorization(), _createOAuthClient(), createUser(), _deleteFactor(), _deleteOAuthClient(), deleteUser(), _denyAuthorization() (+53 more)
 
-### Community 9 - "resume.ts"
+### Community 9 - "ATSAutofiller"
+Cohesion: 0.05
+Nodes (36): Badge, buildSafeParams(), captureScreenshot(), TabStore, Added: ATS Autofiller (new class `ATSAutofiller`), Added: ATS Banner, Added: ATS detection on popup open, Added: ATS Detector (new class `ATSDetector`) (+28 more)
+
+### Community 10 - "cadence.ts"
 Cohesion: 0.08
-Nodes (37): ai, MasterProfileEditorProps, ResumeImporterProps, ResumePreview(), ResumePreviewProps, ATSTemplate(), ATSTemplateProps, EuropassTemplate() (+29 more)
+Nodes (44): CadenceDecision, CadenceInput, CHASEABLE, CLOSED, ExistingFollowUp, JobStatus, laterOf(), nextFollowUp() (+36 more)
 
-### Community 10 - "MailAccount"
+### Community 11 - "ports.ts"
 Cohesion: 0.08
-Nodes (21): GmailHeader, GmailMessage, GmailOptions, GmailProvider, header(), META_HEADERS, toMailMessage(), FetchFn (+13 more)
+Nodes (35): ACTIVE_JOB, OPEN, Row, FollowUpKind, ApprovalCard, Classifier, ConflictError, Draft (+27 more)
 
-### Community 11 - "sidebar.tsx"
-Cohesion: 0.08
-Nodes (36): AppSidebar(), bottomItems, navigationItems, Header(), Layout(), LayoutProps, NotificationChecker(), Sidebar (+28 more)
+### Community 12 - "runtime.ts"
+Cohesion: 0.09
+Nodes (40): Edge functions (`functions/`), GraphNotification, exchange(), settingsRedirect(), startUrl(), ClaudeDrafter, RESUME_BUCKET, SupabaseFileStore (+32 more)
 
-### Community 12 - "dependencies"
-Cohesion: 0.04
-Nodes (45): dependencies, ai@^5.0.113, clsx@^2.1.1, cmdk@^1.1.1, date-fns@^3.6.0, embla-carousel-react@^8.6.0, lucide-react@^0.462.0, @radix-ui/react-accordion@^1.2.11 (+37 more)
+### Community 13 - "sidebar.tsx"
+Cohesion: 0.07
+Nodes (40): AppSidebar(), bottomItems, navigationItems, injectStyles(), JobOsLogo(), JobOsLogoProps, LogoIconSvg(), LogoVariant (+32 more)
 
-### Community 13 - "t"
+### Community 14 - "popup.js"
+Cohesion: 0.10
+Nodes (40): Improved: Code structure, extension/: the JobOS browser extension, Files, Handoff, Hardcoded values, Rules, Testing, Two ways data is saved (+32 more)
+
+### Community 15 - "t"
 Cohesion: 0.06
 Nodes (44): ar(), _authenticate(), _challenge(), _challengeAndVerify(), createBucket(), createIndex(), createSignedUploadUrl(), createSignedUrl() (+36 more)
 
-### Community 14 - "CareerPilot AI Browser Extension"
-Cohesion: 0.05
-Nodes (38): 1. **User Authentication in TrackMate UI**, 2. **Job Storage with User Association**, 3. **Extension Data Flow**, 4. **Security & Data Isolation**, 5. **Extension Authentication Check**, 6. **Database Schema**, Best Practices, Extension Authentication & User Association (+30 more)
+### Community 16 - "Trackers.tsx"
+Cohesion: 0.12
+Nodes (33): @tanstack/react-query, COLUMNS, DreamCompaniesKanban(), DreamCompaniesKanbanProps, DreamCompaniesList(), DreamCompaniesListProps, DreamCompanyCardProps, DreamCompanyModalProps (+25 more)
 
-### Community 15 - "fetch-jobs/index.ts"
+### Community 17 - "devDependencies"
+Cohesion: 0.06
+Nodes (37): devDependencies, autoprefixer@^10.4.21, eslint@^9.32.0, @eslint/js@^9.32.0, eslint-plugin-react-hooks@^5.2.0, eslint-plugin-react-refresh@^0.4.20, globals@^15.15.0, lovable-tagger@^1.1.9 (+29 more)
+
+### Community 18 - "dependencies"
+Cohesion: 0.05
+Nodes (41): dependencies, @ai-sdk/huggingface@^0.0.12, @ai-sdk/openai@^2.0.86, clsx@^2.1.1, date-fns@^3.6.0, input-otp@^1.4.2, lucide-react@^0.462.0, @openrouter/sdk@^0.2.11 (+33 more)
+
+### Community 19 - "services_test.ts"
+Cohesion: 0.13
+Nodes (27): ACTIONS, Body, bot(), onCallback(), onMessage(), TgUpdate, approvalButtons(), Button (+19 more)
+
+### Community 20 - "fetch-jobs/index.ts"
 Cohesion: 0.06
 Nodes (21): https, options, req, ATS_DOMAINS, HF_TOKEN, Job, parseATS(), searchWeb() (+13 more)
 
-### Community 16 - "Trackers.tsx"
-Cohesion: 0.15
-Nodes (26): ColumnOption, ColumnsDropdown(), ColumnsDropdownProps, CompanyLogo(), CompanyLogoProps, DreamCompanySheet(), DreamCompanySheetProps, ModeToggle() (+18 more)
+### Community 21 - "backend: handoff"
+Cohesion: 0.05
+Nodes (31): backend: handoff, Done, Goal, How to run and test, Next step  <- start here, Remaining, Done, extension: handoff (+23 more)
 
-### Community 17 - "log"
+### Community 22 - "log"
 Cohesion: 0.10
 Nodes (37): _appendParams(), _clearAllTimers(), _clearTimer(), connect(), connectionState(), disconnect(), endpointURL(), flushSendBuffer() (+29 more)
 
-### Community 18 - "AvailabilitySettings.tsx"
-Cohesion: 0.10
-Nodes (19): date-fns, AvailabilitySettings(), days, SelectDay(), EditMeetingDialogProps, MeetingCalendar(), MeetingCalendarProps, GoogleMeetIcon() (+11 more)
-
-### Community 19 - "followups-telegram/index.ts"
+### Community 23 - "ResumeImporter.tsx"
 Cohesion: 0.13
-Nodes (25): bot(), onCallback(), onMessage(), TgUpdate, approvalButtons(), Button, callbackData(), keyboard() (+17 more)
+Nodes (23): CHECKLIST_SECTIONS, JobChecklist(), JobChecklistProps, CalendarConnector(), CalendarList, MasterProfileEditor(), FileDropZone(), FileDropZoneProps (+15 more)
 
-### Community 20 - "package.json"
-Cohesion: 0.06
-Nodes (35): author, @ai-sdk/huggingface@^0.0.12, @ai-sdk/openai@^2.0.86, @hello-pangea/dnd@^18.0.1, @hookform/resolvers@^3.10.0, input-otp@^1.4.2, @novu/react@^3.11.2, @openrouter/sdk@^0.2.11 (+27 more)
-
-### Community 21 - "SupabaseRepo"
+### Community 24 - "SupabaseRepo"
 Cohesion: 0.12
 Nodes (7): check(), contactName(), d(), factsList(), SupabaseRepo, toAccount(), toFollowUp()
 
-### Community 22 - "_debug"
+### Community 25 - "_debug"
 Cohesion: 0.10
 Nodes (35): _acquireLock(), _autoRefreshTokenTick(), _callRefreshToken(), cn(), _debug(), _emitInitialSession(), exchangeCodeForSession(), _handleProviderSignIn() (+27 more)
 
-### Community 23 - "EditJobDialog.tsx"
-Cohesion: 0.12
-Nodes (27): @radix-ui/react-dialog, AddJobDialogProps, DatesCalendarProps, EditJobDialog(), EditJobDialogProps, KIND, NextUpCard(), STATUS (+19 more)
+### Community 26 - "draft.ts"
+Cohesion: 0.17
+Nodes (29): approvalCardText(), formatSlot(), KIND_LABEL, outcomeLine(), WEEKDAY, escapeHtml(), isEmail(), errorMessage() (+21 more)
 
-### Community 24 - "adapters_test.ts"
-Cohesion: 0.12
-Nodes (27): RFC-2047, RFC-2822, startUrl(), tokens, b64(), buildRawMessage(), enc, encodeHeader() (+19 more)
-
-### Community 25 - "devDependencies"
+### Community 27 - "FakeRepo"
 Cohesion: 0.07
-Nodes (31): devDependencies, autoprefixer@^10.4.21, eslint@^9.32.0, @eslint/js@^9.32.0, eslint-plugin-react-hooks@^5.2.0, eslint-plugin-react-refresh@^0.4.20, globals@^15.15.0, postcss@^8.5.6 (+23 more)
+Nodes (3): reply(), FakeRepo, uuid()
 
-### Community 26 - "popup.js"
-Cohesion: 0.18
-Nodes (32): Improved: Code structure, chromeStorageAdapter, detectATSOnTab(), displayCompanyData(), displayContactData(), displayJobData(), displayScreenshot(), el() (+24 more)
-
-### Community 27 - "constructor"
+### Community 28 - "constructor"
 Cohesion: 0.08
 Nodes (33): Ae(), bn(), constructor(), Dt(), Et(), _getPayloadRecords(), gt(), _handleTokenChanged() (+25 more)
 
-### Community 28 - "hooks/use-toast.ts"
-Cohesion: 0.10
-Nodes (24): Toast, ToastAction, ToastActionElement, ToastClose, ToastDescription, ToastProps, ToastTitle, toastVariants (+16 more)
+### Community 29 - "EditJobDialog.tsx"
+Cohesion: 0.12
+Nodes (26): @radix-ui/react-dialog, AddJobDialogProps, DatesCalendarProps, EditJobDialog(), EditJobDialogProps, JobKanbanProps, JobQueryManagerProps, EXPERIENCE_LEVELS (+18 more)
 
-### Community 29 - "draft.ts"
-Cohesion: 0.19
-Nodes (26): approvalCardText(), ConflictError, escapeHtml(), errorMessage(), isQuiet(), providerFor(), buildContext(), draftOne() (+18 more)
+### Community 30 - "package.json"
+Cohesion: 0.06
+Nodes (31): author, @ai-sdk/google@^2.0.46, cmdk@^1.1.1, embla-carousel-react@^8.6.0, @marsidev/react-turnstile@^1.4.2, @novu/react@^3.11.2, @radix-ui/react-checkbox@^1.3.2, @radix-ui/react-dropdown-menu@^2.1.15 (+23 more)
 
-### Community 30 - "Badge"
-Cohesion: 0.20
-Nodes (22): AddContactDialogProps, AddEngagementDialogProps, ContactCard(), ContactCardProps, ContactDetailsDialog(), ContactDetailsDialogProps, EngagementTimeline(), EngagementTimelineProps (+14 more)
-
-### Community 31 - "runtime.ts"
-Cohesion: 0.17
-Nodes (22): ACTIONS, Body, GraphNotification, exchange(), settingsRedirect(), appUrl(), background(), buildDeps() (+14 more)
-
-### Community 33 - "JobExtractor"
-Cohesion: 0.24
-Nodes (4): ATSDetector, extractor, JobExtractor, PageState
-
-### Community 34 - "claude.ts"
+### Community 31 - "MeetingService"
 Cohesion: 0.11
-Nodes (17): ClaudeClassifier, ClaudeClient, ClaudeDrafter, DEFAULT_CLASSIFY_MODEL, DEFAULT_DRAFT_MODEL, LABELS, ToolUseResponse, untrusted() (+9 more)
+Nodes (14): EditMeetingDialogProps, MeetingCalendarProps, GoogleMeetIcon(), MeetingCard(), MeetingCardProps, Calendar(), CalendarProps, MeetingService (+6 more)
 
-### Community 35 - "JobSearch.tsx"
-Cohesion: 0.15
-Nodes (17): JobQueryManager(), JobQueryManagerProps, JobSearchSettingsProps, CALLBACK_MESSAGES, OAUTH_HOSTS, Prefs, Alert, AlertDescription (+9 more)
+### Community 32 - "FollowUpSettings.tsx"
+Cohesion: 0.13
+Nodes (21): sonner, FollowUpsTab(), JobFollowUpSettings, KIND, NextUpCard(), STATUS, JobQueryManager(), AvailabilitySettings() (+13 more)
 
-### Community 37 - "CalendarConnector.tsx"
-Cohesion: 0.21
-Nodes (15): CHECKLIST_SECTIONS, JobChecklist(), JobChecklistProps, CalendarConnector(), CalendarList, MasterProfileEditor(), AccordionContent, AccordionItem (+7 more)
+### Community 34 - "5. Features"
+Cohesion: 0.08
+Nodes (25): 10. Sources, 1. What the product should do, 2. Ground rules, 3. Strategies and the evidence behind them, 4. The method the product runs, 5. Features, 6. Operating rhythm the product should produce, 7. Priorities (+17 more)
 
-### Community 38 - "HistoryTree.tsx"
+### Community 35 - "tokens.ts"
+Cohesion: 0.13
+Nodes (14): FetchFn, requestJson(), GMAIL_SCOPES, GOOGLE_TOKEN_URL, MS_TOKEN_URL, OAuthClients, OUTLOOK_SCOPES, RefreshingTokenProvider (+6 more)
+
+### Community 36 - "HistoryTree.tsx"
 Cohesion: 0.12
 Nodes (21): CARD, dayLabel(), describe(), DOT, FOLLOWUP_TITLE, REPLY_LABEL, Tone, Props (+13 more)
 
-### Community 39 - "DreamCompanies.tsx"
-Cohesion: 0.17
-Nodes (18): @tanstack/react-query, COLUMNS, DreamCompaniesKanban(), DreamCompaniesKanbanProps, DreamCompaniesList(), DreamCompaniesListProps, DreamCompanyCard(), DreamCompanyCardProps (+10 more)
+### Community 37 - "claude.ts"
+Cohesion: 0.12
+Nodes (16): ClaudeClassifier, ClaudeClient, DEFAULT_CLASSIFY_MODEL, DEFAULT_DRAFT_MODEL, LABELS, ToolUseResponse, untrusted(), FOLLOWUP_WRITER_PROMPT (+8 more)
 
-### Community 40 - "manifest.json"
-Cohesion: 0.10
-Nodes (20): action, default_icon, default_popup, background, service_worker, content_scripts, 128, 16 (+12 more)
+### Community 38 - "manifest.json"
+Cohesion: 0.09
+Nodes (21): action, default_icon, background, service_worker, content_scripts, 128, 16, 48 (+13 more)
 
-### Community 41 - "utils.ts"
-Cohesion: 0.14
-Nodes (16): class-variance-authority@^0.7.1, class-variance-authority, NavigationMenu, NavigationMenuContent, NavigationMenuIndicator, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle (+8 more)
-
-### Community 42 - "tokens.ts"
-Cohesion: 0.15
-Nodes (12): requestJson(), GMAIL_SCOPES, GOOGLE_TOKEN_URL, MS_TOKEN_URL, OAuthClients, OUTLOOK_SCOPES, RefreshingTokenProvider, TokenResponse (+4 more)
-
-### Community 43 - "compilerOptions"
+### Community 39 - "compilerOptions"
 Cohesion: 0.10
 Nodes (20): compilerOptions, allowImportingTsExtensions, baseUrl, isolatedModules, jsx, lib, module, moduleDetection (+12 more)
 
-### Community 44 - "components.json"
+### Community 40 - "Badge"
+Cohesion: 0.26
+Nodes (15): AddEngagementDialogProps, ContactCard(), ContactDetailsDialog(), EngagementTimeline(), EngagementTimelineProps, Avatar, AvatarFallback, AvatarImage (+7 more)
+
+### Community 41 - "steps"
+Cohesion: 0.11
+Nodes (18): GH_TOKEN, jobs, update, name, on, push, permissions, contents (+10 more)
+
+### Community 42 - "components.json"
 Cohesion: 0.12
 Nodes (16): aliases, components, hooks, lib, ui, utils, rsc, $schema (+8 more)
 
-### Community 45 - "send"
+### Community 43 - "send"
 Cohesion: 0.13
 Nodes (17): _addToPushBuffer(), _cancelRefEvent(), _cancelTimeout(), _canPush(), destroy(), _fetchWithTimeout(), _hasReceived(), httpSend() (+9 more)
 
-### Community 46 - "Implementation Plan: TrackMate Website Enhancement"
+### Community 44 - "sheet.tsx"
+Cohesion: 0.16
+Nodes (14): class-variance-authority@^0.7.1, class-variance-authority, SheetContent, SheetContentProps, SheetDescription, SheetFooter(), SheetHeader(), SheetOverlay (+6 more)
+
+### Community 45 - "Implementation Plan: TrackMate Website Enhancement"
 Cohesion: 0.12
 Nodes (15): **1. Auth & Onboarding**, **1. Branding Unification**, **1. Growth Engine & AI Copilot**, **1. Public Job Discovery & AI Visibility (/jobs)**, **2. Business & Growth**, **2. Dashboard & Visualization**, **2. Resume & Interview Readiness**, **2. SEO & Navigation (Global)** (+7 more)
 
-### Community 47 - "Common Issues and Solutions"
+### Community 46 - "Common Issues and Solutions"
 Cohesion: 0.12
 Nodes (15): 1. Screenshot Error: "The message port closed before a response was received", 2. Job Data Not Extracting Properly, 3. TrackMate URL Configuration, 4. Extension Not Loading, 5. Job Data Not Sending to TrackMate, 6. Only Company Name Extracted, Check Background Script, Check Content Script (+7 more)
+
+### Community 47 - "dropdown-menu.tsx"
+Cohesion: 0.21
+Nodes (11): ColumnsDropdown(), ColumnsDropdownProps, ModeToggle(), DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioItem, DropdownMenuSeparator (+3 more)
 
 ### Community 48 - "compilerOptions"
 Cohesion: 0.12
 Nodes (15): compilerOptions, allowImportingTsExtensions, isolatedModules, lib, module, moduleDetection, moduleResolution, noEmit (+7 more)
 
-### Community 49 - "Installation Guide"
+### Community 49 - "Setup (once)"
 Cohesion: 0.13
-Nodes (14): Can't send to CareerPilot AI, Extension not loading, Icons not showing, Installation Guide, Job data not extracting, Quick Start, Step 1: Create Icons (Optional but Recommended), Step 2: Load Extension in Chrome/Edge (+6 more)
+Nodes (14): 1. Database, 2. Google (Gmail), 3. Microsoft (Outlook / outlook.com), 4. Telegram, 5. Secrets for the edge functions, 6. Deploy, 7. In the app, Follow-up agent: setup and operations (+6 more)
 
-### Community 50 - "User Association Flow: Extension → CareerPilot AI → Database"
+### Community 50 - "Installation Guide"
+Cohesion: 0.13
+Nodes (14): Can't send to JobOS AI, Extension not loading, Icons not showing, Installation Guide, Job data not extracting, Quick Start, Step 1: Create Icons (Optional but Recommended), Step 2: Load Extension in Chrome/Edge (+6 more)
+
+### Community 51 - "User Association Flow: Extension → JobOS AI → Database"
 Cohesion: 0.13
 Nodes (14): Automatic User Association, Code References, Complete Flow Diagram, Data Isolation, Job not appearing, Jobs from other users visible, Key Points, "Please log in" error (+6 more)
 
-### Community 51 - "form.tsx"
-Cohesion: 0.16
-Nodes (14): @radix-ui/react-label@^2.1.7, @radix-ui/react-slot@^1.2.3, react-hook-form@^7.61.1, @radix-ui/react-label, @radix-ui/react-slot, react-hook-form, FormControl, FormDescription (+6 more)
-
-### Community 52 - "Setup (once)"
-Cohesion: 0.14
-Nodes (13): 1. Database, 2. Google (Gmail), 3. Microsoft (Outlook / outlook.com), 4. Telegram, 5. Secrets for the edge functions, 6. Deploy, 7. In the app, Follow-up agent: setup and operations (+5 more)
+### Community 52 - "JobTable.tsx"
+Cohesion: 0.26
+Nodes (13): ColumnOption, JobTable(), JobTableProps, SortConfig, SortDirection, Table, TableBody, TableCaption (+5 more)
 
 ### Community 53 - "n"
 Cohesion: 0.21
@@ -345,9 +399,9 @@ Nodes (13): Carousel, CarouselApi, CarouselContent, CarouselContext, CarouselCon
 Cohesion: 0.18
 Nodes (13): en(), fetchJwk(), fn(), _getAuthenticatorAssuranceLevel(), getClaims(), getSession(), getUser(), getUserIdentities() (+5 more)
 
-### Community 56 - "JobTable.tsx"
-Cohesion: 0.31
-Nodes (11): JobTable(), SortConfig, SortDirection, Table, TableBody, TableCaption, TableCell, TableFooter (+3 more)
+### Community 56 - "form.tsx"
+Cohesion: 0.21
+Nodes (12): @radix-ui/react-label, @radix-ui/react-slot, react-hook-form, FormControl, FormDescription, FormFieldContext, FormFieldContextValue, FormItemContext (+4 more)
 
 ### Community 57 - "file-parser.ts"
 Cohesion: 0.24
@@ -357,85 +411,185 @@ Nodes (8): mammoth@^1.11.0, pdfjs-dist@^5.4.449, mammoth, pdfjs-dist, extractTex
 Cohesion: 0.17
 Nodes (11): compilerOptions, allowJs, baseUrl, noImplicitAny, noUnusedLocals, noUnusedParameters, paths, skipLibCheck (+3 more)
 
-### Community 59 - "chart.tsx"
+### Community 59 - "🏗 Store-Ready Walkthrough"
+Cohesion: 0.18
+Nodes (10): 1. Versioning & Identity, 2. Permissions Audit (Security Compliance), 3. Production Hardening (Cloudflare Turnstile), 4. Code Cleanup & Exclusions, 📂 Artifacts & Locations, 🚀 Execution Commands, JobOS Extension: Store Deployment & Bundling, Phase 1: Bump Version (+2 more)
+
+### Community 60 - "chart.tsx"
 Cohesion: 0.27
 Nodes (10): ChartConfig, ChartContainer, ChartContext, ChartContextProps, ChartLegendContent, ChartStyle(), ChartTooltipContent, getPayloadConfigFromPayload() (+2 more)
 
-### Community 60 - "types.ts"
+### Community 61 - "toast.tsx"
+Cohesion: 0.38
+Nodes (8): Toast, ToastAction, ToastClose, ToastDescription, ToastTitle, toastVariants, ToastViewport, Toaster()
+
+### Community 62 - "types.ts"
 Cohesion: 0.18
 Nodes (10): CompositeTypes, Constants, Database, DatabaseWithoutInternals, DefaultSchema, Enums, Json, Tables (+2 more)
 
-### Community 61 - "_binaryEncodeUserBroadcastPush"
+### Community 63 - "<module>: handoff"
+Cohesion: 0.20
+Nodes (9): Decisions made, Done, Goal, How to run and test, Known issues and risks, <module>: handoff, Next step  <- start here, Notes for the next session (+1 more)
+
+### Community 64 - "_binaryEncodeUserBroadcastPush"
 Cohesion: 0.22
 Nodes (10): _binaryDecode(), _binaryEncodeUserBroadcastPush(), decode(), _decodeUserBroadcast(), encode(), _encodeBinaryUserBroadcastPush(), _encodeJsonUserBroadcastPush(), _encodeUserBroadcastPush() (+2 more)
 
-### Community 62 - "pagination.tsx"
+### Community 65 - "src/: the CRM web app"
+Cohesion: 0.20
+Nodes (9): AI calls, Do not touch without a spec, Extension hand-off, Handoff, How data flows, src/: the CRM web app, Stack, Tests (+1 more)
+
+### Community 66 - "pagination.tsx"
 Cohesion: 0.24
 Nodes (9): ButtonProps, Pagination(), PaginationContent, PaginationEllipsis(), PaginationItem, PaginationLink(), PaginationLinkProps, PaginationNext() (+1 more)
 
-### Community 63 - "Extension Test Cases"
+### Community 67 - "JobOS app (repo: trackmate-ui)"
+Cohesion: 0.22
+Nodes (8): Commands, Definition of done, Finding code, How work gets done here, JobOS app (repo: trackmate-ui), Known traps, Principles, What this repo is
+
+### Community 68 - "<Feature>"
+Cohesion: 0.22
+Nodes (8): Acceptance criteria, Decisions and open questions, <Feature>, Goals, Non-goals, Risks, The contract change, Why
+
+### Community 69 - "scripts"
+Cohesion: 0.22
+Nodes (9): scripts, build, build:dev, dev, lint, preview, test:followups, typecheck (+1 more)
+
+### Community 70 - "2. Core Test Missions (LinkedIn)"
+Cohesion: 0.25
+Nodes (7): 1. Environment Setup, 2. Core Test Missions (LinkedIn), 3. Automation Support, JobOS Extension Testing Protocol, 🏢 Mission: Save Company, 👤 Mission: Save Contact, 💼 Mission: Save Job
+
+### Community 71 - "🛠 Core Project Standards"
+Cohesion: 0.25
+Nodes (7): 1. Performance & Token Savings, 2. The "Extension (Copy)" Warning, 3. Feature Mapping, 🛠 Core Project Standards, 💡 Pro-Tip, Project Rules & Router, 🚀 The JobOS Router
+
+### Community 72 - "Extension Test Cases"
 Cohesion: 0.25
 Nodes (7): Extension Test Cases, Pre-requisites, Test Case 1: Save Job from LinkedIn, Test Case 2: Save Contact from LinkedIn Profile, Test Case 3: Save Company from LinkedIn Company Page, Test Case 4: Custom TrackMate URL, Test Case 5: Auth Token Retrieval
 
-### Community 64 - "Perplexity Job Search Integration"
+### Community 73 - "Perplexity Job Search Integration"
 Cohesion: 0.25
 Nodes (7): Database, Features, Method 1: Automated Search (Pull), Method 2: Direct Data Push (Push), Perplexity Job Search Integration, Setup, Usage
 
-### Community 65 - "Extension Update Changelog"
+### Community 74 - "Extension Update Changelog"
 Cohesion: 0.25
 Nodes (7): [1.4.8] - 2026-01-29, [1.5.0] - 2026-01-30, [1.5.1] - 2026-01-31, Added, Changes, Extension Update Changelog, Fixed
 
-### Community 66 - "The 431 Error Fix Requires Extension Reload"
+### Community 75 - "The 431 Error Fix Requires Extension Reload"
 Cohesion: 0.25
 Nodes (7): If Still Getting 431 Errors, Important: Reload Extension After Changes, Quick Checklist, Steps to Reload Extension, Testing After Reload, The 431 Error Fix Requires Extension Reload, Why This Is Important
 
-### Community 67 - "S3Helper"
-Cohesion: 0.25
-Nodes (4): @aws-sdk/client-s3@^3.948.0, @aws-sdk/client-s3, S3Helper, s3Helper
+### Community 76 - "Unreleased"
+Cohesion: 0.29
+Nodes (6): Added, Changed, Changelog, Fixed, How to add an entry, Unreleased
 
-### Community 68 - "vite.config.ts"
-Cohesion: 0.25
-Nodes (6): lovable-tagger@^1.1.9, vite@^5.4.19, @vitejs/plugin-react-swc@^3.11.0, lovable-tagger, vite, @vitejs/plugin-react-swc
+### Community 77 - "2026-11-26: agent setup and first architecture read"
+Cohesion: 0.29
+Nodes (6): 2026-11-26: agent setup and first architecture read, Next, Not done, Read first, What was found (traps that cost time), What was set up
 
-### Community 69 - "sheet.tsx"
-Cohesion: 0.32
-Nodes (7): SheetContent, SheetContentProps, SheetDescription, SheetFooter(), SheetHeader(), SheetOverlay, sheetVariants
-
-### Community 70 - "Quick Fix: Generate Extension Icons"
+### Community 78 - "Quick Fix: Generate Extension Icons"
 Cohesion: 0.29
 Nodes (6): After Adding Icons, Option 1: Use the HTML Generator (Easiest), Option 2: Use Any Simple Icons, Option 3: Temporary Fix (Icons Removed), Quick Fix: Generate Extension Icons, Quick Test
 
-### Community 71 - "scripts"
-Cohesion: 0.33
-Nodes (6): scripts, build, build:dev, dev, lint, preview
+### Community 79 - "CompanyLogo.tsx"
+Cohesion: 0.43
+Nodes (6): CompanyLogo(), CompanyLogoProps, getAvatarColor(), getDomain(), getInitial(), INDIGO_SHADES
 
-### Community 72 - "🎯 CareerPilot AI - AI-Powered Career Growth & Job Tracker"
+### Community 80 - "supabase/: the backend"
+Cohesion: 0.29
+Nodes (6): Handoff, Migrations (`migrations/`), Scheduled jobs (pg_cron), supabase/: the backend, Tests, There is one project and it is live
+
+### Community 81 - "followups: the follow-up agent"
+Cohesion: 0.29
+Nodes (6): followups: the follow-up agent, Handoff, Layers (imports point downward only), Models, Tests, What it owns
+
+### Community 82 - "JobOS Extension Development Standards"
+Cohesion: 0.33
+Nodes (5): 1. Extension Architecture, 2. Scripts, 3. Storage & States, 4. Token Efficiency Tip, JobOS Extension Development Standards
+
+### Community 83 - "JobOS UI Development Standards"
+Cohesion: 0.33
+Nodes (5): 1. Branding & Styling, 2. Component Patterns (shadcn/ui), 3. Performance & Tokens, 4. Animation, JobOS UI Development Standards
+
+### Community 84 - "0001. Decisions that bind the code are recorded as ADRs"
+Cohesion: 0.33
+Nodes (5): 0001. Decisions that bind the code are recorded as ADRs, Consequences, Context, Decision, Options considered
+
+### Community 85 - "NNNN. <Decision, as a statement>"
+Cohesion: 0.33
+Nodes (5): Consequences, Context, Decision, NNNN. <Decision, as a statement>, Options considered
+
+### Community 86 - "<Term>: the definition"
+Cohesion: 0.33
+Nodes (5): Choices we had to make, In the owner's words, <Term>: the definition, The definition, Where it is read
+
+### Community 87 - "Runbook: the code graphs are missing, stale or not used"
+Cohesion: 0.33
+Nodes (5): After, One-time setup on each machine, Runbook: the code graphs are missing, stale or not used, State on 2026-11-26, Symptom and what to do
+
+### Community 88 - "Runbook: <symptom as a user or operator reports it>"
+Cohesion: 0.33
+Nodes (5): After, Branches, Diagnose in one query, Runbook: <symptom as a user or operator reports it>, Symptom
+
+### Community 89 - "🎯 CareerPilot AI - AI-Powered Career Growth & Job Tracker"
 Cohesion: 0.33
 Nodes (5): 🧩 Browser Extension, 🎯 CareerPilot AI - AI-Powered Career Growth & Job Tracker, ✨ Features, 🏗️ Getting Started, 📄 License
 
-### Community 73 - "next-themes"
+### Community 90 - "interview.ts"
+Cohesion: 0.33
+Nodes (5): Props, Interviewer, InterviewFeedback, InterviewFeedbackInsert, QuestionAnswer
+
+### Community 91 - "Plan: <feature>"
+Cohesion: 0.40
+Nodes (4): Files, How we will know it is done, Plan: <feature>, Tasks
+
+### Community 92 - "OQ-01: What happens to the code that already collects data from LinkedIn?"
+Cohesion: 0.40
+Nodes (4): OQ-01: What happens to the code that already collects data from LinkedIn?, The answer, What we built meanwhile, Why it matters
+
+### Community 93 - "OQ-##: <the question, as a question>"
+Cohesion: 0.40
+Nodes (4): OQ-##: <the question, as a question>, The answer, What we built meanwhile, Why it matters
+
+### Community 94 - "Docs"
+Cohesion: 0.40
+Nodes (4): Docs, Resuming work on a module, The paper trail, and the IDs that tie it together, When two documents disagree
+
+### Community 95 - "next-themes"
 Cohesion: 0.40
 Nodes (4): next-themes@^0.3.0, next-themes, Toaster(), ToasterProps
 
+### Community 96 - "The plan"
+Cohesion: 0.50
+Nodes (3): Decisions: `DEC-###`, Open questions: `OQ-##`, The plan
+
+### Community 97 - "pull_request_template.md"
+Cohesion: 0.50
+Nodes (3): Checklist, Evidence, What and why
+
+### Community 99 - "Work tracker"
+Cohesion: 0.50
+Nodes (3): 2026-11-26 - Agent setup: CLAUDE.md files, spec-driven-kit files, code graphs (no ticket, working tree on main, uncommitted), Work tracker, YYYY-MM-DD - <what> (<TICKET>, branch <branch>)
+
 ## Knowledge Gaps
-- **2 isolated node(s):** `RFC-2047`, `RFC-2822`
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 606 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **20 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **3 isolated node(s):** `RFC-2047`, `RFC-2822`, `RFC-2231`
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 861 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **39 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `uploadOrUpdate()` connect `supabase-js.js` to `cadence.ts`, `t`?**
-  _High betweenness centrality (0.087) - this node is a cross-community bridge._
-- **What connects `RFC-2047`, `RFC-2822` to the rest of the system?**
-  _2 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _High betweenness centrality (0.058) - this node is a cross-community bridge._
+- **What connects `RFC-2047`, `RFC-2822`, `RFC-2231` to the rest of the system?**
+  _3 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `supabase-js.js` be split into smaller, more focused modules?**
   _Cohesion score 0.01904157410345922 - nodes in this community are weakly interconnected._
 - **Why does `at()` connect `cadence.ts` to `supabase-js.js`?**
-  _High betweenness centrality (0.087) - this node is a cross-community bridge._
-- **Should `Input` be split into smaller, more focused modules?**
-  _Cohesion score 0.13550536838208072 - nodes in this community are weakly interconnected._
-- **Why does `cn()` connect `cn` to `Input`, `react`, `Button`, `resume.ts`, `sidebar.tsx`, `Trackers.tsx`, `AvailabilitySettings.tsx`, `EditJobDialog.tsx`, `hooks/use-toast.ts`, `Badge`, `JobSearch.tsx`, `CalendarConnector.tsx`, `HistoryTree.tsx`, `utils.ts`, `form.tsx`, `carousel.tsx`, `JobTable.tsx`, `chart.tsx`, `pagination.tsx`, `sheet.tsx`?**
-  _High betweenness centrality (0.067) - this node is a cross-community bridge._
+  _High betweenness centrality (0.058) - this node is a cross-community bridge._
 - **Should `react` be split into smaller, more focused modules?**
-  _Cohesion score 0.0841046277665996 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07047300525561395 - nodes in this community are weakly interconnected._
+- **Why does `useAuth()` connect `react` to `Badge`, `Trackers.tsx`, `Button`, `JobExtractor`?**
+  _High betweenness centrality (0.056) - this node is a cross-community bridge._
+- **Should `resume.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.05134825014343087 - nodes in this community are weakly interconnected._
