@@ -20,7 +20,7 @@ export function Header() {
         <div className="flex items-center space-x-4">
           <Inbox
             applicationIdentifier={import.meta.env.VITE_NOVU_APP_ID}
-            subscriberId="6956acd8f9d367c59645b1d6"
+            subscriberId={user.id}
             appearance={{
               variables: {
                 colorPrimary: "#0d9488",

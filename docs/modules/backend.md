@@ -17,7 +17,7 @@ Postgres with row level security, auth, edge functions and schedules for the who
 ## Remaining
 
 - [ ] OQ-01: decide the fate of `fetch-linkedin-jobs` and `parse-linkedin`.
-- [ ] `sync-calendar` trusts `userId` from the body.
+- [x] `sync-calendar` and `manage-calendar` authenticate the caller (`_shared/auth.ts`), 2026-11-26. Not yet deployed.
 - [ ] Hourly cron migrations embed the anon key; move to the Vault pattern.
 - [ ] Confirm every table has RLS with a user A / user B check.
 

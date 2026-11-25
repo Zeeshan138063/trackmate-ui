@@ -35,18 +35,7 @@ export function NotificationChecker() {
                         description: `Deadline for ${job.position} at ${job.company}`,
                     });
 
-                    // Trigger Novu
-                    // Using the specific subscriberId from Header.tsx for demo consistency
-                    // In real app, use user.id
-                    await NovuService.triggerNotification("6956acd8f9d367c59645b1d6", {
-                        title: `🔔 Application Deadline: ${job.position}`,
-                        body: `Today is the final day to apply to ${job.company}. Don't miss this opportunity!`,
-                        jobId: job.id,
-                        position: job.position,
-                        company: job.company,
-                        location: job.location || "Remote",
-                        jobUrl: job.jobUrl || "#"
-                    });
+                    await NovuService.triggerReminder("deadline", job.id);
                     notificationsSent++;
                 } catch (e) {
                     console.error("Failed to notify for deadline", e);
@@ -63,15 +52,7 @@ export function NotificationChecker() {
                         description: `Time to follow up for ${job.position} at ${job.company}`,
                     });
 
-                    await NovuService.triggerNotification("6956acd8f9d367c59645b1d6", {
-                        title: `📅 Follow-up Reminder: ${job.position}`,
-                        body: `It's time to follow up with ${job.company}. A quick message keeps you top of mind!`,
-                        jobId: job.id,
-                        position: job.position,
-                        company: job.company,
-                        location: job.location || "Remote",
-                        jobUrl: job.jobUrl || "#"
-                    });
+                    await NovuService.triggerReminder("follow_up", job.id);
                     notificationsSent++;
                 } catch (e) {
                     console.error("Failed to notify for follow-up", e);
