@@ -30,8 +30,23 @@ export interface QueueItem {
   reason: string;
   /** YYYY-MM-DD. Items are ordered by this within their group. */
   dueDate: string;
-  target: { type: "job" | "contact"; id: string };
-  source: "job" | "agent" | "contact";
+  /** `found` is a posting from job discovery that is not on the tracker yet; `url` is the posting. */
+  target: { type: "job" | "contact" | "found"; id: string; url?: string | null };
+  source: "job" | "agent" | "contact" | "found";
+  /** Shown before the dated items of its group (REQ-008: fresh high-fit jobs lead the list). */
+  pinned?: boolean;
+}
+
+/** A fresh, high-fit posting (REQ-008), already filtered by `freshHighFit()` in job-fit.ts. */
+export interface QueueFreshJob {
+  id: string;
+  title: string;
+  company: string;
+  jobUrl?: string | null;
+  /** Whole hours since it was posted or first seen. */
+  ageHours: number;
+  /** True when the source stated the posting date. */
+  datePosted: boolean;
 }
 
 export interface QueueJob {
@@ -72,7 +87,11 @@ export interface QueueInput {
   agentFollowUps: QueueAgentFollowUp[];
   contactActions: QueueContactAction[];
   events: QueueEvent[];
+  freshJobs?: QueueFreshJob[];
 }
+
+/** At most this many fresh jobs join the queue, so they cannot crowd out work already started. */
+export const MAX_FRESH = 3;
 
 export interface DailyQueue {
   items: QueueItem[];
@@ -112,6 +131,21 @@ function deadlineReason(deadline: string, today: string): string {
 /** Every due item from every source, before hiding and before the limit. */
 export function collectItems(input: QueueInput, today: string): QueueItem[] {
   const items: QueueItem[] = [];
+
+  for (const fresh of (input.freshJobs ?? []).slice(0, MAX_FRESH)) {
+    const hours = Math.max(0, Math.round(fresh.ageHours));
+    const age = hours < 1 ? "in the last hour" : `${hours} hour${hours === 1 ? "" : "s"} ago`;
+    items.push({
+      key: `found:${fresh.id}:fresh`,
+      group: "applications",
+      title: `New match: ${fresh.title} at ${fresh.company}`,
+      reason: `${fresh.datePosted ? "Posted" : "First seen"} ${age} · matches your campaign, nothing in the posting rules you out`,
+      dueDate: today,
+      target: { type: "found", id: fresh.id, url: fresh.jobUrl ?? null },
+      source: "found",
+      pinned: true,
+    });
+  }
 
   for (const job of input.jobs) {
     const deadlineDay = job.deadline ? dayOf(job.deadline) : null;
@@ -205,7 +239,7 @@ export function buildDailyQueue(input: QueueInput, today: string, limit: number 
     byGroup[item.group].push(item);
   }
   for (const group of QUEUE_GROUPS) {
-    byGroup[group].sort((a, b) => a.dueDate.localeCompare(b.dueDate) || a.title.localeCompare(b.title));
+    byGroup[group].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned) || a.dueDate.localeCompare(b.dueDate) || a.title.localeCompare(b.title));
   }
 
   const totals = { applications: byGroup.applications.length, followups: byGroup.followups.length, people: byGroup.people.length };
