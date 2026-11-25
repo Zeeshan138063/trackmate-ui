@@ -131,8 +131,6 @@ Going against one needs an ADR, not a judgement call in a pull request.
   `VITE_SUPABASE_*` variables in `.env.example` are not read.
 - `src/integrations/supabase/types.ts` covers 13 of the 27 tables, so newer code uses
   `.from('x' as any)`. Do not copy that habit: regenerate the types.
-- `src/services/NovuService.ts` reads its API key from a `VITE_` variable (breaks P4), and the
-  call only works in dev, through the Vite proxy. Do not add callers.
 - The extension-to-app hand-off does not work: the two sides use different message names. See
   `extension/CLAUDE.md`.
 - `GrowthEngine.publishToLinkedIn` reports success without publishing (breaks P10).

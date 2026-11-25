@@ -66,6 +66,7 @@ Deno. Each folder is one function with an `index.ts`.
 | `perplexity-search` | app | Asks Perplexity for jobs, upserts `discovered_jobs` | `PERPLEXITY_API_KEY` |
 | `parse-linkedin` | app | Reads a LinkedIn URL through `r.jina.ai` for resume import. Also under OQ-01 | none |
 | `manage-calendar`, `sync-calendar` | app | List calendars; sync Google and Microsoft events into `meetings` | `GOOGLE_CLIENT_ID/SECRET`, `AZURE_*` |
+| `notify-reminder` | app | Sends the caller a Novu in-app reminder about one of their own jobs | `NOVU_API_KEY` |
 | `followups-*` (5) | cron, app, Google/Microsoft, Telegram | The follow-up agent | see `docs/FOLLOWUPS.md` |
 
 Embeddings: Hugging Face hosted `BAAI/bge-small-en-v1.5`, 384 dimensions. Changing the model
@@ -75,12 +76,11 @@ Rules for functions:
 
 - **Authenticate the caller yourself.** Read the `Authorization` header, call
   `auth.getUser(token)`, and use that user's id. Never accept `userId` from the body (P5).
-  `followups/runtime.ts` (`requireUser`) is the reference. `sync-calendar` currently trusts a
-  `userId` in the body while using the service role key: a known defect, do not copy it.
+  Use `requireUserId` from `_shared/auth.ts` (or `requireUser` in `followups/runtime.ts`).
 - The service role key bypasses RLS. Use it only after you know who is calling, and still filter
   by that user in every query.
-- CORS: older functions answer `*`. New functions allow `APP_URL` plus `ALLOWED_ORIGINS`, as
-  `followups/runtime.ts` (`corsHeaders`) does.
+- CORS: older functions answer `*`. New functions use `appCors` from `_shared/cors.ts`, which
+  allows `APP_URL` plus `ALLOWED_ORIGINS`.
 - Vendors sit behind a small adapter with an interface, as in `followups/adapters/`. New
   functions do not call a vendor SDK from the request handler.
 - Errors returned to the browser are generic; details go to `console.error`. Never log tokens,

@@ -21,3 +21,6 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 ### Changed
 
 ### Fixed
+
+- Calendar functions now check who is calling and only touch that user's calendar accounts.
+- The notification key is no longer in the browser; reminders go to the signed-in user instead of one shared inbox.
