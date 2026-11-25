@@ -126,26 +126,9 @@ export default function ApplicationCopilot() {
         }
     };
 
-    // Use Real Score if available, otherwise fallback to mock calculation
-    const displayScore = useMemo(() => {
-        if (realMatchScore !== null) return realMatchScore;
-
-        // Fallback Mock Logic
-        if (!currentJob || !masterProfile) return 0;
-        let score = 70;
-        const title = currentJob.position.toLowerCase();
-        const target = (masterProfile.targetTitle || "").toLowerCase();
-        if (title.includes(target) || target.includes(title)) score += 15;
-        const desc = (currentJob.description || "").toLowerCase();
-        const skills = masterProfile.skills.flatMap(s => s.items.split(',').map(i => i.trim().toLowerCase()));
-        let skillMatches = 0;
-        skills.forEach(s => {
-            if (desc.includes(s)) skillMatches++;
-        });
-        score += Math.min(15, skillMatches * 2);
-        return Math.min(99, score);
-
-    }, [currentJob, masterProfile, realMatchScore]);
+    // The score is only ever the one returned by the AI analysis. Until that has run there is
+    // no score to show (P10): no estimate from keyword overlap dressed up as a match.
+    const displayScore = realMatchScore;
 
     // Determining which resume to show
     const resumeToShow = tailoredResume || masterProfile;
@@ -264,10 +247,17 @@ export default function ApplicationCopilot() {
                                 </div>
                             </div>
                             <div className="flex flex-col items-end gap-2">
-                                <div className={`flex flex-col items-center justify-center h-16 w-16 rounded-full border-4 ${displayScore >= 80 ? 'border-green-500 text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20' : 'border-amber-500 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20'} `}>
-                                    <span className="text-xl font-bold">{displayScore}</span>
-                                    <span className="text-[9px] font-bold uppercase">Match</span>
-                                </div>
+                                {displayScore === null ? (
+                                    <div className="flex flex-col items-center justify-center h-16 w-16 rounded-full border-4 border-slate-300 text-slate-500 dark:border-slate-600 dark:text-slate-400" title="Run the optimizer to score this job against your profile">
+                                        <span className="text-xl font-bold">–</span>
+                                        <span className="text-[9px] font-bold uppercase">Not scored</span>
+                                    </div>
+                                ) : (
+                                    <div className={`flex flex-col items-center justify-center h-16 w-16 rounded-full border-4 ${displayScore >= 80 ? 'border-green-500 text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20' : 'border-amber-500 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20'} `}>
+                                        <span className="text-xl font-bold">{displayScore}</span>
+                                        <span className="text-[9px] font-bold uppercase">Match</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
