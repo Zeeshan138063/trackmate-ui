@@ -1,4 +1,16 @@
-# CareerPilot AI Extension — v2.0 Changes
+# JobOS Extension — changes
+
+## v2.0.1
+
+- The extension is now called **JobOS** in the toolbar, the popup and the store name.
+- The app URL defaults to `https://app.jobos.dev` instead of `http://localhost:8080`. A URL you
+  saved earlier is kept. For local development, type `http://localhost:8080/trackers` in the popup.
+- The bridge script (`careerpilot-bridge.js`) is injected only on the JobOS app
+  (`app.jobos.dev`, `job.zeeshare.com`, localhost) instead of every https site. If you run the
+  app on another domain, add it to the second `content_scripts` block in `manifest.json`.
+- No change to what is read from pages, and no change to message or storage names.
+
+# v2.0 changes
 
 ## What Was Rebuilt & Why
 

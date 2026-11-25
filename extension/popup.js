@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ── Open CareerPilot ──
   el('openBtn')?.addEventListener('click', () => {
-    chrome.tabs.create({ url: el('careerPilotUrl').value || 'http://localhost:8080/trackers' });
+    chrome.tabs.create({ url: el('careerPilotUrl').value || 'https://app.jobos.dev/trackers' });
   });
 
   // ── Import to Resume ──
@@ -351,7 +351,7 @@ async function handleSave() {
 
   const saveBtn = el('saveBtn');
   saveBtn.disabled = true;
-  setStatus('Saving to CareerPilot…', 'info');
+  setStatus('Saving to JobOS…', 'info');
 
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -436,7 +436,7 @@ async function handleAutofill() {
     const profile  = profiles[0];
 
     if (!profile) {
-      setStatus('No profile found. Complete your CareerPilot profile first.', 'error');
+      setStatus('No profile found. Complete your JobOS profile first.', 'error');
       btn.disabled = false;
       return;
     }
@@ -487,7 +487,7 @@ async function handleImportResume() {
   chrome.runtime.sendMessage({
     action:        'sendProfileToCareerPilot',
     data:          currentJobData,
-    careerPilotUrl: el('careerPilotUrl').value || 'http://localhost:8080',
+    careerPilotUrl: el('careerPilotUrl').value || 'https://app.jobos.dev',
   }, response => {
     btn.disabled = false;
     if (!response?.success) setStatus('Failed to open Resume Builder', 'error');
@@ -667,11 +667,11 @@ async function saveCompanyDirectly(data) {
 // SESSION SYNC TO CAREERPILOT TABS
 // ────────────────────────────────────────────────────────────────
 async function syncSessionToTabs(session) {
-  const cpUrl       = el('careerPilotUrl')?.value || 'http://localhost:8080';
+  const cpUrl       = el('careerPilotUrl')?.value || 'https://app.jobos.dev';
   const storageKey  = `sb-${SUPABASE_URL.split('//')[1].split('.')[0]}-auth-token`;
 
   let origin;
-  try { origin = new URL(cpUrl).origin; } catch (_) { origin = 'http://localhost:8080'; }
+  try { origin = new URL(cpUrl).origin; } catch (_) { origin = 'https://app.jobos.dev'; }
 
   const tabs = await chrome.tabs.query({ url: `${origin}/*` });
   for (const tab of tabs) {
