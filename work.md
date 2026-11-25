@@ -48,7 +48,7 @@ keep the last line of each section the next step.
 - [ ] Follow-ups: Workable feed; paste-a-URL capture into `discovered_jobs`; the public `/jobs` page still lists rows collected from LinkedIn before this change until they archive (15 days).
 - [ ] PR into rebranding-jobos.
 ## 2026-11-26 - Contact stages and next actions (REQ-003, branch jobos/contact-stages, into rebranding-jobos)
-## 2026-11-26 - "Who do I know here?" (REQ-006, branch feat/who-do-i-know, stacked on REQ-003 and job intake)
+## 2026-11-26 - "Who do I know here?" (REQ-006, branch jobos/who-do-i-know, into rebranding-jobos)
 
 - [x] Spec and plan approved by Zee; DEC-004.
 - [x] `src/utils/company-match.ts`, 7 tests.
@@ -57,7 +57,7 @@ keep the last line of each section the next step.
 - [ ] After merge: set REQ-006 to "exists" in `docs/prd/requirements.md`.
 - [ ] Known limit: matching is by typed company name, so "FB" will not find "Meta".
 - [ ] Next: REQ-004 (daily queue), then REQ-007 (referral-first prompt), which reads these matches.
-- [ ] PR into main, after feat/contact-stages-next-actions and feat/job-intake-allowed-sources.
+- [ ] PR into rebranding-jobos.
 
 ## 2026-11-26 - Contact stages and next actions (REQ-003, branch feat/contact-stages-next-actions)
 
