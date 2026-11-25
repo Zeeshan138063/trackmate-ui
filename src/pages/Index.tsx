@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CareerGoalSection } from "@/components/CareerGoalSection";
+import { DailyQueue } from "@/components/DailyQueue";
 import { JobApplicationsChart } from "@/components/JobApplicationsChart";
 import { JobSearchPipeline } from "@/components/JobSearchPipeline";
 import { RecentActivity } from "@/components/RecentActivity";
@@ -83,6 +84,9 @@ export default function Index() {
   return (
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-8 space-y-8">
+        {/* Today: the daily queue comes first (REQ-004) */}
+        <DailyQueue jobs={jobs} contacts={contacts} />
+
         {/* Career Goal Section */}
         <CareerGoalSection />
 
