@@ -40,7 +40,7 @@ export function Header() {
 
           <Inbox
             applicationIdentifier={import.meta.env.VITE_NOVU_APP_ID}
-            subscriberId="6956acd8f9d367c59645b1d6"
+            subscriberId={user.id}
             appearance={{
               variables: {
                 colorPrimary: "#6366F1",
