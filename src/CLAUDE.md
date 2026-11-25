@@ -86,9 +86,27 @@ callers and do not patch around it in passing.
 
 ## Tests
 
-There is no test runner for `src/` yet. Until one is added by its own ticket, the plan for a
-change must list the manual checks, and pure logic should be written as plain functions in
-`utils/` so it can be tested once a runner exists.
+`npm test` runs vitest over `src/**/*.test.ts` in a Node environment (no DOM). Pure logic goes in
+plain functions in `utils/` with a test beside it; `utils/contact-next-action.ts` is the
+reference: no clock, no network, time passed in. Components are not unit-tested yet, so the plan
+for a UI change lists the manual checks.
+
+## Contacts (REQ-003)
+
+- A contact's next step is computed, never stored: `nextAction()` in
+  `utils/contact-next-action.ts`, fed by `hooks/useContactActions.ts`. Change a rule there and in
+  its test, nowhere else. Timings live in `RULES` (DEC-003).
+- Stages change only on a user click (DEC-002). `suggestedStage()` proposes; never auto-apply it.
+- Do-not-contact is `contacts.relationship_stage = 'do_not_contact'`, the field the follow-up
+  agent checks. Do not add a second flag.
+- Next steps are prompts. Nothing here may act on LinkedIn or send anything (P1, P2).
+- The daily queue on Home is `buildDailyQueue()` in `utils/daily-queue.ts`, fed by
+  `hooks/useDailyQueue.ts`. A new kind of due item is a new branch in `collectItems()` with a
+  stable `key` and a test. Only real data goes in: no placeholder items (DEC-005). What the user
+  did with an item is appended to `daily_queue_events`, never updated.
+- "Who do I know at this company" is `contactsAtCompany()` in `utils/company-match.ts`, shown by
+  `components/contacts/KnownContacts.tsx`. A number on a job counts exact, contactable matches
+  only (DEC-004). Match on the user's own contacts; never look a company or person up elsewhere.
 
 ## Handoff
 

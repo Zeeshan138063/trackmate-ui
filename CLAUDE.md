@@ -32,8 +32,9 @@ npm install
 npm run dev              # web app on http://localhost:8080
 npm run typecheck        # tsc, app code
 npm run lint             # eslint
+npm test                 # vitest: pure logic in src/**/*.test.ts
 npm run build            # vite build
-npm run verify           # typecheck + lint + build: the one command people, CI and Claude run
+npm run verify           # typecheck + lint + test + build: the one command people, CI and Claude run
 npm run test:followups   # Deno tests for the follow-up agent (needs deno installed)
 ```
 

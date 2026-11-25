@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EngagementTimeline } from "./EngagementTimeline";
+import { ContactRelationshipControls } from "@/components/contacts/ContactRelationshipControls";
 import { AddEngagementDialog } from "./AddEngagementDialog";
 import { FollowUpList } from "./FollowUpList";
 import { useEngagements } from "@/hooks/useEngagements";
@@ -52,13 +53,16 @@ interface ContactDetailsDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onEdit?: (contact: Contact) => void;
+    /** Saves stage, role type or do-not-contact through the caller's contact list (REQ-003). */
+    onUpdate?: (id: string, updates: Partial<Contact>) => Promise<unknown>;
 }
 
 export function ContactDetailsDialog({
     contact,
     open,
     onOpenChange,
-    onEdit
+    onEdit,
+    onUpdate
 }: ContactDetailsDialogProps) {
     const [isAddEngagementOpen, setIsAddEngagementOpen] = useState(false);
 
@@ -192,6 +196,8 @@ export function ContactDetailsDialog({
                         </TabsList>
 
                         <TabsContent value="details" className="space-y-6 mt-0">
+                            {onUpdate && <ContactRelationshipControls contact={contact} onUpdate={onUpdate} />}
+
                             {/* Contact Info Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {contact.email && (

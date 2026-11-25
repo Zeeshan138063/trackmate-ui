@@ -1,3 +1,5 @@
+import { KnownContactsMarker } from "@/components/contacts/KnownContacts";
+import type { Contact } from "@/types/contact";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { Job } from "@/types/job";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +11,8 @@ interface JobKanbanProps {
     jobs: Job[];
     onUpdateJob: (job: Job) => void;
     onEditJob: (job: Job) => void;
+    /** REQ-006: the user's contacts, to mark jobs at companies where they know someone. */
+    contacts?: Contact[];
 }
 
 const columns = [
@@ -21,7 +25,7 @@ const columns = [
     "Rejected",
 ];
 
-export function JobKanban({ jobs, onUpdateJob, onEditJob }: JobKanbanProps) {
+export function JobKanban({ jobs, onUpdateJob, onEditJob, contacts = [] }: JobKanbanProps) {
     const onDragEnd = (result: DropResult) => {
         const { destination, source, draggableId } = result;
 
@@ -96,6 +100,7 @@ export function JobKanban({ jobs, onUpdateJob, onEditJob }: JobKanbanProps) {
                                                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                                                 <Building className="h-3 w-3" />
                                                                 <span className="line-clamp-1">{job.company}</span>
+                                                                <KnownContactsMarker company={job.company} contacts={contacts} />
                                                             </div>
                                                             {job.location && (
                                                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">

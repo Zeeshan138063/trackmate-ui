@@ -18,6 +18,11 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 
 ### Added
 
+- Home opens on a Today list: applications to finish, follow-ups and replies due, and people to reach out to, each with the reason it is there and Done, Snooze, Skip and Open. You set how many items a day.
+
+- Every job, tracked or discovered, shows the contacts you already have at that company with their warmth stage, and you can link them to the job in one click.
+
+- Connections: every contact has a role type and a warmth stage, shows its one next step with a due date, and the page opens on a Today list of people to act on, with snooze, filters and a do-not-contact switch.
 - Settings > Data: Export All Data downloads your data as a JSON file, and Delete Account permanently removes your data and account.
 
 ### Changed

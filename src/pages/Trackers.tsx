@@ -29,6 +29,7 @@ import { AddJobDialog } from "@/components/AddJobDialog";
 import { EditJobDialog } from "@/components/EditJobDialog";
 import { ColumnsDropdown, ColumnOption } from "@/components/ColumnsDropdown";
 import { useJobs } from "@/hooks/useJobs";
+import { useContacts } from "@/hooks/useContacts";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { JobStats, Job } from "@/types/job";
@@ -53,6 +54,7 @@ const defaultColumns: ColumnOption[] = [
 
 export default function Trackers() {
   const { jobs, loading, addJob, updateJob, deleteJob } = useJobs();
+  const { contacts } = useContacts(); // REQ-006: "N contacts" marker on each job
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
   const [visibleColumns, setVisibleColumns] = useState<ColumnOption[]>(defaultColumns);
@@ -318,6 +320,20 @@ export default function Trackers() {
     setEditingJob(job);
     setEditDialogOpen(true);
   };
+
+  // Deep link from the daily queue (REQ-004): /trackers?job=<id> opens that job once.
+  useEffect(() => {
+    const jobId = searchParams.get('job');
+    if (!jobId || loading) return;
+    const target = jobs.find(j => j.id === jobId);
+    if (target) {
+      setEditingJob(target);
+      setEditDialogOpen(true);
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete('job');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, jobs, loading]);
 
   const handleUpdateJob = (updatedJob: Job) => {
     updateJob(updatedJob);
@@ -692,6 +708,7 @@ export default function Trackers() {
             onUpdateJob={updateJob}
             onDeleteJob={handleDeleteClick}
             onEditJob={handleEditJob}
+            contacts={contacts}
             visibleColumns={visibleColumns}
             sortConfig={sortConfig}
             onSort={handleSort}
@@ -702,6 +719,7 @@ export default function Trackers() {
             jobs={filteredJobs}
             onUpdateJob={updateJob}
             onEditJob={handleEditJob}
+            contacts={contacts}
           />
         )}
 
