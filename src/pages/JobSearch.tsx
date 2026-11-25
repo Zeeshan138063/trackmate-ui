@@ -158,7 +158,7 @@ export default function JobSearch() {
         salary: "Not Disclosed",
         type: "Full-time",
         skills: [keyword, "AI Match"],
-        matchScore: j.similarity ? Math.round(j.similarity * 100) : 85, // Use real similarity or fallback
+        matchScore: typeof j.similarity === 'number' ? Math.round(j.similarity * 100) : null, // no similarity, no score (P10)
         foundDate: j.posted_at,
         source: j.source || 'LinkedIn',
         description: j.description || "No description available",
@@ -211,7 +211,7 @@ export default function JobSearch() {
         salary: "Not Disclosed",
         type: "Full-time",
         skills: [keyword, "AI Match"],
-        matchScore: j.similarity ? Math.round(j.similarity * 100) : 85,
+        matchScore: typeof j.similarity === 'number' ? Math.round(j.similarity * 100) : null,
         foundDate: j.posted_at,
         source: j.source || 'LinkedIn',
         description: j.description || "No description available",
@@ -258,7 +258,7 @@ export default function JobSearch() {
         jobUrl: job.job_url, // Maps correctly now
         description: job.description,
         status: "Bookmarked",
-        excitement: job.matchScore >= 90 ? 5 : job.matchScore >= 80 ? 4 : 3,
+        excitement: job.matchScore === null ? 3 : job.matchScore >= 90 ? 5 : job.matchScore >= 80 ? 4 : 3,
         dateSaved: new Date().toISOString(),
         datePosted: job.foundDate,
         source: "linkedin_auto" // Using the allowed literal type
@@ -427,7 +427,7 @@ export default function JobSearch() {
                           <div className="flex items-center gap-2 flex-wrap">
                             <h3 className="font-semibold text-lg text-slate-900 dark:text-white line-clamp-1">{job.title}</h3>
                             <Badge variant="secondary" className="text-xs font-normal bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-100 dark:border-indigo-900/50">
-                              {job.matchScore}% Match
+                              {job.matchScore === null ? "Not scored" : `${job.matchScore}% Match`}
                             </Badge>
                             {job.source && (
                               <Badge variant="outline" className="text-[10px] text-slate-500 border-slate-200">
@@ -493,7 +493,7 @@ export default function JobSearch() {
           <DialogHeader>
             <DialogTitle className="text-xl flex items-center justify-between pr-8">
               <span>{selectedJob?.title}</span>
-              {selectedJob?.matchScore && (
+              {typeof selectedJob?.matchScore === 'number' && (
                 <Badge variant="secondary" className="ml-2">
                   {selectedJob.matchScore}% Match
                 </Badge>
