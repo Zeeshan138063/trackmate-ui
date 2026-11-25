@@ -4,6 +4,15 @@ What is true now, per branch of work. Newest section at the top. Every push that
 updates this file (the `push-tracker-gate` hook checks). Tick what is done, add what is left, and
 keep the last line of each section the next step.
 
+## 2026-11-26 - Extension 2.0.1 (branch chore/extension-jobos)
+
+- [x] JobOS naming in popup and manifest; default app URL `https://app.jobos.dev`; sign-up link fixed.
+- [x] Bridge script limited to the app's origins (`extension/manifest.json`).
+- [ ] Manual test in Chrome (not done: no browser with the extension in the build session). Run cases 1 to 3 in `docs/EXTENSION_TEST_CASES.md`, both save paths, plus logout sync.
+- [ ] Publish 2.0.1 to the Chrome Web Store; the store listing name changes with it.
+- [ ] Next: narrow `content.js` matches (own spec).
+- [ ] PR into main.
+
 ## 2026-11-26 - Agent setup: CLAUDE.md files, spec-driven-kit files, code graphs (no ticket, working tree on main, uncommitted)
 
 - [x] Root and scoped `CLAUDE.md` (src, supabase, followups, extension) and `AGENTS.md`.

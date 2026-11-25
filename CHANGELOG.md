@@ -20,4 +20,6 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 
 ### Changed
 
+- Browser extension 2.0.1: renamed to JobOS, opens app.jobos.dev by default, and its app bridge no longer runs on unrelated sites.
+
 ### Fixed
