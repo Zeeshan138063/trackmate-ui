@@ -3,7 +3,8 @@
 The source is `2026-11-26-crm-strategy-spec.md` (Zee, 2026-11-26). This index gives the P0
 features from its section 7 stable IDs so specs, tests and commits can cite them. P1 and P2
 features get IDs when they are scheduled. "State today" comes from the code audit of
-2026-11-26 at commit `553655d`: https://claude.ai/artifact/MPeUCBWQjXVEiHDgr197DL
+2026-11-26: https://claude.ai/artifact/MPeUCBWQjXVEiHDgr197DL (read on `main`; the P0 states
+below were re-checked against `rebranding-jobos` and are the same there)
 
 | ID | Requirement | Spec section | Priority | State today |
 |---|---|---|---|---|
