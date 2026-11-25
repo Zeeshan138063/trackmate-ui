@@ -8,6 +8,7 @@
 // Adding a table that stores user data? Add it here and to EXPORT_TABLES in
 // src/services/AccountDataService.ts (principle P9).
 export const USER_TABLES = [
+  "daily_queue_events",
   "follow_up_events",
   "follow_ups",
   "followup_settings",
