@@ -47,6 +47,7 @@ export function useJobs() {
         excitement: job.excitement,
         checklist: job.checklist || {},
         notes: job.notes || undefined,
+        attachedResume: job.attached_resume ? JSON.stringify(job.attached_resume) : undefined,
         createdAt: job.created_at,
         updatedAt: job.updated_at,
       })) || [];
@@ -185,9 +186,32 @@ export function useJobs() {
         excitement: (data as any).excitement,
         checklist: (data as any).checklist || {},
         notes: (data as any).notes || undefined,
+        attachedResume: (data as any).attached_resume ? JSON.stringify((data as any).attached_resume) : undefined,
         createdAt: (data as any).created_at,
         updatedAt: (data as any).updated_at,
       };
+
+      // The tailored resume attached to a job lives in jobs.attached_resume. It is saved on its
+      // own so that a failure here is reported and never blocks the main update.
+      const previous = jobs.find(job => job.id === updatedJob.id);
+      if (updatedJob.attachedResume !== previous?.attachedResume) {
+        const { error: resumeError } = await supabase
+          .from('jobs')
+          .update({ attached_resume: updatedJob.attachedResume ? JSON.parse(updatedJob.attachedResume) : null } as never)
+          .eq('id', updatedJob.id)
+          .eq('user_id', user.id);
+
+        if (resumeError) {
+          console.error('Error saving attached resume:', resumeError);
+          toast({
+            title: "Resume was not attached",
+            description: "The job was updated, but the resume could not be saved to it.",
+            variant: "destructive",
+          });
+        } else {
+          transformedJob.attachedResume = updatedJob.attachedResume;
+        }
+      }
 
       setJobs(prev => prev.map(job =>
         job.id === updatedJob.id ? transformedJob : job

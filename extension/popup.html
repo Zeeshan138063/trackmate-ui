@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CareerPilot AI</title>
+  <title>JobOS</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -213,7 +213,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-left">
-      <h1>🎯 CareerPilot AI</h1>
+      <h1>🎯 JobOS</h1>
       <p id="headerSubtitle">Capture Job Details</p>
     </div>
     <div class="header-right" id="appVersion">v--</div>
@@ -236,7 +236,7 @@
     <!-- ── Login View ── -->
     <div id="loginView" class="login-container" style="display:none">
       <p style="text-align:center;color:#4b5563;font-size:13px;margin-bottom:4px;">
-        Log in to save jobs to CareerPilot
+        Log in to save jobs to JobOS
       </p>
       <div class="field">
         <label>Email</label>
@@ -247,7 +247,7 @@
         <input type="password" id="loginPassword" class="input-field" placeholder="••••••••" autocomplete="current-password">
       </div>
       <button id="loginSubmitBtn" class="btn-primary"><span>Log In</span></button>
-      <p class="hint">No account? <a href="http://localhost:5173/auth" target="_blank">Sign up here</a></p>
+      <p class="hint">No account? <a href="https://app.jobos.dev/auth" target="_blank">Sign up here</a></p>
     </div>
 
     <!-- ── App View ── -->
@@ -312,7 +312,7 @@
         <button id="captureBtn"     class="btn-secondary"><span>📸 Capture Screenshot</span></button>
         <button id="saveBtn"        class="btn-primary"  style="display:none"><span>💾 Save Job</span></button>
         <button id="importResumeBtn" class="btn-import"  style="display:none"><span>📄 Import to Resume Builder</span></button>
-        <button id="openBtn"        class="btn-secondary" style="display:none"><span>🚀 Open CareerPilot</span></button>
+        <button id="openBtn"        class="btn-secondary" style="display:none"><span>🚀 Open JobOS</span></button>
       </div>
 
       <!-- Mode selector -->
@@ -328,9 +328,9 @@
 
       <!-- Settings -->
       <div class="settings">
-        <label>CareerPilot URL</label>
-        <input type="text" id="careerPilotUrl" class="input-field" placeholder="http://localhost:8080/trackers" value="http://localhost:8080/trackers">
-        <div class="note">⚠️ Must be logged in to CareerPilot before saving.</div>
+        <label>JobOS app URL</label>
+        <input type="text" id="careerPilotUrl" class="input-field" placeholder="https://app.jobos.dev/trackers" value="https://app.jobos.dev/trackers">
+        <div class="note">⚠️ Must be logged in to JobOS before saving.</div>
       </div>
 
       <!-- Footer -->

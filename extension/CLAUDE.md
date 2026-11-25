@@ -1,6 +1,6 @@
 # extension/: the JobOS browser extension
 
-Chrome, Manifest V3, version 2.0.0, plain JavaScript, **no build step and no npm**: the files in
+Chrome, Manifest V3, version 2.0.1, plain JavaScript, **no build step and no npm**: the files in
 this folder are what gets loaded. Read the root `CLAUDE.md` first. `extension (Copy)/` next door
 is a stale 1.5.1 copy: never edit it, never read it for answers.
 
@@ -18,7 +18,7 @@ always reviews, and the user always clicks submit.
 | `content.js` | every `https://*/*` page | `PageState` (SPA navigation and DOM changes), `JobExtractor` (per-site readers), `ATSDetector`, `ATSAutofiller` |
 | `background.js` | service worker | `TabStore` (per-tab state, in memory), `Badge` (JOB, PROF, CO, FILL), screenshots, temporary hand-off storage |
 | `popup.html`, `popup.js` | the popup | Sign-in, review and edit, save, autofill, import profile, session sync |
-| `careerpilot-bridge.js` | the web app's pages, at `document_start` | Lets the web app fetch hand-off data and tells the extension when the app logs out |
+| `careerpilot-bridge.js` | the web app's pages only (`app.jobos.dev`, `job.zeeshare.com`, localhost), at `document_start` | Lets the web app fetch hand-off data and tells the extension when the app logs out |
 | `supabase-js.js` | popup | Vendored Supabase client. Do not edit; replace whole when upgrading |
 | `*.md` | | Older notes. `USER_ASSOCIATION_FLOW.md` and `CHANGES.md` are still accurate; treat the rest as history |
 
@@ -60,7 +60,7 @@ and `saveCompanyDirectly`. A migration that renames or adds a required column mu
 - Supabase URL, project ref and anon key in `popup.js`, `background.js`, `careerpilot-bridge.js`.
   The anon key is public; no other key may ever be added here (P4).
 - The app URL comes from the popup field, saved as `careerPilotUrl`, defaulting to
-  `http://localhost:8080`. The session key is `sb-<project ref>-auth-token`, the same key the web
+  `https://app.jobos.dev`. For local work type `http://localhost:8080/trackers` there. The session key is `sb-<project ref>-auth-token`, the same key the web
   app uses in `localStorage`; `syncSessionToTabs` copies the session into open app tabs.
 
 ## Rules
@@ -78,9 +78,10 @@ and `saveCompanyDirectly`. A migration that renames or adds a required column mu
 - **Selectors**: prefer `aria-*`, `data-*`, roles and structure over class names, which sites
   rotate. Every extractor returns the same shape with empty strings for what it could not find;
   it never throws to the popup.
-- **Permissions**: `host_permissions` and the content-script matches are already broader than
-  needed (`https://*/*`). Do not widen them. Narrowing them is wanted, but is its own spec
-  because the generic extractor and the bridge depend on it.
+- **Permissions**: `host_permissions` and the `content.js` matches are broader than needed
+  (`https://*/*`). Do not widen them. Narrowing them is wanted, but is its own spec because the
+  generic extractor depends on it. The bridge is already limited to the app's own origins; a
+  new app domain must be added to its `matches`.
 - **Store little** (P9). Hand-off records expire after one hour. Do not add long-lived caches of
   other people's profile data.
 - Messages that answer asynchronously must `return true` from the listener. The service worker

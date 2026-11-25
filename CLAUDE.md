@@ -125,8 +125,6 @@ Going against one needs an ADR, not a judgement call in a pull request.
   `VITE_SUPABASE_*` variables in `.env.example` are not read.
 - `src/integrations/supabase/types.ts` covers 13 of the 27 tables, so newer code uses
   `.from('x' as any)`. Do not copy that habit: regenerate the types.
-- `src/utils/s3-helper.ts` and `src/services/NovuService.ts` read secrets from `VITE_` variables
-  (breaks P4). Do not add callers. The Novu call also only works in dev, through the Vite proxy.
 - `GrowthEngine.publishToLinkedIn` reports success without publishing (breaks P10).
 - The `fetch-linkedin-jobs` cron URL has a typo in the project ref, so that schedule may not be
   running. Do not "fix" it: see OQ-01.

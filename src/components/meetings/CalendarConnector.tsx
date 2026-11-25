@@ -130,24 +130,13 @@ const CalendarConnector = ({ userId }: { userId: string }) => {
             setAvailableCalendars(prev => ({ ...prev, [accountId]: data.calendars || [] }));
         } catch (e) {
             console.error("Error fetching calendars:", e);
-            // Verify with mock data if function fails (for dev/demo)
-            if (provider === 'google') {
-                setAvailableCalendars(prev => ({
-                    ...prev, [accountId]: [
-                        { id: 'primary', summary: 'Primary', primary: true },
-                        { id: 'birthdays', summary: 'Birthdays' },
-                        { id: 'family', summary: 'Family' },
-                        { id: 'tasks', summary: 'Tasks' }
-                    ]
-                }));
-            } else {
-                setAvailableCalendars(prev => ({
-                    ...prev, [accountId]: [
-                        { id: 'calendar', summary: 'Calendar', primary: true },
-                        { id: 'tasks', summary: 'Tasks' }
-                    ]
-                }));
-            }
+            // No stand-in list: showing calendars that are not the user's would be false (P10).
+            setAvailableCalendars(prev => ({ ...prev, [accountId]: [] }));
+            toast({
+                title: "Could not load calendars",
+                description: "Your calendars could not be read. Try reconnecting the account.",
+                variant: "destructive",
+            });
         } finally {
             setLoadingCalendars(prev => ({ ...prev, [accountId]: false }));
         }
