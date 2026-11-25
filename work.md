@@ -4,6 +4,15 @@ What is true now, per branch of work. Newest section at the top. Every push that
 updates this file (the `push-tracker-gate` hook checks). Tick what is done, add what is left, and
 keep the last line of each section the next step.
 
+## 2026-11-26 - Connections audit fixes (branch jobos/connections-polish, into rebranding-jobos)
+
+- [x] Audit from the code (the live page needs a sign-in; not viewed in a browser).
+- [x] Extension contact import fixed; delete confirmation; search, sort, count, paging; duplicate warning (`src/utils/contact-list.ts`, 10 tests).
+- [x] Card links, keyboard and touch access; details dialog mounted once per page.
+- [ ] Zee: browser check: send a profile from the extension; delete; sort; keyboard.
+- [ ] Proposed, not built: import LinkedIn's own "Connections.csv" export; list view; bulk stage change; server-side search past about 1,000 contacts.
+- [ ] PR into rebranding-jobos.
+
 ## 2026-11-26 - Consistency checker (REQ-002, branch jobos/consistency-checker, into rebranding-jobos)
 
 - [x] Spec and plan approved by Zee.

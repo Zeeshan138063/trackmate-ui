@@ -31,10 +31,15 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 
 ### Changed
 
+- Connections: search also covers email and notes, contacts can be sorted (next step due first by default), deleting asks first, adding warns about a probable duplicate, and card icons for email, phone and LinkedIn open them.
+
 - Job discovery now reads the public job feeds of the companies on your watchlist (Greenhouse, Lever, Ashby) and no longer fetches LinkedIn or scrapes search results.
 - A job with no known posting date now says "First seen" instead of "Posted", and shows its real source.
 
 ### Fixed
+
+- Sending a profile from the Chrome extension to Connections now opens the Add Contact form with the details filled in.
+- Connections no longer loads every contact's details in the background, which made the page slow with many contacts.
 
 - Browser extension 3.1.1: jobs, contacts and profiles captured by the extension now arrive in the app with all their details, and the extension's app bridge no longer runs on unrelated sites.
 - Calendar functions now check who is calling and only touch that user's calendar accounts.
