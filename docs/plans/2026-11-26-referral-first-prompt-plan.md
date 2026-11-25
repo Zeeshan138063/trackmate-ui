@@ -1,6 +1,6 @@
 # Plan: referral-first prompt
 
-Spec: `docs/specs/2026-11-26-referral-first-prompt-design.md`. Approved by: <pending>.
+Spec: `docs/specs/2026-11-26-referral-first-prompt-design.md`. Approved by: Zee, 2026-11-26.
 
 Branch `feat/referral-first`, stacked on `feat/daily-queue`.
 
@@ -23,8 +23,9 @@ Branch `feat/referral-first`, stacked on `feat/daily-queue`.
 
 ## How we will know it is done
 
-| AC | Evidence |
-|---|---|
-| AC-1, AC-5, AC-6 | `npm test` |
-| AC-2 to AC-4 | manual checks in the pull request |
-| All | type and lint counts no worse than baseline; build passes |
+| AC | Evidence | Result, 2026-11-26 |
+|---|---|---|
+| AC-1, AC-5, AC-6 | `npm test` | 3 new tests pass (40 in total) |
+| AC-2 rendering | one-off server render of `ReferralPrompt` | three people shown, "and 1 more", nothing with no candidates; not kept as a test |
+| AC-2 to AC-4 in the browser | manual checks in the pull request | **not done** |
+| All | typecheck, lint, build | 28 type errors (baseline); lint 196 errors and 22 warnings, unchanged; build passes |

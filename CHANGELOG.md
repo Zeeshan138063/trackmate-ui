@@ -18,6 +18,8 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 
 ### Added
 
+- Before you apply somewhere you already know someone well, the job reminds you to ask them first, and the Today list says who could refer you.
+
 - Home opens on a Today list: applications to finish, follow-ups and replies due, and people to reach out to, each with the reason it is there and Done, Snooze, Skip and Open. You set how many items a day.
 
 - Every job, tracked or discovered, shows the contacts you already have at that company with their warmth stage, and you can link them to the job in one click.
