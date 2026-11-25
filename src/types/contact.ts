@@ -20,6 +20,8 @@ export interface Contact {
     warmth_stage?: WarmthStage;
     warmth_stage_changed_at?: string;
     next_action_snoozed_until?: string | null;
+    // REQ-009. Absent until migration 20261126140000 is applied.
+    invitation_sent_at?: string | null;
     // Owned by the follow-up agent; 'do_not_contact' is the one do-not-contact flag in the product.
     relationship_stage?: 'active' | 'nurture' | 'dormant' | 'do_not_contact';
     next_touch_at?: string | null;
