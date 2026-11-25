@@ -5,6 +5,7 @@ import { useResume } from "@/hooks/useResume";
 import { MasterProfileEditor } from "@/components/resume/MasterProfileEditor";
 import { ResumePreview } from "@/components/resume/ResumePreview";
 import { ResumeImporter } from "@/components/resume/ResumeImporter";
+import { ConsistencyChecker } from "@/components/resume/ConsistencyChecker";
 import { Loader2, Printer, Sparkles, Save, CheckCircle2, Share2 } from "lucide-react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -135,6 +136,7 @@ export default function ResumeBuilder() {
                       <Share2 className="h-4 w-4" />
                       Share
                     </Button>
+                    {masterProfile && <ConsistencyChecker profile={masterProfile} />}
                     <Button size="sm" variant="outline" className="gap-2 bg-background shadow-sm hover:bg-accent hover:text-accent-foreground" onClick={handlePrint}>
                       <Printer className="h-4 w-4" />
                       Download PDF
