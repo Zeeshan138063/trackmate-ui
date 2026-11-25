@@ -1,6 +1,6 @@
 # Plan: invitation limits tracker
 
-Spec: `docs/specs/2026-11-26-invitation-limits-design.md`. Approved by: <pending>.
+Spec: `docs/specs/2026-11-26-invitation-limits-design.md`. Approved by: Zee, 2026-11-26.
 
 Branch `feat/invitation-limits`, stacked on `feat/referral-first`.
 
@@ -27,11 +27,13 @@ Branch `feat/invitation-limits`, stacked on `feat/referral-first`.
 
 ## How we will know it is done
 
-| AC | Evidence |
-|---|---|
-| AC-2 to AC-4, AC-6 | `npm test` |
-| AC-1, AC-5, AC-7 | manual checks in the pull request |
-| All | type and lint counts no worse than baseline; build passes |
+| AC | Evidence | Result, 2026-11-26 |
+|---|---|---|
+| AC-2, AC-4 | `npm test`: `src/utils/invitation-limits.test.ts` | 5 of 5 pass |
+| AC-3, AC-4, AC-6 | `npm test`: "REQ-009 invitations" in `contact-next-action.test.ts` | 3 new pass; the 20 earlier tests pass unchanged (48 in total) |
+| AC-5 rendering | one-off server render of `InvitationMeter` in ok, warn and stop | correct; not kept as a test |
+| AC-1, AC-5, AC-7 in the browser | manual checks in the pull request | **not done** |
+| All | typecheck, lint, build | 28 type errors (baseline); lint 196 errors and 22 warnings, unchanged; build passes |
 
 ## Deploy
 

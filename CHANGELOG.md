@@ -18,6 +18,8 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 
 ### Added
 
+- Connections tracks the LinkedIn invitations you mark as sent over the last seven days, warns you at 80 and stops suggesting new connection requests at 100.
+
 - Before you apply somewhere you already know someone well, the job reminds you to ask them first, and the Today list says who could refer you.
 
 - Home opens on a Today list: applications to finish, follow-ups and replies due, and people to reach out to, each with the reason it is there and Done, Snooze, Skip and Open. You set how many items a day.
