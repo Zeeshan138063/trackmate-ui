@@ -49,7 +49,7 @@ keep the last line of each section the next step.
 - [ ] PR into rebranding-jobos.
 ## 2026-11-26 - Contact stages and next actions (REQ-003, branch jobos/contact-stages, into rebranding-jobos)
 ## 2026-11-26 - "Who do I know here?" (REQ-006, branch jobos/who-do-i-know, into rebranding-jobos)
-## 2026-11-26 - Daily queue (REQ-004, branch feat/daily-queue, stacked on feat/who-do-i-know)
+## 2026-11-26 - Daily queue (REQ-004, branch jobos/daily-queue, into rebranding-jobos)
 
 - [x] Spec and plan approved by Zee; DEC-005, DEC-006.
 - [x] `src/utils/daily-queue.ts`, 10 tests.
@@ -59,7 +59,7 @@ keep the last line of each section the next step.
 - [ ] Zee: browser check (list in the pull request) and a user A / user B check on `daily_queue_events`.
 - [ ] After merge: set REQ-004 to "partial: no fresh-job, practice or content items yet" in `docs/prd/requirements.md`.
 - [ ] Next: REQ-007 (referral-first prompt) and REQ-009 (limits tracker), both small rules on top of REQ-003.
-- [ ] PR into main, after the three branches it is stacked on.
+- [ ] PR into rebranding-jobos.
 
 ## 2026-11-26 - "Who do I know here?" (REQ-006, branch feat/who-do-i-know, stacked on REQ-003 and job intake)
 
