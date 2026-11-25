@@ -5,13 +5,17 @@ import { ContactCard } from "@/components/ContactCard";
 import { AddContactDialog } from "@/components/AddContactDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Users, MapPin, BellRing, CalendarClock, Clock, AlertCircle } from "lucide-react";
+import { Plus, Search, Users, MapPin } from "lucide-react";
 import { Contact } from "@/types/contact";
 import { useFollowUps } from "@/hooks/useFollowUps";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TodayActions } from "@/components/contacts/TodayActions";
+import { ContactDetailsDialog } from "@/components/ContactDetailsDialog";
+import { AddEngagementDialog } from "@/components/AddEngagementDialog";
+import { useContactActions, localToday } from "@/hooks/useContactActions";
+import { useEngagements } from "@/hooks/useEngagements";
+import { addDays, ROLE_LABELS, ROLE_TYPES, STAGE_LABELS, WARMTH_STAGES } from "@/utils/contact-next-action";
 
 
 export default function Connections() {
@@ -22,6 +26,26 @@ export default function Connections() {
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
     const [editingContact, setEditingContact] = useState<Contact | null>(null);
+
+    // REQ-003: stages, next actions and the Today list.
+    const [stageFilter, setStageFilter] = useState<string>("all");
+    const [roleFilter, setRoleFilter] = useState<string>("all");
+    const [loggingContactId, setLoggingContactId] = useState<string | null>(null);
+    const [openContactId, setOpenContactId] = useState<string | null>(null);
+    const { byContact: contactActions, refresh: refreshActions } = useContactActions(contacts, followUps);
+    const { addEngagement } = useEngagements();
+    const openContact = contacts.find((c) => c.id === openContactId) ?? null;
+
+    const handleSnooze = (contact: Contact, days: number) =>
+        updateContact(contact.id, { next_action_snoozed_until: addDays(localToday(), days) });
+
+    const handleLogged: typeof addEngagement = async (engagement) => {
+        const saved = await addEngagement(engagement);
+        if (saved) {
+            await Promise.all([refreshActions(), fetchFollowUps()]);
+        }
+        return saved;
+    };
 
     // Check for extension data
     useEffect(() => {
@@ -83,14 +107,6 @@ export default function Connections() {
         fetchFollowUps();
     }, [fetchFollowUps]);
 
-    // Derived state for follow-ups
-    const { overdue, dueToday, isOverdue } = useMemo(() => {
-        const now = new Date();
-        const overdue = followUps.filter(f => new Date(f.due_date) < now);
-        const dueToday = followUps.filter(f => new Date(f.due_date) >= now);
-        return { overdue, dueToday, isOverdue: overdue.length > 0 };
-    }, [followUps]);
-
     // Browser notification effect
     useEffect(() => {
         if (followUps.length > 0 && "Notification" in window) {
@@ -121,9 +137,12 @@ export default function Connections() {
                 (contact.country?.toLowerCase().includes(locQuery) ?? false)
             );
 
-            return matchesSearch && matchesLocation;
+            const matchesStage = stageFilter === "all" || (contact.warmth_stage ?? "identified") === stageFilter;
+            const matchesRole = roleFilter === "all" || (contact.role_type ?? "other") === roleFilter;
+
+            return matchesSearch && matchesLocation && matchesStage && matchesRole;
         });
-    }, [contacts, searchQuery, locationQuery]);
+    }, [contacts, searchQuery, locationQuery, stageFilter, roleFilter]);
 
     const handleCreateContact = async (contactData: Omit<Contact, "id" | "user_id" | "created_at">) => {
         await addContact(contactData);
@@ -159,61 +178,14 @@ export default function Connections() {
                 </Button>
             </div>
 
-            {followUps.length > 0 && (
-                <div className="space-y-4">
-                    {isOverdue && (
-                        <Alert variant="destructive" className="bg-red-50 border-red-200 animate-pulse">
-                            <AlertCircle className="h-4 w-4 text-red-600" />
-                            <AlertTitle className="text-red-800 font-bold flex items-center gap-2">
-                                OVERDUE ITEMS
-                                <Badge variant="destructive" className="ml-2">
-                                    {overdue.length} Missed
-                                </Badge>
-                            </AlertTitle>
-                            <AlertDescription className="text-red-700 mt-2">
-                                <div className="grid gap-2 mt-2">
-                                    {overdue.slice(0, 3).map(fu => (
-                                        <div key={fu.id} className="flex items-center justify-between text-sm bg-white/60 p-2 rounded border border-red-100 font-semibold">
-                                            <span>
-                                                {contacts.find(c => c.id === fu.contact_id)?.name || 'Unknown Contact'}
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                <Clock className="h-3 w-3" />
-                                                {format(new Date(fu.due_date), 'MMM d, h:mm a')}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </AlertDescription>
-                        </Alert>
-                    )}
-
-                    {dueToday.length > 0 && (
-                        <Alert className="bg-amber-50 border-amber-200">
-                            <CalendarClock className="h-4 w-4 text-amber-600" />
-                            <AlertTitle className="text-amber-800 font-medium flex items-center gap-2">
-                                Due Later Today
-                                <Badge variant="secondary" className="bg-amber-100 text-amber-700 hover:bg-amber-200">
-                                    {dueToday.length} Due
-                                </Badge>
-                            </AlertTitle>
-                            <AlertDescription className="text-amber-700 mt-2">
-                                <div className="grid gap-2 mt-2">
-                                    {dueToday.slice(0, 3).map(fu => (
-                                        <div key={fu.id} className="flex items-center justify-between text-sm bg-white/50 p-2 rounded">
-                                            <span className="font-medium">
-                                                {contacts.find(c => c.id === fu.contact_id)?.name || 'Unknown Contact'}
-                                            </span>
-                                            <span className="text-amber-600/80">
-                                                {format(new Date(fu.due_date), 'h:mm a')} - {fu.type}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </AlertDescription>
-                        </Alert>
-                    )}
-                </div>
+            {!loading && (
+                <TodayActions
+                    contacts={contacts}
+                    actions={contactActions}
+                    onLog={(contact) => setLoggingContactId(contact.id)}
+                    onSnooze={handleSnooze}
+                    onOpen={(contact) => setOpenContactId(contact.id)}
+                />
             )}
 
             <div className="flex flex-col md:flex-row gap-4">
@@ -235,6 +207,20 @@ export default function Connections() {
                         className="pl-9"
                     />
                 </div>
+                <Select value={stageFilter} onValueChange={setStageFilter}>
+                    <SelectTrigger className="md:w-44" aria-label="Filter by stage"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All stages</SelectItem>
+                        {WARMTH_STAGES.map((st) => <SelectItem key={st} value={st}>{STAGE_LABELS[st]}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                    <SelectTrigger className="md:w-44" aria-label="Filter by role type"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All role types</SelectItem>
+                        {ROLE_TYPES.map((r) => <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>)}
+                    </SelectContent>
+                </Select>
             </div>
 
             {loading ? (
@@ -247,7 +233,7 @@ export default function Connections() {
             ) : filteredContacts.length === 0 ? (
                 <EmptyState
                     icon={Users}
-                    title={searchQuery ? "No connections found" : "Start your network"}
+                    title={searchQuery || stageFilter !== "all" || roleFilter !== "all" ? "No connections found" : "Start your network"}
                     description={searchQuery
                         ? "No contacts match your search criteria. Try a different keyword."
                         : "Start building your professional network by adding your first contact."}
@@ -262,6 +248,8 @@ export default function Connections() {
                             contact={contact}
                             onEdit={openEditDialog}
                             onDelete={deleteContact}
+                            actionInfo={contactActions.get(contact.id)}
+                            onUpdate={updateContact}
                         />
                     ))}
                 </div>
@@ -275,6 +263,23 @@ export default function Connections() {
                 }}
                 onSave={editingContact ? handleUpdateContact : handleCreateContact}
                 initialData={editingContact}
+            />
+
+            {loggingContactId && (
+                <AddEngagementDialog
+                    open
+                    onOpenChange={(open) => { if (!open) setLoggingContactId(null); }}
+                    onSubmit={handleLogged}
+                    contactId={loggingContactId}
+                />
+            )}
+
+            <ContactDetailsDialog
+                contact={openContact}
+                open={!!openContact}
+                onOpenChange={(open) => { if (!open) setOpenContactId(null); }}
+                onEdit={openEditDialog}
+                onUpdate={updateContact}
             />
         </div>
     );
