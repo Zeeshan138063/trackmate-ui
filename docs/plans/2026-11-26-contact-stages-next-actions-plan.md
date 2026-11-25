@@ -33,4 +33,4 @@ Spec: `docs/specs/2026-11-26-contact-stages-next-actions-design.md`. Approved by
 | AC-7 rendering | one-off server render of `TodayActions`, stage badge and controls | rendered the due row with its overdue badge and left out the do-not-contact row; not kept as a test |
 | AC-1, AC-2, AC-6 to AC-10 in the browser | manual checks in the pull request | **not done**: needs a login and the migration |
 | AC-11 | no new table or policy; existing `contacts` RLS | by design; user A / user B check still to do |
-| All | `npm run verify` parts | typecheck 28 errors and lint 199 errors, both equal to baseline; tests pass; build passes |
+| All | `npm run verify` parts | typecheck 28 errors, equal to baseline; lint not above baseline; tests pass; build passes |
