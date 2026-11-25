@@ -59,10 +59,10 @@
     },
     {
       "matches": [
-        "http://localhost:*/*",
-        "http://127.0.0.1:*/*",
+        "https://app.jobos.dev/*",
         "https://job.zeeshare.com/*",
-        "https://*/*"
+        "http://localhost:*/*",
+        "http://127.0.0.1:*/*"
       ],
       "js": ["careerpilot-bridge.js"],
       "run_at": "document_start"
