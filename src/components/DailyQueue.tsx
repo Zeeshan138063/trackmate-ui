@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlarmClock, Check, CheckCircle2, ExternalLink, SkipForward } from "lucide-react";
+import { AlarmClock, Check, CheckCircle2, ExternalLink, Send, SkipForward } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -65,6 +65,12 @@ export function DailyQueue({ jobs, contacts }: Props) {
         }
     };
 
+    // REQ-009: the user sent the connection invitation by hand and marks it here.
+    const markInvited = async (item: QueueItem) => {
+        const saved = await updateContact(item.target.id, { invitation_sent_at: new Date().toISOString() });
+        if (saved && !(await record(item, "done"))) toast.error(SAVE_FAILED);
+    };
+
     const skip = async (item: QueueItem) => {
         if (!(await record(item, "skipped"))) toast.error(SAVE_FAILED);
     };
@@ -127,8 +133,14 @@ export function DailyQueue({ jobs, contacts }: Props) {
                                                 </p>
                                             </div>
                                             <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                                                {item.key.endsWith(":connect") && (
+                                                    <Button size="sm" onClick={() => markInvited(item)}>
+                                                        <Send className="h-3.5 w-3.5 mr-1.5" />
+                                                        Mark invitation sent
+                                                    </Button>
+                                                )}
                                                 {item.source !== "agent" && (
-                                                    <Button size="sm" onClick={() => done(item)}>
+                                                    <Button size="sm" variant={item.key.endsWith(":connect") ? "outline" : "default"} onClick={() => done(item)}>
                                                         <Check className="h-3.5 w-3.5 mr-1.5" />
                                                         {item.source === "contact" ? "Log it" : "Done"}
                                                     </Button>

@@ -11,6 +11,7 @@ import { useFollowUps } from "@/hooks/useFollowUps";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TodayActions } from "@/components/contacts/TodayActions";
+import { InvitationMeter } from "@/components/contacts/InvitationMeter";
 import { ContactDetailsDialog } from "@/components/ContactDetailsDialog";
 import { AddEngagementDialog } from "@/components/AddEngagementDialog";
 import { useContactActions, localToday } from "@/hooks/useContactActions";
@@ -32,7 +33,7 @@ export default function Connections() {
     const [roleFilter, setRoleFilter] = useState<string>("all");
     const [loggingContactId, setLoggingContactId] = useState<string | null>(null);
     const [openContactId, setOpenContactId] = useState<string | null>(null);
-    const { byContact: contactActions, refresh: refreshActions } = useContactActions(contacts, followUps);
+    const { byContact: contactActions, invitations, refresh: refreshActions } = useContactActions(contacts, followUps);
     const { addEngagement } = useEngagements();
     const openContact = contacts.find((c) => c.id === openContactId) ?? null;
 
@@ -195,8 +196,11 @@ export default function Connections() {
                     onLog={(contact) => setLoggingContactId(contact.id)}
                     onSnooze={handleSnooze}
                     onOpen={(contact) => setOpenContactId(contact.id)}
+                    onMarkInvited={(contact) => updateContact(contact.id, { invitation_sent_at: new Date().toISOString() })}
                 />
             )}
+
+            {!loading && contacts.length > 0 && <InvitationMeter usage={invitations} />}
 
             <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1">

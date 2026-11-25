@@ -18,15 +18,12 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 
 ### Added
 
+- Connections tracks the LinkedIn invitations you mark as sent over the last seven days, warns you at 80 and stops suggesting new connection requests at 100.
 - Before you apply somewhere you already know someone well, the job reminds you to ask them first, and the Today list says who could refer you.
-
 - Home opens on a Today list: applications to finish, follow-ups and replies due, and people to reach out to, each with the reason it is there and Done, Snooze, Skip and Open. You set how many items a day.
-
 - Every job, tracked or discovered, shows the contacts you already have at that company with their warmth stage, and you can link them to the job in one click.
-
 - Connections: every contact has a role type and a warmth stage, shows its one next step with a due date, and the page opens on a Today list of people to act on, with snooze, filters and a do-not-contact switch.
 - Settings > Data: Export All Data downloads your data as a JSON file, and Delete Account permanently removes your data and account.
-- Connections: every contact has a role type and a warmth stage, shows its one next step with a due date, and the page opens on a Today list of people to act on, with snooze, filters and a do-not-contact switch.
 
 ### Changed
 
@@ -36,7 +33,6 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 ### Fixed
 
 - Browser extension 3.1.1: jobs, contacts and profiles captured by the extension now arrive in the app with all their details, and the extension's app bridge no longer runs on unrelated sites.
-
 - Calendar functions now check who is calling and only touch that user's calendar accounts.
 - The notification key is no longer in the browser; reminders go to the signed-in user instead of one shared inbox.
 - Match scores are only shown when they were actually computed; otherwise the job says "Not scored".

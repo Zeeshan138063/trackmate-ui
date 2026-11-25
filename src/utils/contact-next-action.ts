@@ -44,6 +44,7 @@ export const RULES = {
   maxFollowUps: 2,
   restDays: 30,
   checkInDays: 14,
+  invitationPendingDays: 14,
   keepInTouchDays: 30,
   thankYouWindowDays: 2,
 } as const;
@@ -73,6 +74,14 @@ export interface ContactForAction {
   snoozedUntil?: string | null;
   /** Set by the follow-up agent when it moves a contact to its keep-in-touch track. */
   nurtureNextTouchAt?: string | null;
+  /** REQ-009: when the user marked a connection invitation as sent. */
+  invitationSentAt?: string | null;
+}
+
+/** REQ-009: the user's invitation usage this week, as far as the engine needs it. */
+export interface InvitationLimit {
+  state: "ok" | "warn" | "stop";
+  nextSlotOn: string | null;
 }
 
 export interface InteractionForAction {
@@ -146,6 +155,7 @@ export function nextAction(
   interactions: InteractionForAction[],
   reminders: ReminderForAction[],
   today: string,
+  invitations?: InvitationLimit,
 ): NextAction {
   // 1. Do-not-contact wins over everything.
   if (contact.doNotContact) return { kind: "none", reason: "Marked do not contact" };
@@ -219,13 +229,27 @@ export function nextAction(
       };
     }
 
-    case "engaged":
+    case "engaged": {
+      // REQ-009: an invitation already marked as sent waits for an answer.
+      if (contact.invitationSentAt) {
+        const sentDay = dayOf(contact.invitationSentAt);
+        const checkOn = addDays(sentDay, RULES.invitationPendingDays);
+        if (today < checkOn) {
+          return { kind: "none", reason: `Invitation sent on ${sentDay}. Mark Connected when they accept` };
+        }
+        return { kind: "check_in", label: "Check on your invitation", reason: `Sent on ${sentDay}, not marked as accepted`, dueDate: checkOn };
+      }
+      // REQ-009: at the weekly limit, stop suggesting invitations.
+      if (invitations?.state === "stop") {
+        return { kind: "none", reason: `Weekly invitation limit reached${invitations.nextSlotOn ? `. Next slot on ${invitations.nextSlotOn}` : ""}` };
+      }
       return {
         kind: "connect",
         label: "Send a connection request with a short note",
         reason: "You have engaged with their content",
         dueDate: addDays(stageDay, RULES.connectAfterEngagedDays),
       };
+    }
 
     case "connected": {
       const sent = recent.filter((i) => i.direction === "outbound");

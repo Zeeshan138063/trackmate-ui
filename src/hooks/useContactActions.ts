@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { Contact } from "@/types/contact";
 import type { FollowUp } from "@/types/engagement";
+import { invitationUsage } from "@/utils/invitation-limits";
 import {
     type ContactForAction,
     type InteractionForAction,
@@ -29,6 +30,7 @@ export function toActionContact(contact: Contact): ContactForAction {
         doNotContact: contact.relationship_stage === "do_not_contact",
         snoozedUntil: contact.next_action_snoozed_until ?? null,
         nurtureNextTouchAt: contact.relationship_stage === "nurture" ? contact.next_touch_at ?? null : null,
+        invitationSentAt: contact.invitation_sent_at ?? null,
     };
 }
 
@@ -70,6 +72,12 @@ export function useContactActions(contacts: Contact[], reminders: FollowUp[]) {
         refresh();
     }, [refresh]);
 
+    // REQ-009: invitations the user marked as sent in the last seven days.
+    const invitations = useMemo(
+        () => invitationUsage(contacts.map((c) => c.invitation_sent_at), localToday()),
+        [contacts],
+    );
+
     const byContact = useMemo(() => {
         const today = localToday();
 
@@ -93,12 +101,12 @@ export function useContactActions(contacts: Contact[], reminders: FollowUp[]) {
             const forAction = toActionContact(contact);
             const history = interactionsBy.get(contact.id) ?? [];
             result.set(contact.id, {
-                action: nextAction(forAction, history, remindersBy.get(contact.id) ?? [], today),
+                action: nextAction(forAction, history, remindersBy.get(contact.id) ?? [], today, invitations),
                 suggested: suggestedStage(forAction, history),
             });
         }
         return result;
-    }, [contacts, interactions, reminders]);
+    }, [contacts, interactions, reminders, invitations]);
 
-    return { byContact, refresh, error };
+    return { byContact, invitations, refresh, error };
 }

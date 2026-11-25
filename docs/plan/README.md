@@ -68,3 +68,10 @@ restated in the repo where the code depends on it, so the repo is enough on its 
 - Words given (strategy spec 5H): "if a contact at the company is at 'In conversation' or
   above, suggest asking them before applying cold".
 - Affects: REQ-007; `src/utils/company-match.ts::referralCandidates`.
+
+### DEC-008 Invitation limits: warn at 80, stop at 100, in a rolling seven days
+- Decided by: Zee, 2026-11-26, by approving the REQ-009 plan
+- Words given (strategy spec 5E): "counts invitations the user marks as sent in a rolling seven
+  days, warns at 80, and stops queuing at 100". The 100 figure is observed, not published by
+  LinkedIn, so the UI says "about 100".
+- Affects: REQ-009; `src/utils/invitation-limits.ts`.

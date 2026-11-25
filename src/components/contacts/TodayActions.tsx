@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { AlarmClock, CheckCircle2, ChevronDown, ChevronUp, ExternalLink, PenLine } from "lucide-react";
+import { AlarmClock, CheckCircle2, ChevronDown, ChevronUp, ExternalLink, PenLine, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,13 +24,15 @@ interface Props {
     onLog: (contact: Contact) => void;
     onSnooze: (contact: Contact, days: number) => void;
     onOpen: (contact: Contact) => void;
+    /** REQ-009: the user sent a connection invitation by hand and marks it here. */
+    onMarkInvited?: (contact: Contact) => void;
 }
 
 /**
  * The people to act on today (REQ-003, AC-7): every contact whose next action is due, most
  * overdue first. JobOS only prompts; the user does the action and logs it (P1, P2).
  */
-export function TodayActions({ contacts, actions, onLog, onSnooze, onOpen }: Props) {
+export function TodayActions({ contacts, actions, onLog, onSnooze, onOpen, onMarkInvited }: Props) {
     const [showAll, setShowAll] = useState(false);
     const today = localToday();
 
@@ -90,8 +92,14 @@ export function TodayActions({ contacts, actions, onLog, onSnooze, onOpen }: Pro
                                         <span className="text-muted-foreground"> · {action.reason}</span>
                                     </p>
                                 </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                    <Button size="sm" onClick={() => onLog(contact)}>
+                                <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                                    {action.kind === "connect" && onMarkInvited && (
+                                        <Button size="sm" onClick={() => onMarkInvited(contact)}>
+                                            <Send className="h-3.5 w-3.5 mr-1.5" />
+                                            Mark invitation sent
+                                        </Button>
+                                    )}
+                                    <Button size="sm" variant={action.kind === "connect" && onMarkInvited ? "outline" : "default"} onClick={() => onLog(contact)}>
                                         <PenLine className="h-3.5 w-3.5 mr-1.5" />
                                         Log it
                                     </Button>

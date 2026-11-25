@@ -11,6 +11,7 @@ keep the last line of each section the next step.
 - [ ] Zee: `supabase secrets set NOVU_API_KEY=...`, deploy `manage-calendar sync-calendar notify-reminder`.
 - [ ] Zee: remove `VITE_NOVU_API_KEY` from the build environment and rotate the key.
 - [ ] PR into rebranding-jobos.
+
 ## 2026-11-26 - Honest results (audit stage 0, branch jobos/honest-results, into rebranding-jobos)
 
 - [x] No invented match scores: `src/pages/JobSearch.tsx`, `src/pages/ApplicationCopilot.tsx`; mock scan deleted.
@@ -21,6 +22,7 @@ keep the last line of each section the next step.
 - [ ] After merge: remove the stale `GrowthEngine.publishToLinkedIn` lines from `CLAUDE.md` and `src/CLAUDE.md`.
 - [ ] Still open: Settings > Integrations asks for a LinkedIn client secret for a publishing feature that no longer exists.
 - [ ] PR into rebranding-jobos.
+
 ## 2026-11-26 - Data export and account deletion (audit stage 0, branch jobos/data-export-delete, into rebranding-jobos)
 
 - [x] `delete-account` edge function; helper tests in `supabase/functions/delete-account/tables_test.ts`.
@@ -47,9 +49,19 @@ keep the last line of each section the next step.
 - [ ] Not run against the live project or a real feed from the build session (no network to those hosts). Check the first hourly run in the function logs.
 - [ ] Follow-ups: Workable feed; paste-a-URL capture into `discovered_jobs`; the public `/jobs` page still lists rows collected from LinkedIn before this change until they archive (15 days).
 - [ ] PR into rebranding-jobos.
-## 2026-11-26 - Contact stages and next actions (REQ-003, branch jobos/contact-stages, into rebranding-jobos)
-## 2026-11-26 - "Who do I know here?" (REQ-006, branch jobos/who-do-i-know, into rebranding-jobos)
-## 2026-11-26 - Daily queue (REQ-004, branch jobos/daily-queue, into rebranding-jobos)
+
+## 2026-11-26 - Invitation limits tracker (REQ-009, branch jobos/invitation-limits, into rebranding-jobos)
+
+- [x] Plan approved by Zee; DEC-008.
+- [x] `src/utils/invitation-limits.ts` (5 tests); engine rules (3 tests); migration `20261126140000_contact_invitation_sent.sql`.
+- [x] "Mark invitation sent" on the card and both Today lists; `InvitationMeter` on Connections.
+- [ ] Zee: `supabase db push`. Until then marking an invitation shows an error; everything else works.
+- [ ] Zee: browser check (list in the pull request).
+- [ ] Known limit: only invitations marked in JobOS are counted, and one date is kept per contact.
+- [ ] After merge: set REQ-007 and REQ-009 to "exists" in `docs/prd/requirements.md`.
+- [ ] Next P0s: REQ-005 (drafting from notes), REQ-001 (campaign setup), REQ-008 (fit caps and freshness), REQ-002 (consistency checker).
+- [ ] PR into rebranding-jobos.
+
 ## 2026-11-26 - Referral-first prompt (REQ-007, branch jobos/referral-first, into rebranding-jobos)
 
 - [x] Plan approved by Zee; DEC-007.
@@ -58,7 +70,7 @@ keep the last line of each section the next step.
 - [ ] Known limit: the confirmation only runs when saving from the job dialog, not when dragging a card to Applied on the kanban.
 - [ ] PR into rebranding-jobos.
 
-## 2026-11-26 - Daily queue (REQ-004, branch feat/daily-queue, stacked on feat/who-do-i-know)
+## 2026-11-26 - Daily queue (REQ-004, branch jobos/daily-queue, into rebranding-jobos)
 
 - [x] Spec and plan approved by Zee; DEC-005, DEC-006.
 - [x] `src/utils/daily-queue.ts`, 10 tests.
@@ -70,7 +82,7 @@ keep the last line of each section the next step.
 - [ ] Next: REQ-007 (referral-first prompt) and REQ-009 (limits tracker), both small rules on top of REQ-003.
 - [ ] PR into rebranding-jobos.
 
-## 2026-11-26 - "Who do I know here?" (REQ-006, branch feat/who-do-i-know, stacked on REQ-003 and job intake)
+## 2026-11-26 - "Who do I know here?" (REQ-006, branch jobos/who-do-i-know, into rebranding-jobos)
 
 - [x] Spec and plan approved by Zee; DEC-004.
 - [x] `src/utils/company-match.ts`, 7 tests.
@@ -81,7 +93,7 @@ keep the last line of each section the next step.
 - [ ] Next: REQ-004 (daily queue), then REQ-007 (referral-first prompt), which reads these matches.
 - [ ] PR into rebranding-jobos.
 
-## 2026-11-26 - Contact stages and next actions (REQ-003, branch feat/contact-stages-next-actions)
+## 2026-11-26 - Contact stages and next actions (REQ-003, branch jobos/contact-stages, into rebranding-jobos)
 
 - [x] Spec and plan approved by Zee; DEC-002 and DEC-003 in `docs/plan/README.md`.
 - [x] Engine `src/utils/contact-next-action.ts`, 20 tests (`npm test`).
@@ -94,13 +106,12 @@ keep the last line of each section the next step.
 - [ ] Next: REQ-006 (match contacts to jobs by company), then REQ-004 (daily queue).
 - [ ] PR into rebranding-jobos.
 
-## 2026-11-26 - Agent setup: CLAUDE.md files, spec-driven-kit files, code graphs (no ticket, working tree on main, uncommitted)
+## 2026-11-26 - Agent setup: CLAUDE.md files, spec-driven-kit files, code graphs (branch jobos/agent-setup, into rebranding-jobos)
 
 - [x] Root and scoped `CLAUDE.md` (src, supabase, followups, extension) and `AGENTS.md`.
 - [x] Kit files: `docs/`, `CHANGELOG.md`, `work.md`, `.gitattributes`, `.github/`, `spec-kit.json`.
 - [x] Strategy spec in `docs/prd/`, REQ-001 to REQ-009 indexed.
 - [x] Code graphs built and copied in (`docs/runbooks/code-graphs.md`).
-- [ ] Zee: review, move to a branch, commit.
 - [ ] Zee: approve `docs/architecture/principles.md`; answer OQ-01.
 - [ ] Install CodeGraph and graphify on the Mac (runbook).
 - [ ] Next: run the spec audit (section 8) and fill in `docs/prd/requirements.md`.
