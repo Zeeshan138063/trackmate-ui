@@ -45,3 +45,9 @@ restated in the repo where the code depends on it, so the repo is enough on its 
   rests for 30 days". Follow-up after 6 days, at most 2, rest 30; other timings in `RULES`.
 - Affects: REQ-003; `src/utils/contact-next-action.ts::RULES`. Editable cadences per role type
   are a later feature.
+
+### DEC-004 A contact count on a job only counts people definitely at that company
+- Decided by: Zee, 2026-11-26
+- Words given: approved "possible matches are listed separately and labelled" and "exact
+  matches are counted".
+- Affects: REQ-006; `src/utils/company-match.ts::countContactable`.
