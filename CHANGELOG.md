@@ -22,4 +22,12 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 
 ### Changed
 
+- Job discovery now reads the public job feeds of the companies on your watchlist (Greenhouse, Lever, Ashby) and no longer fetches LinkedIn or scrapes search results.
+- A job with no known posting date now says "First seen" instead of "Posted", and shows its real source.
+
 ### Fixed
+
+- Match scores are only shown when they were actually computed; otherwise the job says "Not scored".
+- The Growth page no longer says a post was published when it was not; it copies the draft and opens LinkedIn for you to post.
+- Connection notes and cover letters no longer state things that are not in your profile; a failed AI call now shows an error instead of a canned note.
+- A failed calendar load shows an error instead of a made-up calendar list.

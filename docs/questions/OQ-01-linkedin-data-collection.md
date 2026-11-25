@@ -1,6 +1,6 @@
 # OQ-01: What happens to the code that already collects data from LinkedIn?
 
-- **Owner:** Zee (product owner)   **Asked:** 2026-11-26   **Status:** open
+- **Owner:** Zee (product owner)   **Asked:** 2026-11-26   **Status:** answered 2026-11-26 (DEC-001)
 - **Blocks:** REQ-008 (freshness alert, depends on job intake sources), and any work on job
   intake or the extension's LinkedIn readers
 
@@ -28,4 +28,12 @@ new `linkedin.com` requests in edge functions, and `extension/CLAUDE.md` and
 
 ## The answer
 
-Empty until answered.
+Zee, 2026-11-26, recorded as DEC-001 in `docs/plan/README.md`: remove the server fetch only.
+
+| Code | Outcome |
+|---|---|
+| `fetch-linkedin-jobs` and its hourly cron | Removed; cron unscheduled by migration `20261126110000` |
+| `parse-linkedin` | Removed (nothing called it) |
+| Extension LinkedIn readers | Kept as they are. It reads only pages the user has open, never acts, and gains no new LinkedIn page types or fields without a new decision |
+
+Intake now reads the public job-board feeds of watchlist companies (`fetch-jobs/feeds.ts`).

@@ -1,290 +1,151 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
+// Job intake. Called hourly by pg_cron (fetch-ats-jobs-hourly).
+//
+// For every company on a user's watchlist whose careers page is a Greenhouse, Lever or Ashby
+// board, read that board's public feed and keep the postings whose title matches a keyword
+// some user is actively searching for. New rows go to discovered_jobs with an embedding.
+//
+// Decision DEC-001 (answer to OQ-01): JobOS takes jobs only from feeds the job boards publish
+// for this purpose. It does not fetch LinkedIn and does not scrape search results (P1).
 
-// Configuration
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
-const SUPABASE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { type Board, boardKey, feedUrl, type FeedJob, firstMatchingKeyword, normalize, parseBoard } from "./feeds.ts";
 
-// Use a remote embedding model via HF
-const HF_TOKEN = Deno.env.get('HF_TOKEN');
+const MAX_BOARDS_PER_RUN = 60;
+const MAX_NEW_JOBS_PER_BOARD = 25;
+const FETCH_TIMEOUT_MS = 10_000;
+const USER_AGENT = "JobOS job intake (+https://jobos.dev)";
+const EMBEDDING_URL = "https://router.huggingface.co/hf-inference/models/BAAI/bge-small-en-v1.5";
 
-// ATS Domains to "Dork" for
-// We prioritize these as they have standard DOM structures
-const ATS_DOMAINS = [
-    'site:boards.greenhouse.io',
-    'site:jobs.lever.co',
-    'site:apply.workable.com',
-    'site:jobs.ashbyhq.com'
-];
+const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "", {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
+const HF_TOKEN = Deno.env.get("HF_TOKEN");
 
-interface Job {
-    external_id: string;
-    title: string;
-    company: string;
-    location: string;
-    job_url: string;
-    keyword: string;
-    source: string;
-    posted_at: string;
-    description?: string;
-    embedding?: number[];
+async function generateEmbedding(text: string): Promise<number[] | null> {
+  if (!HF_TOKEN) return null;
+  try {
+    const response = await fetch(EMBEDDING_URL, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${HF_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ inputs: text.substring(0, 5000) }),
+    });
+    if (!response.ok) return null;
+    const result = await response.json();
+    if (Array.isArray(result) && Array.isArray(result[0])) return result[0];
+    if (Array.isArray(result)) return result;
+    return null;
+  } catch {
+    return null;
+  }
 }
 
-/**
- * Generate Embedding (Shared Utility)
- */
-async function generateEmbedding(text: string) {
-    if (!HF_TOKEN) return null;
-    try {
-        const response = await fetch(
-            "https://router.huggingface.co/hf-inference/models/BAAI/bge-small-en-v1.5",
-            {
-                headers: { Authorization: `Bearer ${HF_TOKEN}`, "Content-Type": "application/json" },
-                method: "POST",
-                body: JSON.stringify({ inputs: text.substring(0, 5000) }), // truncate
-            }
-        );
-        if (!response.ok) return null;
-        const result = await response.json();
-        if (Array.isArray(result) && Array.isArray(result[0])) return result[0];
-        if (Array.isArray(result)) return result;
-        return null;
-    } catch {
-        return null;
+/** Reads one board's feed. Returns null (and logs why) on any failure: never a partial guess. */
+async function readFeed(board: Board, company: string): Promise<FeedJob[] | null> {
+  try {
+    const res = await fetch(feedUrl(board), {
+      headers: { Accept: "application/json", "User-Agent": USER_AGENT },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+    if (!res.ok) {
+      console.warn(`feed ${boardKey(board)}: HTTP ${res.status}`);
+      return null;
     }
+    // Lever can answer with HTML even when JSON was asked for.
+    if (!(res.headers.get("Content-Type") ?? "").includes("json")) {
+      console.warn(`feed ${boardKey(board)}: not JSON`);
+      return null;
+    }
+    return normalize(board, company, await res.json());
+  } catch (e) {
+    console.warn(`feed ${boardKey(board)}: ${e instanceof Error ? e.name : "error"}`);
+    return null;
+  }
 }
 
-/**
- * Perform a generic search to find URLs.
- * Uses DuckDuckGo HTML version to avoid complex anti-bot on Google.
- */
-export async function searchWeb(query: string): Promise<string[]> {
-    console.log(`Searching Web for: ${query}`);
-    const MAX_RETRIES = 5;
-    let attempt = 0;
+Deno.serve(async () => {
+  try {
+    // 1. What are people searching for?
+    const { data: queries, error: queryError } = await supabase
+      .from("job_search_queries")
+      .select("id, keyword")
+      .eq("is_active", true);
+    if (queryError) throw queryError;
+    const keywords = [...new Set((queries ?? []).map((q) => String(q.keyword ?? "").trim()).filter(Boolean))];
 
-    while (attempt < MAX_RETRIES) {
-        try {
-            // Using html.duckduckgo.com for easier parsing
-            const formData = new URLSearchParams();
-            formData.append('q', query);
+    // 2. Which boards are on someone's watchlist?
+    const { data: companies, error: companyError } = await supabase
+      .from("dream_companies")
+      .select("name, careers_page_url")
+      .not("careers_page_url", "is", null);
+    if (companyError) throw companyError;
 
-            const response = await fetch("https://html.duckduckgo.com/html/", {
-                method: "POST",
-                body: formData,
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                }
-            });
-
-            if (response.status === 429) {
-                attempt++;
-                const delay = 2000 * Math.pow(2, attempt) + Math.random() * 1000;
-                console.warn(`Search 429 (Attempt ${attempt}/${MAX_RETRIES}). Retrying in ${Math.round(delay)}ms...`);
-                await new Promise(r => setTimeout(r, delay));
-                continue;
-            }
-
-            if (!response.ok) {
-                console.error(`Search failed: ${response.status}`);
-                return [];
-            }
-
-            const html = await response.text();
-            const doc = new DOMParser().parseFromString(html, "text/html");
-
-            if (!doc) return [];
-
-            // Select results
-            const links = Array.from(doc.querySelectorAll('.result__a'))
-                .map(el => el.getAttribute('href'))
-                .filter(href => href && href.startsWith('http'));
-
-            // Filter out non-job links (ads, duckduckgo internal)
-            const cleanLinks = links.filter(l =>
-                !l.includes('duckduckgo.com') &&
-                (l.includes('greenhouse.io') || l.includes('lever.co') || l.includes('workable.com') || l.includes('ashbyhq.com'))
-            );
-
-            return [...new Set(cleanLinks)]; // Dedupe
-        } catch (error) {
-            console.error("Search Error:", error);
-            attempt++;
-            if (attempt >= MAX_RETRIES) return [];
-            await new Promise(r => setTimeout(r, 2000));
-        }
+    const boards = new Map<string, { board: Board; company: string }>();
+    for (const c of companies ?? []) {
+      const board = parseBoard(c.careers_page_url);
+      if (board && !boards.has(boardKey(board))) boards.set(boardKey(board), { board, company: String(c.name ?? board.token) });
     }
-    return [];
-}
 
-/**
- * Universal ATS Parser
- */
-export async function parseATS(url: string): Promise<Partial<Job> | null> {
-    try {
-        console.log(`Parsing ATS: ${url}`);
-        const response = await fetch(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            }
-        });
-        if (!response.ok) return null;
-
-        const html = await response.text();
-        const doc = new DOMParser().parseFromString(html, "text/html");
-        if (!doc) return null;
-
-        let title, company, location, description;
-
-        // Greenhouse
-        if (url.includes('greenhouse.io')) {
-            title = doc.querySelector('.app-title, #app_title')?.textContent?.trim();
-            company = doc.querySelector('.company-name')?.textContent?.trim();
-            location = doc.querySelector('.location')?.textContent?.trim();
-            description = doc.querySelector('#content, .content')?.textContent?.trim();
-            company = company?.replace('at ', '');
-        }
-        // Lever
-        else if (url.includes('lever.co')) {
-            title = doc.querySelector('.posting-headline h2')?.textContent?.trim();
-            company = doc.title?.split('-')[0]?.trim();
-            location = doc.querySelector('.posting-categories .location, .location')?.textContent?.trim();
-            description = doc.querySelector('.posting-description, .content')?.textContent?.trim();
-        }
-        // Workable
-        else if (url.includes('workable.com')) {
-            title = doc.querySelector('[data-ui="job-title"], h1')?.textContent?.trim();
-            company = doc.querySelector('[data-ui="company-name"]')?.textContent?.trim();
-            description = doc.querySelector('[data-ui="job-description"]')?.textContent?.trim();
-            location = doc.querySelector('[data-ui="job-location"]')?.textContent?.trim();
-        }
-        // Ashby
-        else if (url.includes('ashbyhq.com')) {
-            title = doc.querySelector('h1')?.textContent?.trim();
-            // Ashby often uses meta tags well
-            const metaCompany = doc.querySelector('meta[property="og:site_name"]')?.getAttribute('content');
-            company = metaCompany || "Unknown";
-            description = doc.querySelector('.job-description')?.textContent?.trim();
-        }
-
-        if (title) {
-            return {
-                title,
-                company: company || 'Unknown',
-                location: location || 'Remote',
-                description: description || title,
-                job_url: url
-            };
-        }
-        return null;
-    } catch (e) {
-        console.error(`Failed to parse ${url}`, e);
-        return null;
+    const summary = { boards: boards.size, read: 0, failed: 0, matched: 0, inserted: 0, skippedBoards: 0 };
+    if (keywords.length === 0 || boards.size === 0) {
+      return Response.json({ success: true, ...summary, note: "no active keywords or no supported careers pages" });
     }
-}
 
-Deno.serve(async (req) => {
-    try {
-        const { keyword } = await req.json().catch(() => ({}));
+    // Take a different slice each hour so a long watchlist is covered over the day.
+    const all = [...boards.values()];
+    const start = all.length > MAX_BOARDS_PER_RUN ? (new Date().getUTCHours() * MAX_BOARDS_PER_RUN) % all.length : 0;
+    const batch = all.slice(start, start + MAX_BOARDS_PER_RUN);
+    summary.skippedBoards = all.length - batch.length;
 
-        let queries = [];
-        if (keyword) {
-            queries.push({ keyword, filters: {} });
-        } else {
-            // Select ID so we can update the specific query later
-            const { data } = await supabase.from('job_search_queries').select('id, keyword, filters').eq('is_active', true);
-            queries = data || [];
-        }
+    for (const { board, company } of batch) {
+      const jobs = await readFeed(board, company);
+      if (jobs === null) {
+        summary.failed++;
+        continue;
+      }
+      summary.read++;
 
-        const discoveredJobs: Job[] = [];
-        const uniqueUrls = new Set<string>();
+      const wanted = jobs
+        .map((job) => ({ job, keyword: firstMatchingKeyword(job.title, keywords) }))
+        .filter((x): x is { job: FeedJob; keyword: string } => x.keyword !== null);
+      summary.matched += wanted.length;
+      if (wanted.length === 0) continue;
 
-        // Limit concurrent execution for safety in this MVP
-        for (const q of queries) {
-            console.log(`\n--- Processing Query: ${q.keyword} ---`);
+      // Only embed and insert what we have not seen.
+      const { data: existing, error: existingError } = await supabase
+        .from("discovered_jobs")
+        .select("external_id")
+        .in("external_id", wanted.map((w) => w.job.external_id));
+      if (existingError) throw existingError;
+      const seen = new Set((existing ?? []).map((r) => r.external_id));
+      const fresh = wanted.filter((w) => !seen.has(w.job.external_id)).slice(0, MAX_NEW_JOBS_PER_BOARD);
+      if (fresh.length === 0) continue;
 
-            // 1. Search Phase
-            const results: string[][] = [];
-            for (const domain of ATS_DOMAINS) {
-                const query = `${domain} "${q.keyword}"`;
-                const links = await searchWeb(query);
-                results.push(links || []);
+      const rows = [];
+      for (const { job, keyword } of fresh) {
+        const embedding = await generateEmbedding(`${job.title} ${job.company} ${job.location ?? ""} ${(job.description ?? "").substring(0, 200)}`);
+        rows.push({ ...job, keyword, ...(embedding ? { embedding } : {}) });
+      }
 
-                // Friendly delay between domains
-                await new Promise(r => setTimeout(r, 2000 + Math.random() * 2000));
-            }
+      const { error: insertError } = await supabase
+        .from("discovered_jobs")
+        .upsert(rows, { onConflict: "external_id", ignoreDuplicates: true });
+      if (insertError) throw insertError;
+      summary.inserted += rows.length;
 
-            const allLinks = results.flat();
-            console.log(`Found ${allLinks.length} raw links`);
-
-            // 2. Processing Phase
-            for (const link of allLinks) {
-                if (uniqueUrls.has(link)) continue;
-                uniqueUrls.add(link);
-
-                // Check DB for existing
-                // Simple optimization: check if we scraped this URL recently? 
-                // For now, let's just parse and let the DB dedupe on insert if we want, 
-                // OR check existence now to save "parse" time.
-                // We'll rely on the parser to be fast.
-
-                const jobData = await parseATS(link);
-                if (jobData) {
-                    // Generate Embedding
-                    const textToEmbed = `${jobData.title} ${jobData.company} ${jobData.location} ${jobData.description?.substring(0, 200)}`;
-                    const embedding = await generateEmbedding(textToEmbed);
-
-                    discoveredJobs.push({
-                        external_id: link, // URL is the ID
-                        title: jobData.title!,
-                        company: jobData.company!,
-                        location: jobData.location!,
-                        job_url: link,
-                        keyword: q.keyword,
-                        source: 'ats_auto',
-                        posted_at: new Date().toISOString(),
-                        description: jobData.description,
-                        embedding: embedding || undefined
-                    });
-                }
-
-                // Be nice to the servers
-                await new Promise(r => setTimeout(r, 500));
-            }
-
-            // Update Last Run if we have an ID
-            if (q.id) {
-                await supabase
-                    .from('job_search_queries')
-                    .update({ last_run_at: new Date().toISOString() })
-                    .eq('id', q.id);
-            }
-        }
-
-        // 3. Storage Phase
-        if (discoveredJobs.length > 0) {
-            console.log(`Inserting ${discoveredJobs.length} jobs...`);
-            // We use 'upsert' or 'insert' with ignoreDuplicates if possible. 
-            // supabase-js insert doesn't have 'ignoreDuplicates' easily without onConflict
-            // Assumes 'discovered_jobs' has unique constraint on 'external_id'
-            const { error } = await supabase
-                .from('discovered_jobs')
-                .upsert(discoveredJobs, { onConflict: 'external_id', ignoreDuplicates: true });
-
-            if (error) console.error("DB Error:", error);
-        }
-
-        return new Response(
-            JSON.stringify({ success: true, count: discoveredJobs.length, jobs: discoveredJobs.map(j => j.title) }),
-            { headers: { "Content-Type": "application/json" } }
-        );
-
-    } catch (error) {
-        return new Response(
-            JSON.stringify({ error: error.message }),
-            { status: 500, headers: { "Content-Type": "application/json" } }
-        );
+      await new Promise((r) => setTimeout(r, 300)); // be a polite client
     }
-})
+
+    if (queries?.length) {
+      await supabase
+        .from("job_search_queries")
+        .update({ last_run_at: new Date().toISOString() })
+        .in("id", queries.map((q) => q.id));
+    }
+
+    console.log("fetch-jobs", JSON.stringify(summary));
+    return Response.json({ success: true, ...summary });
+  } catch (error) {
+    console.error("fetch-jobs failed:", error instanceof Error ? error.message : String(error));
+    return Response.json({ error: "job intake failed" }, { status: 500 });
+  }
+});

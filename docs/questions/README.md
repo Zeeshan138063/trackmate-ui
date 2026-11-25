@@ -21,4 +21,4 @@ Copy `_TEMPLATE.md` for each new question, and list it in the table below.
 
 | OQ | Question | Owner | Where it bites |
 |---|---|---|---|
-| OQ-01 | What happens to the code that already collects data from LinkedIn? | Zee | `supabase/functions/fetch-linkedin-jobs/`, `supabase/functions/parse-linkedin/`, `extension/content.js` |
+| OQ-01 (answered, DEC-001) | What happens to the code that already collects data from LinkedIn? | Zee | `supabase/functions/fetch-linkedin-jobs/`, `supabase/functions/parse-linkedin/`, `extension/content.js` |

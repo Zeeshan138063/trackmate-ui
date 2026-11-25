@@ -134,10 +134,10 @@ export default function PublicJobDiscovery() {
                                                     </div>
                                                     <div className="flex items-center gap-1">
                                                         <Clock className="h-3 w-3" />
-                                                        {formatTimeAgo(job.posted_at)}
+                                                        {job.posted_at ? formatTimeAgo(job.posted_at) : `First seen ${formatTimeAgo(job.first_seen_at ?? job.created_at)}`}
                                                     </div>
                                                     <Badge variant="secondary" className="text-xs font-normal bg-slate-100">
-                                                        {job.source === 'linkedin_auto' ? 'LinkedIn' : 'Other'}
+                                                        {job.source === 'linkedin_auto' || job.source === 'linkedin' ? 'LinkedIn' : job.source === 'greenhouse' ? 'Greenhouse' : job.source === 'lever' ? 'Lever' : job.source === 'ashby' ? 'Ashby' : 'Company site'}
                                                     </Badge>
                                                 </div>
                                             </div>

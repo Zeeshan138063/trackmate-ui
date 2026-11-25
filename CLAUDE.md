@@ -96,8 +96,8 @@ Binding. The full table with how each is checked is `docs/architecture/principle
 Going against one needs an ADR, not a judgement call in a pull request.
 
 - **P1 No LinkedIn automation.** JobOS never clicks, connects, messages, likes, comments or posts
-  on LinkedIn for the user, and adds no new scraping of LinkedIn pages. Existing code that
-  conflicts is tracked as OQ-01; do not extend it.
+  on LinkedIn for the user, and its servers never fetch LinkedIn. The extension may read a
+  LinkedIn page the user has open (DEC-001); it gains no new LinkedIn page types or fields.
 - **P2 Assist, do not act.** JobOS prepares the action (who, why, a draft, a link). The user
   submits every application and sends every message. The follow-up agent's approval step is the
   model: nothing leaves without a human click.
@@ -128,8 +128,6 @@ Going against one needs an ADR, not a judgement call in a pull request.
 - `src/utils/s3-helper.ts` and `src/services/NovuService.ts` read secrets from `VITE_` variables
   (breaks P4). Do not add callers. The Novu call also only works in dev, through the Vite proxy.
 - `GrowthEngine.publishToLinkedIn` reports success without publishing (breaks P10).
-- The `fetch-linkedin-jobs` cron URL has a typo in the project ref, so that schedule may not be
-  running. Do not "fix" it: see OQ-01.
 - Both `bun.lockb` and `package-lock.json` exist. npm is the package manager; the Dockerfile runs
   `npm ci`.
 - `inspect_db.cjs` and `test_search.ts` in the root are loose scratch files, not part of the app.
