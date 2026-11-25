@@ -83,8 +83,8 @@ strings are a contract: change both sides in one pull request and test by hand.
 
 ## Do not touch without a spec
 
-`NovuService.ts` and `GrowthEngine.publishToLinkedIn` are known problems listed in the root
-`CLAUDE.md`. Do not add callers and do not patch around them in passing.
+`GrowthEngine.publishToLinkedIn` is a known problem listed in the root `CLAUDE.md`. Do not add
+callers and do not patch around it in passing.
 
 ## Tests
 
