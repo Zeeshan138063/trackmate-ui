@@ -8,11 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { User, Bell, Shield, CreditCard, Download, Trash2, Sparkles, Link } from "lucide-react";
+import { User, Bell, Shield, CreditCard, Download, Sparkles, Link } from "lucide-react";
 import { AIHelper } from "@/utils/ai-helper";
 import { PROVIDERS, AIProviderId } from "@/utils/ai-providers/registry";
 import { IntegrationsSettings } from "@/components/Settings/IntegrationsSettings";
 import { FollowUpSettings } from "@/components/Settings/FollowUpSettings";
+import { DataManagement } from "@/components/Settings/DataManagement";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -588,27 +589,7 @@ export default function Settings() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div>
-                <h4 className="font-medium mb-4">Export Data</h4>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Download a copy of all your data including job applications, resumes, and settings.
-                </p>
-                <Button variant="outline">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export All Data
-                </Button>
-              </div>
-
-              <div>
-                <h4 className="font-medium mb-4">Delete Account</h4>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Permanently delete your account and all associated data. This action cannot be undone.
-                </p>
-                <Button variant="destructive">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Account
-                </Button>
-              </div>
+              <DataManagement />
             </CardContent>
           </Card>
         </TabsContent>
