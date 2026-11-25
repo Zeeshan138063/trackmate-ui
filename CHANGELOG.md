@@ -22,6 +22,9 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 
 ### Changed
 
+- Job discovery now reads the public job feeds of the companies on your watchlist (Greenhouse, Lever, Ashby) and no longer fetches LinkedIn or scrapes search results.
+- A job with no known posting date now says "First seen" instead of "Posted", and shows its real source.
+
 ### Fixed
 
 - Browser extension 3.1.1: jobs, contacts and profiles captured by the extension now arrive in the app with all their details, and the extension's app bridge no longer runs on unrelated sites.
