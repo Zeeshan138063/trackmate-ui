@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "JobOS — AI Job Tracker & Autofill",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Capture jobs from any site. Autofill any ATS. Track everything. Powered by JobOS AI.",
   "permissions": [
     "activeTab",
@@ -66,8 +66,7 @@
     {
       "matches": [
         "https://job.zeeshare.com/*",
-        "https://app.jobos.dev/*",
-        "https://*/*"
+        "https://app.jobos.dev/*"
       ],
       "js": [
         "jobos-bridge.js"

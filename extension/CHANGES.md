@@ -1,3 +1,16 @@
+# JobOS Extension — changes
+
+## v3.1.1
+
+- **Hand-off to the app works.** The app asked for captured data with one message name and the
+  bridge listened for another, so the Add Job, Add Contact and Import Profile dialogs only ever
+  got the short values in the URL. The bridge now answers the message the app sends.
+- **The bridge runs only on the JobOS app** (`app.jobos.dev`, `job.zeeshare.com`) instead of
+  every https site, and replies only to its own page. For local development add
+  `http://localhost:8080/*` to the second `content_scripts` block while testing.
+- `background.js` falls back to `https://app.jobos.dev`, not `http://localhost:8080`.
+- No change to what is read from pages.
+
 # JobOS AI Extension — v2.0 Changes
 
 ## What Was Rebuilt & Why

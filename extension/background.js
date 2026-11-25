@@ -87,7 +87,7 @@ function uid(prefix = 'cp') {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 function baseUrl(url) {
-  return (url || 'http://localhost:8080').replace(/\/trackers\/?$/, '');
+  return (url || 'https://app.jobos.dev').replace(/\/trackers\/?$/, '');
 }
 function storeTemp(id, data) {
   return new Promise(resolve => {
