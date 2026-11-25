@@ -4,6 +4,15 @@ What is true now, per branch of work. Newest section at the top. Every push that
 updates this file (the `push-tracker-gate` hook checks). Tick what is done, add what is left, and
 keep the last line of each section the next step.
 
+## 2026-11-26 - Security hardening (audit stage 0, branch fix/security-hardening)
+
+- [x] `manage-calendar`, `sync-calendar`: caller taken from the session (`supabase/functions/_shared/auth.ts`).
+- [x] S3 client and AWS keys removed from the browser; `jobs.attached_resume` migration.
+- [x] `notify-reminder` edge function; per-user Novu subscriber. Helper tests in `notify-reminder/message_test.ts`.
+- [ ] Zee: `supabase db push`, `supabase secrets set NOVU_API_KEY=...`, deploy `manage-calendar sync-calendar notify-reminder`.
+- [ ] Zee: remove `VITE_AWS_*` and `VITE_NOVU_API_KEY` from the build environment and rotate both keys.
+- [ ] PR into main.
+
 ## 2026-11-26 - Agent setup: CLAUDE.md files, spec-driven-kit files, code graphs (no ticket, working tree on main, uncommitted)
 
 - [x] Root and scoped `CLAUDE.md` (src, supabase, followups, extension) and `AGENTS.md`.

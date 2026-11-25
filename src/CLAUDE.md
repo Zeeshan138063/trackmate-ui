@@ -22,7 +22,7 @@ import. Import alias: `@/` is `src/`. Dev server: port 8080. The project began i
 | `services/` | Objects that wrap a table or an edge function: `JobService`, `QueryService`, `MeetingService`, `dreamCompanies`, `GrowthEngine`, `AIGenerator`, `NovuService` |
 | `types/` | App-side types in camelCase (`Job`, contact, engagement, followup, meeting, resume, interview) |
 | `integrations/supabase/` | `client.ts` (the one Supabase client) and `types.ts` (generated database types) |
-| `utils/` | `ai-helper.ts`, `resume-ai-helper.ts`, `ai-providers/registry.ts`, file and PDF parsing, `search-intelligence.ts`, `s3-helper.ts` |
+| `utils/` | `ai-helper.ts`, `resume-ai-helper.ts`, `ai-providers/registry.ts`, file and PDF parsing, `search-intelligence.ts` |
 | `data/mock-jobs.ts` | Mock data. Never ship it as real results |
 
 Sidebar entries are in `components/AppSidebar.tsx`. `/interview`, `/interview-feedback` and
@@ -81,8 +81,8 @@ and wait for a reply with `source: 'careerpilot-extension'`. These strings are a
 
 ## Do not touch without a spec
 
-`s3-helper.ts`, `NovuService.ts` and `GrowthEngine.publishToLinkedIn` are known problems listed in
-the root `CLAUDE.md`. Do not add callers and do not patch around them in passing.
+`GrowthEngine.publishToLinkedIn` is a known problem listed in the root `CLAUDE.md`. Do not add
+callers and do not patch around it in passing.
 
 ## Tests
 
