@@ -56,7 +56,7 @@ export default function JobDetails() {
                 company: job.company,
                 location: job.location,
                 jobUrl: job.job_url,
-                datePosted: job.posted_at,
+                datePosted: job.posted_at ?? undefined,
                 description: job.description,
                 status: 'Bookmarked',
                 excitement: 3,
@@ -95,9 +95,8 @@ export default function JobDetails() {
         "@type": "JobPosting",
         "title": job.title,
         "description": job.description || `Apply for ${job.title} at ${job.company} in ${job.location}. Full job details and application tracking available on JobOS.`,
-        "datePosted": job.posted_at,
-        "validThrough": new Date(new Date(job.posted_at).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days fallback
-        "employmentType": "FULL_TIME",
+        // Only what the source states: no guessed expiry date or employment type in structured data.
+        ...(job.posted_at ? { "datePosted": job.posted_at } : {}),
         "hiringOrganization": {
             "@type": "Organization",
             "name": job.company,
@@ -201,7 +200,9 @@ export default function JobDetails() {
                         </div>
                         <div className="flex items-center gap-1 bg-slate-100 px-3 py-1 rounded-full">
                             <Clock className="h-3 w-3" />
-                            Posted {new Date(job.posted_at).toLocaleDateString()}
+                            {job.posted_at
+                                ? `Posted ${new Date(job.posted_at).toLocaleDateString()}`
+                                : `First seen ${new Date(job.first_seen_at ?? job.created_at).toLocaleDateString()}`}
                         </div>
                         <Badge variant="secondary" className="font-normal text-slate-600">
                             {job.source}

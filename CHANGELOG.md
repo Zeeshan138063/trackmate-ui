@@ -19,8 +19,12 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 ### Added
 
 - Settings > Data: Export All Data downloads your data as a JSON file, and Delete Account permanently removes your data and account.
+- Connections: every contact has a role type and a warmth stage, shows its one next step with a due date, and the page opens on a Today list of people to act on, with snooze, filters and a do-not-contact switch.
 
 ### Changed
+
+- Job discovery now reads the public job feeds of the companies on your watchlist (Greenhouse, Lever, Ashby) and no longer fetches LinkedIn or scrapes search results.
+- A job with no known posting date now says "First seen" instead of "Posted", and shows its real source.
 
 ### Fixed
 

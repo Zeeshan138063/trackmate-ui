@@ -51,7 +51,6 @@ Rules:
 
 | Job | When | Does |
 |---|---|---|
-| `fetch-linkedin-jobs-hourly` | hourly | POSTs to `fetch-linkedin-jobs`. The URL has a typo in the project ref, so it may not be reaching the function. Leave it: OQ-01 |
 | `fetch-ats-jobs-hourly` | hourly | POSTs to `fetch-jobs` |
 | `archive-old-jobs-daily` | 03:00 | `archive_old_jobs()` moves old `discovered_jobs` rows to `archived_jobs` |
 | `followups-tick` | every 15 min | `followups_call_tick()` calls the `followups-tick` function with a Vault secret |
@@ -62,11 +61,9 @@ Deno. Each folder is one function with an `index.ts`.
 
 | Function | Caller | Does | Secrets |
 |---|---|---|---|
-| `fetch-jobs` | cron | For each active `job_search_queries` row, searches DuckDuckGo limited to Greenhouse, Lever, Workable and Ashby pages, embeds, upserts `discovered_jobs` | `HF_TOKEN` |
-| `fetch-linkedin-jobs` | cron | Same, but fetches LinkedIn job search pages. Conflicts with P1; frozen under OQ-01 | `HF_TOKEN` |
+| `fetch-jobs` | cron | Reads the public Greenhouse, Lever and Ashby feeds of watchlist companies (`dream_companies.careers_page_url`), keeps titles matching an active `job_search_queries` keyword, embeds, upserts `discovered_jobs`. Logic and tests in `fetch-jobs/feeds.ts` | `HF_TOKEN` |
 | `search-jobs` | app | Embeds the phrase, calls the `match_jobs` RPC | `HF_TOKEN` |
 | `perplexity-search` | app | Asks Perplexity for jobs, upserts `discovered_jobs` | `PERPLEXITY_API_KEY` |
-| `parse-linkedin` | app | Reads a LinkedIn URL through `r.jina.ai` for resume import. Also under OQ-01 | none |
 | `manage-calendar`, `sync-calendar` | app | List calendars; sync Google and Microsoft events into `meetings` | `GOOGLE_CLIENT_ID/SECRET`, `AZURE_*` |
 | `notify-reminder` | app | Sends the caller a Novu in-app reminder about one of their own jobs | `NOVU_API_KEY` |
 | `followups-*` (5) | cron, app, Google/Microsoft, Telegram | The follow-up agent | see `docs/FOLLOWUPS.md` |
@@ -93,6 +90,10 @@ Rules for functions:
   tell Zee the exact `supabase secrets set` command to run. Never invent a value.
 - Anything that sends, posts or submits outside JobOS needs an explicit approval step by the user
   (P2). Anything that fetches another site states in its spec why that site's terms allow it.
+  Job intake uses only feeds the job boards publish for that purpose (DEC-001): no LinkedIn,
+  no scraping of search results or HTML pages.
+- `discovered_jobs.posted_at` is the employer's date or null. Never write "now" into it;
+  `first_seen_at` records when JobOS saw the job.
 
 ## Account data (P9)
 

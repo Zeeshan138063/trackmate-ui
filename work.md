@@ -37,6 +37,29 @@ keep the last line of each section the next step.
 - [ ] Publish 3.1.1.
 - [ ] PR into rebranding-jobos.
 
+## 2026-11-26 - Job intake on allowed sources (DEC-001, branch jobos/job-intake, into rebranding-jobos)
+
+- [x] Removed `fetch-linkedin-jobs` and `parse-linkedin`; OQ-01 closed as DEC-001.
+- [x] `fetch-jobs` reads Greenhouse, Lever and Ashby feeds for watchlist companies; `feeds.ts` with tests in `feeds_test.ts`.
+- [x] Migration `20261126110000`: unschedule LinkedIn cron, `first_seen_at`, `match_jobs`, `archive_old_jobs`.
+- [x] UI: "First seen" label and real source names.
+- [ ] Zee, in this order: `supabase db push`; `supabase functions deploy fetch-jobs`; `supabase functions delete fetch-linkedin-jobs parse-linkedin`.
+- [ ] Not run against the live project or a real feed from the build session (no network to those hosts). Check the first hourly run in the function logs.
+- [ ] Follow-ups: Workable feed; paste-a-URL capture into `discovered_jobs`; the public `/jobs` page still lists rows collected from LinkedIn before this change until they archive (15 days).
+- [ ] PR into rebranding-jobos.
+## 2026-11-26 - Contact stages and next actions (REQ-003, branch jobos/contact-stages, into rebranding-jobos)
+
+- [x] Spec and plan approved by Zee; DEC-002 and DEC-003 in `docs/plan/README.md`.
+- [x] Engine `src/utils/contact-next-action.ts`, 20 tests (`npm test`).
+- [x] Migration `20261126120000_contact_warmth_stage.sql`.
+- [x] UI: stage badge, relationship controls, card next action and suggestion, Today list, filters.
+- [ ] Zee: `supabase db push`. Until then everyone reads as Identified and changing a stage shows an error.
+- [ ] Zee: browser check of AC-1, AC-2, AC-6 to AC-10, and a user A / user B check (AC-11).
+- [ ] After merge: set REQ-003 to "exists" in `docs/prd/requirements.md`; regenerate Supabase types.
+- [ ] Known limit: turning do-not-contact off sets the follow-up agent's track back to active, even if it was nurture before.
+- [ ] Next: REQ-006 (match contacts to jobs by company), then REQ-004 (daily queue).
+- [ ] PR into rebranding-jobos.
+
 ## 2026-11-26 - Agent setup: CLAUDE.md files, spec-driven-kit files, code graphs (no ticket, working tree on main, uncommitted)
 
 - [x] Root and scoped `CLAUDE.md` (src, supabase, followups, extension) and `AGENTS.md`.
