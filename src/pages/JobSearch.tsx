@@ -17,6 +17,19 @@ import { useJobs } from "@/hooks/useJobs";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
+/** Human label for where a discovered job came from. Unknown sources are shown as-is. */
+const SOURCE_LABELS: Record<string, string> = {
+  greenhouse: "Greenhouse",
+  lever: "Lever",
+  ashby: "Ashby",
+  ats_auto: "Company site",
+  perplexity_push: "Web search",
+  perplexity_auto: "Web search",
+  linkedin: "LinkedIn",
+  linkedin_auto: "LinkedIn",
+};
+const sourceLabel = (source?: string | null) => (source ? SOURCE_LABELS[source] ?? source : "Unknown source");
+
 export default function JobSearch() {
   const { masterProfile, loading: profileLoading } = useResume();
   const { addJob } = useJobs();
@@ -159,8 +172,9 @@ export default function JobSearch() {
         type: "Full-time",
         skills: [keyword, "AI Match"],
         matchScore: typeof j.similarity === 'number' ? Math.round(j.similarity * 100) : null, // no similarity, no score (P10)
-        foundDate: j.posted_at,
-        source: j.source || 'LinkedIn',
+        foundDate: j.posted_at ?? j.first_seen_at ?? j.created_at,
+        dateKind: j.posted_at ? 'posted' : 'first_seen',
+        source: sourceLabel(j.source),
         description: j.description || "No description available",
         isRemote: j.location ? j.location.toLowerCase().includes('remote') : false,
         job_url: j.job_url
@@ -212,8 +226,9 @@ export default function JobSearch() {
         type: "Full-time",
         skills: [keyword, "AI Match"],
         matchScore: typeof j.similarity === 'number' ? Math.round(j.similarity * 100) : null,
-        foundDate: j.posted_at,
-        source: j.source || 'LinkedIn',
+        foundDate: j.posted_at ?? j.first_seen_at ?? j.created_at,
+        dateKind: j.posted_at ? 'posted' : 'first_seen',
+        source: sourceLabel(j.source),
         description: j.description || "No description available",
         isRemote: j.location ? j.location.toLowerCase().includes('remote') : false,
         job_url: j.job_url
@@ -260,8 +275,8 @@ export default function JobSearch() {
         status: "Bookmarked",
         excitement: job.matchScore === null ? 3 : job.matchScore >= 90 ? 5 : job.matchScore >= 80 ? 4 : 3,
         dateSaved: new Date().toISOString(),
-        datePosted: job.foundDate,
-        source: "linkedin_auto" // Using the allowed literal type
+        datePosted: job.dateKind === 'posted' ? job.foundDate : undefined,
+        source: "auto"
       });
 
       setSavedJobIds(prev => [...prev, job.id]);
@@ -504,7 +519,7 @@ export default function JobSearch() {
             </DialogDescription>
             {selectedJob?.foundDate && (
               <p className="text-sm text-slate-500 mt-1">
-                Posted {formatDistanceToNow(new Date(selectedJob.foundDate), { addSuffix: true })}
+                {selectedJob.dateKind === 'posted' ? 'Posted' : 'First seen'} {formatDistanceToNow(new Date(selectedJob.foundDate), { addSuffix: true })}
               </p>
             )}
           </DialogHeader>
