@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "CareerPilot AI",
-  "version": "2.0.0",
+  "name": "JobOS",
+  "version": "2.0.1",
   "description": "Capture jobs, contacts & companies. Autofill ATS forms with your tailored resume.",
   "permissions": [
     "activeTab",
@@ -59,10 +59,10 @@
     },
     {
       "matches": [
-        "http://localhost:*/*",
-        "http://127.0.0.1:*/*",
+        "https://app.jobos.dev/*",
         "https://job.zeeshare.com/*",
-        "https://*/*"
+        "http://localhost:*/*",
+        "http://127.0.0.1:*/*"
       ],
       "js": ["careerpilot-bridge.js"],
       "run_at": "document_start"

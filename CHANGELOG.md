@@ -24,6 +24,7 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 
 - Job discovery now reads the public job feeds of the companies on your watchlist (Greenhouse, Lever, Ashby) and no longer fetches LinkedIn or scrapes search results.
 - A job with no known posting date now says "First seen" instead of "Posted", and shows its real source.
+- Browser extension 2.0.1: renamed to JobOS, opens app.jobos.dev by default, and its app bridge no longer runs on unrelated sites.
 
 ### Fixed
 
