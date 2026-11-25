@@ -50,13 +50,13 @@ keep the last line of each section the next step.
 ## 2026-11-26 - Contact stages and next actions (REQ-003, branch jobos/contact-stages, into rebranding-jobos)
 ## 2026-11-26 - "Who do I know here?" (REQ-006, branch jobos/who-do-i-know, into rebranding-jobos)
 ## 2026-11-26 - Daily queue (REQ-004, branch jobos/daily-queue, into rebranding-jobos)
-## 2026-11-26 - Referral-first prompt (REQ-007, branch feat/referral-first, stacked on feat/daily-queue)
+## 2026-11-26 - Referral-first prompt (REQ-007, branch jobos/referral-first, into rebranding-jobos)
 
 - [x] Plan approved by Zee; DEC-007.
 - [x] `referralCandidates()` with tests; queue reason; `ReferralPrompt` banner and apply confirmation in the job dialog.
 - [ ] Zee: browser check (list in the pull request). No migration, no deploy.
 - [ ] Known limit: the confirmation only runs when saving from the job dialog, not when dragging a card to Applied on the kanban.
-- [ ] PR into main, after feat/daily-queue.
+- [ ] PR into rebranding-jobos.
 
 ## 2026-11-26 - Daily queue (REQ-004, branch feat/daily-queue, stacked on feat/who-do-i-know)
 
