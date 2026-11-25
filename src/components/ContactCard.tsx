@@ -5,6 +5,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ContactStageBadge } from "@/components/contacts/ContactStageBadge";
+import type { ContactActionInfo } from "@/hooks/useContactActions";
+import { ROLE_LABELS, STAGE_LABELS } from "@/utils/contact-next-action";
 import {
     Mail,
     Phone,
@@ -27,10 +30,18 @@ interface ContactCardProps {
     onEdit?: (contact: Contact) => void;
     onDelete?: (id: string) => void;
     interactionType?: string; // For job specific context
+    /** REQ-003: next action and suggested stage from useContactActions. Omitted outside Connections. */
+    actionInfo?: ContactActionInfo;
+    /** Saves stage, role type or do-not-contact through the page's contact list. */
+    onUpdate?: (id: string, updates: Partial<Contact>) => Promise<unknown>;
 }
 
-export function ContactCard({ contact, onEdit, onDelete, interactionType }: ContactCardProps) {
+export function ContactCard({ contact, onEdit, onDelete, interactionType, actionInfo, onUpdate }: ContactCardProps) {
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+    const stage = contact.warmth_stage ?? "identified";
+    const doNotContact = contact.relationship_stage === "do_not_contact";
+    const action = actionInfo?.action;
+    const suggested = actionInfo?.suggested ?? null;
 
     const getInitials = (name: string) => {
         return name
@@ -44,7 +55,7 @@ export function ContactCard({ contact, onEdit, onDelete, interactionType }: Cont
     return (
         <>
             <Card
-                className="group relative h-[300px] flex flex-col hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border-muted/60"
+                className="group relative h-[330px] flex flex-col hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border-muted/60"
                 onClick={() => setIsDetailsOpen(true)}
             >
                 {/* Header Actions - Positioned absolutely to not mess with flex layout */}
@@ -109,6 +120,17 @@ export function ContactCard({ contact, onEdit, onDelete, interactionType }: Cont
 
                     {/* Meta badges */}
                     <div className="flex flex-wrap gap-1.5">
+                        <ContactStageBadge stage={stage} />
+                        {contact.role_type && contact.role_type !== "other" && (
+                            <Badge variant="outline" className="text-[10px] py-0 h-5 font-normal bg-background/50">
+                                {ROLE_LABELS[contact.role_type]}
+                            </Badge>
+                        )}
+                        {doNotContact && (
+                            <Badge variant="destructive" className="text-[10px] py-0 h-5 font-normal">
+                                Do not contact
+                            </Badge>
+                        )}
                         {contact.relationship && (
                             <Badge variant="outline" className="text-[10px] py-0 h-5 font-normal bg-background/50">
                                 {contact.relationship}
@@ -135,6 +157,32 @@ export function ContactCard({ contact, onEdit, onDelete, interactionType }: Cont
                         {/* Fade out effect at bottom of notes if needed, or just let line-clamp do it */}
                     </div>
 
+                    {/* Next action (REQ-003). A prompt only: the user does it and logs it. */}
+                    {action && (
+                        <div className="text-xs shrink-0 space-y-1">
+                            {action.kind === "none" ? (
+                                <p className="text-muted-foreground truncate" title={action.reason}>{action.reason}</p>
+                            ) : (
+                                <p className="truncate" title={`${action.label} · ${action.reason}`}>
+                                    <span className="font-medium">Next: {action.label}</span>
+                                    <span className="text-muted-foreground"> · due {action.dueDate}</span>
+                                </p>
+                            )}
+                            {suggested && onUpdate && (
+                                <button
+                                    type="button"
+                                    className="text-primary hover:underline"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onUpdate(contact.id, { warmth_stage: suggested });
+                                    }}
+                                >
+                                    Suggested: {STAGE_LABELS[suggested]}. Move?
+                                </button>
+                            )}
+                        </div>
+                    )}
+
                     {/* Footer Contact Info - Fixed height at bottom */}
                     <div className="pt-3 border-t flex items-center justify-between text-muted-foreground mt-auto shrink-0">
                         <div className="flex gap-3">
@@ -160,6 +208,7 @@ export function ContactCard({ contact, onEdit, onDelete, interactionType }: Cont
                 open={isDetailsOpen}
                 onOpenChange={setIsDetailsOpen}
                 onEdit={onEdit}
+                onUpdate={onUpdate}
             />
         </>
     );
