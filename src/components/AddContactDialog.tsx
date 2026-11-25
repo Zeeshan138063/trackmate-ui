@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Contact } from "@/types/contact";
+import { findDuplicate } from "@/utils/contact-list";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ROLE_LABELS, ROLE_TYPES, type RoleType, STAGE_LABELS, WARMTH_STAGES, type WarmthStage } from "@/utils/contact-next-action";
 
@@ -18,7 +19,10 @@ interface AddContactDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSave: (contact: Omit<Contact, "id" | "user_id" | "created_at">) => void;
-    initialData?: Contact | null;
+    /** A saved contact to edit (has an id), or starting values for a new one (no id). */
+    initialData?: Partial<Contact> | null;
+    /** The user's contacts, to warn about a probable duplicate before saving. */
+    existing?: Contact[];
 }
 
 export function AddContactDialog({
@@ -26,7 +30,9 @@ export function AddContactDialog({
     onOpenChange,
     onSave,
     initialData,
+    existing = [],
 }: AddContactDialogProps) {
+    const isEdit = !!initialData?.id;
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -83,19 +89,21 @@ export function AddContactDialog({
         // the defaults for a new contact). That keeps adding and editing contacts working on a
         // database where the migration has not been applied yet (AC-10).
         const { role_type, warmth_stage, ...base } = formData;
-        const payload: Omit<Contact, "id" | "user_id" | "created_at"> = { ...base };
+        const payload: Omit<Contact, "id" | "user_id" | "created_at"> = { ...base, name: base.name.trim() };
         if (role_type !== (initialData?.role_type ?? "other")) payload.role_type = role_type;
         if (warmth_stage !== (initialData?.warmth_stage ?? "identified")) payload.warmth_stage = warmth_stage;
         onSave(payload);
         onOpenChange(false);
     };
 
+    const duplicate = open ? findDuplicate(formData, existing, initialData?.id) : null;
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>
-                        {initialData ? "Edit Contact" : "Add New Contact"}
+                        {isEdit ? "Edit Contact" : "Add New Contact"}
                     </DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4 py-4">
@@ -247,6 +255,13 @@ export function AddContactDialog({
                         />
                     </div>
 
+                    {duplicate && (
+                        <p role="status" className="text-sm rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200 p-3">
+                            You may already have this person: <strong>{duplicate.contact.name}</strong>
+                            {duplicate.contact.company ? ` at ${duplicate.contact.company}` : ""} has the same {duplicate.why}.
+                        </p>
+                    )}
+
                     <DialogFooter>
                         <Button
                             type="button"
@@ -256,7 +271,7 @@ export function AddContactDialog({
                             Cancel
                         </Button>
                         <Button type="submit">
-                            {initialData ? "Update Contact" : "Add Contact"}
+                            {isEdit ? "Update Contact" : duplicate ? "Add anyway" : "Add Contact"}
                         </Button>
                     </DialogFooter>
                 </form>
