@@ -16,6 +16,9 @@ import { JobQueryManager } from "@/components/JobQueryManager";
 import { useJobs } from "@/hooks/useJobs";
 import { useContacts } from "@/hooks/useContacts";
 import { KnownContacts, KnownContactsMarker } from "@/components/contacts/KnownContacts";
+import { FitCapBadges, FitCapDetails } from "@/components/jobs/FitCaps";
+import { useCampaign } from "@/hooks/useCampaign";
+import { assessFit } from "@/utils/job-fit";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -36,6 +39,10 @@ export default function JobSearch() {
   const { masterProfile, loading: profileLoading } = useResume();
   const { addJob } = useJobs();
   const { contacts } = useContacts(); // REQ-006: who do I know at each company
+  // REQ-008: what in each posting rules the user out, given their campaign. No campaign, no caps.
+  const { campaign, saved: campaignSaved } = useCampaign();
+  const [hideCapped, setHideCapped] = useState(false);
+  const capsOf = (job: { title: string; description?: string }) => (campaignSaved ? assessFit(job, campaign).caps : []);
   const [activeConfig, setActiveConfig] = useState<SearchConfig>({
     query: "",
     location: "Remote",
@@ -419,6 +426,14 @@ export default function JobSearch() {
                   {scannedJobs.length} New Matches
                 </Badge>
               </h2>
+              {campaignSaved ? (
+                <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <input type="checkbox" checked={hideCapped} onChange={(e) => setHideCapped(e.target.checked)} />
+                  Hide jobs that rule me out ({scannedJobs.filter((j) => capsOf(j).length > 0).length})
+                </label>
+              ) : (
+                <a href="/settings?tab=campaign" className="text-sm text-primary hover:underline">Set up your campaign to flag jobs you cannot take</a>
+              )}
             </div>
 
           </div>
@@ -436,7 +451,7 @@ export default function JobSearch() {
               ))
             ) : (
               <>
-                {scannedJobs.map((job) => (
+                {scannedJobs.filter((job) => !hideCapped || capsOf(job).length === 0).map((job) => (
                   <Card key={job.id} className="hover:shadow-md transition-all border-slate-200 dark:border-slate-800 group relative overflow-hidden bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
                     <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <CardContent className="p-5">
@@ -448,6 +463,7 @@ export default function JobSearch() {
                               {job.matchScore === null ? "Not scored" : `${job.matchScore}% Match`}
                             </Badge>
                             <KnownContactsMarker company={job.company} contacts={contacts} />
+                            <FitCapBadges caps={capsOf(job)} />
                             {job.source && (
                               <Badge variant="outline" className="text-[10px] text-slate-500 border-slate-200">
                                 {job.source}
@@ -530,6 +546,7 @@ export default function JobSearch() {
 
           <div className="space-y-4 py-4">
             {selectedJob && <KnownContacts company={selectedJob.company} contacts={contacts} />}
+            {selectedJob && <FitCapDetails caps={capsOf(selectedJob)} />}
 
             <div className="flex gap-2 flex-wrap">
               {selectedJob?.skills.map(s => (
