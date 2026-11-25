@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useFollowUps } from "@/hooks/useFollowUps";
 import { localToday, useContactActions } from "@/hooks/useContactActions";
 import type { Contact } from "@/types/contact";
+import { referralCandidates } from "@/utils/company-match";
 import type { Job } from "@/types/job";
 import {
     buildDailyQueue,
@@ -82,7 +83,14 @@ export function useDailyQueue(jobs: Job[], contacts: Contact[]) {
             const info = byContact.get(c.id);
             return info ? [{ contactId: c.id, name: c.name, company: c.company, action: info.action }] : [];
         });
-        return buildDailyQueue({ jobs, agentFollowUps, contactActions, events }, localToday(), limit);
+        // REQ-007: say who could refer the user, for applications not yet sent.
+        const queueJobs = jobs.map((job) => ({
+            ...job,
+            referralName: job.status === "Bookmarked" || job.status === "Applying"
+                ? referralCandidates(job.company, contacts)[0]?.name ?? null
+                : null,
+        }));
+        return buildDailyQueue({ jobs: queueJobs, agentFollowUps, contactActions, events }, localToday(), limit);
     }, [jobs, contacts, agentRows, byContact, events, limit]);
 
     const setLimit = useCallback((value: number) => {

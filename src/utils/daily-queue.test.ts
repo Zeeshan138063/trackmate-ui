@@ -65,6 +65,26 @@ describe("AC-2 sources and groups", () => {
   });
 });
 
+describe("REQ-007 referral note", () => {
+  it("adds who could refer you to application items only", () => {
+    const items = collectItems({
+      ...empty,
+      jobs: [
+        job("1", { status: "Applying", referralName: "Amna" }),
+        job("2", { deadline: "2026-11-27", referralName: "Bilal" }),
+        job("3", { status: "Applied", followUp: TODAY, referralName: "Chen" }),
+        job("4", { status: "Applying" }),
+      ],
+    }, TODAY);
+    expect(items.map((i) => i.reason)).toEqual([
+      "You started this application · Amna at Co1 could refer you",
+      "Deadline in 1 day · Bilal at Co2 could refer you",
+      "You set a follow-up for 2026-11-26",
+      "You started this application",
+    ]);
+  });
+});
+
 describe("AC-3 order and limit", () => {
   const busy: QueueInput = {
     ...empty,
