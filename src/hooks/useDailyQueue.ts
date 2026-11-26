@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useCampaign } from "@/hooks/useCampaign";
 import { useFollowUps } from "@/hooks/useFollowUps";
 import { localToday, useContactActions } from "@/hooks/useContactActions";
 import type { Contact } from "@/types/contact";
 import { referralCandidates } from "@/utils/company-match";
+import { addDays } from "@/utils/contact-next-action";
+import { ageHours, FRESH_HOURS, freshHighFit, type FoundJob } from "@/utils/job-fit";
 import type { Job } from "@/types/job";
 import {
     buildDailyQueue,
@@ -39,7 +42,40 @@ export function useDailyQueue(jobs: Job[], contacts: Contact[]) {
     const { byContact, refresh: refreshInteractions } = useContactActions(contacts, reminders);
     const [agentRows, setAgentRows] = useState<{ id: string; job_id: string; contact_id: string | null; state: string; due_date: string | null }[]>([]);
     const [events, setEvents] = useState<QueueEvent[]>([]);
-    const [limit, setLimitState] = useState<number>(readLimit);
+    // The limit is the campaign's daily capacity once a campaign is saved (REQ-001). Until then
+    // it is the number kept in this browser (DEC-006).
+    const { campaign, saved: campaignSaved, save: saveCampaign } = useCampaign();
+    const [localLimit, setLimitState] = useState<number>(readLimit);
+    const limit = campaignSaved ? campaign.dailyCapacity : localLimit;
+
+    const [found, setFound] = useState<FoundJob[]>([]);
+
+    // REQ-008: postings from the last 48 hours, only once a campaign says what to look for.
+    const loadFound = useCallback(async () => {
+        if (!user || !campaignSaved || campaign.roleTitles.length === 0) {
+            setFound([]);
+            return;
+        }
+        const since = new Date(Date.now() - FRESH_HOURS * 3_600_000).toISOString();
+        const { data, error } = await supabase
+            .from("discovered_jobs" as never)
+            .select("id, title, company, description, job_url, posted_at, first_seen_at")
+            .or(`posted_at.gte.${since},and(posted_at.is.null,first_seen_at.gte.${since})`)
+            .order("first_seen_at", { ascending: false })
+            .limit(200);
+        if (error) {
+            // Before migration 20261126110000 there is no first_seen_at: no fresh items, the rest of the queue still works.
+            console.error("Daily queue: new jobs not loaded:", error.message);
+            setFound([]);
+            return;
+        }
+        setFound(((data ?? []) as unknown as { id: string; title: string; company: string; description: string | null; job_url: string | null; posted_at: string | null; first_seen_at: string | null }[])
+            .map((j) => ({ id: j.id, title: j.title, company: j.company, description: j.description, jobUrl: j.job_url, postedAt: j.posted_at, firstSeenAt: j.first_seen_at })));
+    }, [user, campaignSaved, campaign.roleTitles]);
+
+    useEffect(() => {
+        loadFound();
+    }, [loadFound]);
 
     const loadExtras = useCallback(async () => {
         if (!user) return;
@@ -90,8 +126,17 @@ export function useDailyQueue(jobs: Job[], contacts: Contact[]) {
                 ? referralCandidates(job.company, contacts)[0]?.name ?? null
                 : null,
         }));
-        return buildDailyQueue({ jobs: queueJobs, agentFollowUps, contactActions, events }, localToday(), limit);
-    }, [jobs, contacts, agentRows, byContact, events, limit]);
+        const now = new Date();
+        const freshJobs = freshHighFit(found, campaign, jobs, now).map((j) => ({
+            id: j.id,
+            title: j.title,
+            company: j.company,
+            jobUrl: j.jobUrl,
+            ageHours: ageHours(j, now) ?? 0,
+            datePosted: !!j.postedAt,
+        }));
+        return buildDailyQueue({ jobs: queueJobs, agentFollowUps, contactActions, events, freshJobs }, localToday(), limit);
+    }, [jobs, contacts, agentRows, byContact, events, limit, found, campaign]);
 
     const setLimit = useCallback((value: number) => {
         const next = clampLimit(value);
@@ -101,12 +146,16 @@ export function useDailyQueue(jobs: Job[], contacts: Contact[]) {
         } catch {
             // remembered for this visit only
         }
-    }, []);
+        if (campaignSaved) void saveCampaign({ ...campaign, dailyCapacity: next });
+    }, [campaignSaved, campaign, saveCampaign]);
 
     /** Records what the user did with an item. Returns false, leaving the item in place, on failure (AC-8). */
     const record = useCallback(async (item: QueueItem, action: QueueEventAction, snoozeDays = 1): Promise<boolean> => {
         if (!user) return false;
-        const until = effectiveUntil(action, localToday(), snoozeDays);
+        // A found job the user finished with or passed on stays away for the rest of its fresh window.
+        const until = item.source === "found" && action !== "snoozed"
+            ? addDays(localToday(), 3)
+            : effectiveUntil(action, localToday(), snoozeDays);
         const { error } = await supabase
             .from("daily_queue_events" as never)
             .insert({ user_id: user.id, item_key: item.key, item_group: item.group, action, effective_until: until } as never);
@@ -119,8 +168,8 @@ export function useDailyQueue(jobs: Job[], contacts: Contact[]) {
     }, [user]);
 
     const refresh = useCallback(async () => {
-        await Promise.all([fetchReminders(), refreshInteractions(), loadExtras()]);
-    }, [fetchReminders, refreshInteractions, loadExtras]);
+        await Promise.all([fetchReminders(), refreshInteractions(), loadExtras(), loadFound()]);
+    }, [fetchReminders, refreshInteractions, loadExtras, loadFound]);
 
     return { queue, limit, setLimit, record, refresh };
 }

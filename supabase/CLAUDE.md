@@ -51,6 +51,7 @@ Rules:
 
 | Job | When | Does |
 |---|---|---|
+| `fetch-linkedin-jobs-hourly` | hourly | POSTs to `fetch-linkedin-jobs`. Kept (DEC-011). In `20251216183800_enable_cron.sql` the URL has a typo in the project ref and a placeholder bearer token, so check `cron.job` to see what is really scheduled |
 | `fetch-ats-jobs-hourly` | hourly | POSTs to `fetch-jobs` |
 | `archive-old-jobs-daily` | 03:00 | `archive_old_jobs()` moves old `discovered_jobs` rows to `archived_jobs` |
 | `followups-tick` | every 15 min | `followups_call_tick()` calls the `followups-tick` function with a Vault secret |
@@ -61,6 +62,8 @@ Deno. Each folder is one function with an `index.ts`.
 
 | Function | Caller | Does | Secrets |
 |---|---|---|---|
+| `fetch-linkedin-jobs` | cron | Fetches public LinkedIn job search pages for active `job_search_queries`, embeds, inserts into `discovered_jobs` with source `linkedin_auto`. Kept by owner decision until the feeds replace it (DEC-011). Do not extend it | `HF_TOKEN` |
+| `parse-linkedin` | none found | Reads a LinkedIn URL through `r.jina.ai`. No caller in `src/`; kept with the fetch (DEC-011) | none |
 | `fetch-jobs` | cron | Reads the public Greenhouse, Lever and Ashby feeds of watchlist companies (`dream_companies.careers_page_url`), keeps titles matching an active `job_search_queries` keyword, embeds, upserts `discovered_jobs`. Logic and tests in `fetch-jobs/feeds.ts` | `HF_TOKEN` |
 | `search-jobs` | app | Embeds the phrase, calls the `match_jobs` RPC | `HF_TOKEN` |
 | `perplexity-search` | app | Asks Perplexity for jobs, upserts `discovered_jobs` | `PERPLEXITY_API_KEY` |
@@ -90,7 +93,7 @@ Rules for functions:
   tell Zee the exact `supabase secrets set` command to run. Never invent a value.
 - Anything that sends, posts or submits outside JobOS needs an explicit approval step by the user
   (P2). Anything that fetches another site states in its spec why that site's terms allow it.
-  Job intake uses only feeds the job boards publish for that purpose (DEC-001): no LinkedIn,
+  Job intake uses the feeds the job boards publish (DEC-001) and, for now, the existing LinkedIn fetch (DEC-011): no new LinkedIn fetching,
   no scraping of search results or HTML pages.
 - `discovered_jobs.posted_at` is the employer's date or null. Never write "now" into it;
   `first_seen_at` records when JobOS saw the job.

@@ -103,7 +103,8 @@ Binding. The full table with how each is checked is `docs/architecture/principle
 Going against one needs an ADR, not a judgement call in a pull request.
 
 - **P1 No LinkedIn automation.** JobOS never clicks, connects, messages, likes, comments or posts
-  on LinkedIn for the user, and its servers never fetch LinkedIn. The extension may read a
+  on LinkedIn for the user. Its servers fetch LinkedIn only for the existing hourly read of
+  public job listings, kept by owner decision (DEC-011); add no other LinkedIn fetch. The extension may read a
   LinkedIn page the user has open (DEC-001); it gains no new LinkedIn page types or fields.
 - **P2 Assist, do not act.** JobOS prepares the action (who, why, a draft, a link). The user
   submits every application and sends every message. The follow-up agent's approval step is the

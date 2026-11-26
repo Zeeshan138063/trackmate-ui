@@ -5,28 +5,48 @@ import { ContactCard } from "@/components/ContactCard";
 import { AddContactDialog } from "@/components/AddContactDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Users, MapPin } from "lucide-react";
+import { FileUp, Plus, Search, Users, MapPin, X } from "lucide-react";
 import { Contact } from "@/types/contact";
 import { useFollowUps } from "@/hooks/useFollowUps";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TodayActions } from "@/components/contacts/TodayActions";
+import { ImportConnectionsDialog } from "@/components/contacts/ImportConnectionsDialog";
 import { InvitationMeter } from "@/components/contacts/InvitationMeter";
 import { ContactDetailsDialog } from "@/components/ContactDetailsDialog";
 import { AddEngagementDialog } from "@/components/AddEngagementDialog";
 import { useContactActions, localToday } from "@/hooks/useContactActions";
 import { useEngagements } from "@/hooks/useEngagements";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { CONTACT_SORTS, importedContact, matchesLocation, matchesQuery, SORT_LABELS, sortContacts, type ContactSort } from "@/utils/contact-list";
 import { addDays, ROLE_LABELS, ROLE_TYPES, STAGE_LABELS, WARMTH_STAGES } from "@/utils/contact-next-action";
 
 
+/** Cards drawn at once. More are added on request, so a large network stays quick to render. */
+const PAGE_SIZE = 48;
+
 export default function Connections() {
-    const { contacts, loading, addContact, updateContact, deleteContact } = useContacts();
+    const { contacts, loading, addContact, addContacts, updateContact, deleteContact } = useContacts();
+    const [isImportOpen, setIsImportOpen] = useState(false);
     const { followUps, fetchFollowUps } = useFollowUps(); // Fetch global pending follow-ups
     const [searchQuery, setSearchQuery] = useState("");
     const [locationQuery, setLocationQuery] = useState("");
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
-    const [editingContact, setEditingContact] = useState<Contact | null>(null);
+    // A saved contact being edited (has an id) or starting values for a new one (no id).
+    const [editingContact, setEditingContact] = useState<Partial<Contact> | null>(null);
+    const [sort, setSort] = useState<ContactSort>("next");
+    const [shown, setShown] = useState(PAGE_SIZE);
+    const [deleting, setDeleting] = useState<Contact | null>(null);
 
     // REQ-003: stages, next actions and the Today list.
     const [stageFilter, setStageFilter] = useState<string>("all");
@@ -58,109 +78,90 @@ export default function Connections() {
         return saved;
     };
 
-    // Check for extension data
+    // Hand-off from the Chrome extension: /connections?action=addContact&dataId=<id>&name=..&company=..
+    // The extension's bridge answers { type, dataId, data }. It may load after this page, so ask a
+    // few times; if it never answers, use the name and company the extension also put in the URL.
     useEffect(() => {
-        const action = searchParams.get('action');
+        if (searchParams.get('action') !== 'addContact') return;
         const dataId = searchParams.get('dataId');
+        const params = new URLSearchParams(searchParams);
+        let finished = false;
 
-        if (action === 'addContact' && dataId) {
-            // Request data from extension via bridge
-            window.postMessage({
-                type: 'CAREERPILOT_FETCH_JOB_DATA', // Reuse existing message type or add new one
-                dataId: dataId
-            }, window.location.origin);
+        const finish = (data: Record<string, unknown> | null) => {
+            if (finished) return;
+            finished = true;
+            window.removeEventListener('message', handleMessage);
+            clearInterval(asking);
+            clearTimeout(givingUp);
+            const draft = importedContact(data, params);
+            if (draft) {
+                setEditingContact(draft);
+                setIsAddDialogOpen(true);
+            }
+            setSearchParams({}, { replace: true });
+        };
+        const handleMessage = (event: MessageEvent) => {
+            if (event.origin !== window.location.origin || event.source !== window) return;
+            const msg = event.data;
+            if (msg?.type !== 'CAREERPILOT_JOB_DATA_RESPONSE' || !msg.data) return;
+            if (msg.dataId && msg.dataId !== dataId) return;
+            finish(msg.data);
+        };
+        const ask = () => {
+            if (dataId) window.postMessage({ type: 'CAREERPILOT_FETCH_JOB_DATA', dataId }, window.location.origin);
+        };
 
-            // Listen for response
-            const handleMessage = (event: MessageEvent) => {
-                if (event.origin !== window.location.origin) return;
-
-                if (event.data.type === 'CAREERPILOT_JOB_DATA_RESPONSE') {
-                    if (event.data.success && event.data.data) {
-                        const importedData = event.data.data;
-
-                        // Map extension data to Contact type
-                        // We use a temporary object that satisfies the Partial<Contact> shape for the dialog
-                        const newContact: any = {
-                            name: importedData.name || '',
-                            company: importedData.company || '',
-                            position: importedData.position || '',
-                            location: importedData.location || '',
-                            notes: importedData.notes || importedData.about || '',
-                            relationship: importedData.relationship || '',
-                            // Initialize other required fields with defaults if needed
-                            email: '',
-                            phone: '',
-                            linkedin_url: importedData.linkedin_url || ''
-                        };
-
-                        setEditingContact(newContact);
-                        setIsAddDialogOpen(true);
-
-                        // Clean URL
-                        setSearchParams({});
-                    }
-                    // Remove listener after handling
-                    window.removeEventListener('message', handleMessage);
-                }
-            };
-
-            window.addEventListener('message', handleMessage);
-
-            // Cleanup
-            return () => {
-                window.removeEventListener('message', handleMessage);
-            };
-        }
-
-    }, [searchParams, setSearchParams]);
+        window.addEventListener('message', handleMessage);
+        ask();
+        const asking = setInterval(ask, 500);
+        const givingUp = setTimeout(() => finish(null), dataId ? 4000 : 0);
+        return () => {
+            finished = true;
+            window.removeEventListener('message', handleMessage);
+            clearInterval(asking);
+            clearTimeout(givingUp);
+        };
+        // Runs once for the hand-off; the URL is cleared when it finishes.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
         fetchFollowUps();
     }, [fetchFollowUps]);
 
-    // Browser notification effect
-    useEffect(() => {
-        if (followUps.length > 0 && "Notification" in window) {
-            if (Notification.permission === "granted") {
-                new Notification("Pending Follow-ups", {
-                    body: `You have ${followUps.length} follow-ups due today.`,
-                    icon: "/favicon.ico"
-                });
-            } else if (Notification.permission !== "denied") {
-                Notification.requestPermission();
-            }
-        }
-    }, [followUps.length]);
-
     const filteredContacts = useMemo(() => {
-        return contacts.filter((contact) => {
-            const query = searchQuery.toLowerCase();
-            const locQuery = locationQuery.toLowerCase();
+        const matching = contacts.filter((contact) =>
+            matchesQuery(contact, searchQuery) &&
+            matchesLocation(contact, locationQuery) &&
+            (stageFilter === "all" || (contact.warmth_stage ?? "identified") === stageFilter) &&
+            (roleFilter === "all" || (contact.role_type ?? "other") === roleFilter));
+        const dueDates = new Map<string, string>();
+        for (const contact of matching) {
+            const action = contactActions.get(contact.id)?.action;
+            if (action && action.kind !== "none") dueDates.set(contact.id, action.dueDate);
+        }
+        return sortContacts(matching, sort, dueDates);
+    }, [contacts, searchQuery, locationQuery, stageFilter, roleFilter, sort, contactActions]);
 
-            const matchesSearch = (
-                contact.name.toLowerCase().includes(query) ||
-                (contact.company?.toLowerCase().includes(query) ?? false) ||
-                (contact.position?.toLowerCase().includes(query) ?? false)
-            );
+    const filtering = !!searchQuery.trim() || !!locationQuery.trim() || stageFilter !== "all" || roleFilter !== "all";
+    const clearFilters = () => {
+        setSearchQuery("");
+        setLocationQuery("");
+        setStageFilter("all");
+        setRoleFilter("all");
+    };
 
-            const matchesLocation = !locQuery || (
-                (contact.address?.toLowerCase().includes(locQuery) ?? false) ||
-                (contact.country?.toLowerCase().includes(locQuery) ?? false)
-            );
-
-            const matchesStage = stageFilter === "all" || (contact.warmth_stage ?? "identified") === stageFilter;
-            const matchesRole = roleFilter === "all" || (contact.role_type ?? "other") === roleFilter;
-
-            return matchesSearch && matchesLocation && matchesStage && matchesRole;
-        });
-    }, [contacts, searchQuery, locationQuery, stageFilter, roleFilter]);
+    // A new search starts from the first page of cards.
+    useEffect(() => {
+        setShown(PAGE_SIZE);
+    }, [searchQuery, locationQuery, stageFilter, roleFilter, sort]);
 
     const handleCreateContact = async (contactData: Omit<Contact, "id" | "user_id" | "created_at">) => {
         await addContact(contactData);
     };
 
     const handleUpdateContact = async (contactData: Omit<Contact, "id" | "user_id" | "created_at">) => {
-        if (editingContact) {
+        if (editingContact?.id) {
             await updateContact(editingContact.id, contactData);
             setEditingContact(null);
         }
@@ -177,16 +178,22 @@ export default function Connections() {
                 <div>
                     <h1 className="text-3xl font-extrabold tracking-tight">Connections</h1>
                     <p className="text-muted-foreground mt-1">
-                        Manage your professional network and contacts.
+                        The people in your job search: who to reach out to today, and where each relationship stands.
                     </p>
                 </div>
-                <Button onClick={() => {
-                    setEditingContact(null);
-                    setIsAddDialogOpen(true);
-                }}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Contact
-                </Button>
+                <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+                        <FileUp className="mr-2 h-4 w-4" />
+                        Import from LinkedIn file
+                    </Button>
+                    <Button onClick={() => {
+                        setEditingContact(null);
+                        setIsAddDialogOpen(true);
+                    }}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Contact
+                    </Button>
+                </div>
             </div>
 
             {!loading && (
@@ -206,7 +213,8 @@ export default function Connections() {
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Search connections by name, company, or role..."
+                        placeholder="Search name, company, role, email or notes..."
+                        aria-label="Search contacts"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-9"
@@ -216,6 +224,7 @@ export default function Connections() {
                     <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
                         placeholder="Filter by location..."
+                        aria-label="Filter by location"
                         value={locationQuery}
                         onChange={(e) => setLocationQuery(e.target.value)}
                         className="pl-9"
@@ -235,7 +244,27 @@ export default function Connections() {
                         {ROLE_TYPES.map((r) => <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>)}
                     </SelectContent>
                 </Select>
+                <Select value={sort} onValueChange={(v) => setSort(v as ContactSort)}>
+                    <SelectTrigger className="md:w-44" aria-label="Sort contacts"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        {CONTACT_SORTS.map((key) => <SelectItem key={key} value={key}>Sort: {SORT_LABELS[key]}</SelectItem>)}
+                    </SelectContent>
+                </Select>
             </div>
+
+            {!loading && contacts.length > 0 && (
+                <div className="flex items-center justify-between text-sm text-muted-foreground -mt-4" aria-live="polite">
+                    <span>
+                        {filtering ? `${filteredContacts.length} of ${contacts.length} contacts` : `${contacts.length} contact${contacts.length === 1 ? "" : "s"}`}
+                    </span>
+                    {filtering && (
+                        <Button variant="ghost" size="sm" onClick={clearFilters}>
+                            <X className="h-3.5 w-3.5 mr-1" />
+                            Clear filters
+                        </Button>
+                    )}
+                </div>
+            )}
 
             {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -247,27 +276,56 @@ export default function Connections() {
             ) : filteredContacts.length === 0 ? (
                 <EmptyState
                     icon={Users}
-                    title={searchQuery || stageFilter !== "all" || roleFilter !== "all" ? "No connections found" : "Start your network"}
-                    description={searchQuery
-                        ? "No contacts match your search criteria. Try a different keyword."
-                        : "Start building your professional network by adding your first contact."}
-                    actionLabel={!searchQuery ? "Add Connection" : undefined}
-                    onAction={!searchQuery ? () => setIsAddDialogOpen(true) : undefined}
+                    title={filtering ? "No contacts match" : "Start your network"}
+                    description={filtering
+                        ? "Nothing matches your search and filters."
+                        : "Add the first person you want to stay in touch with. You can also send a profile here from the JobOS Chrome extension."}
+                    actionLabel={filtering ? "Clear filters" : "Add Contact"}
+                    onAction={filtering ? clearFilters : () => { setEditingContact(null); setIsAddDialogOpen(true); }}
                 />
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {filteredContacts.map((contact) => (
+                    {filteredContacts.slice(0, shown).map((contact) => (
                         <ContactCard
                             key={contact.id}
                             contact={contact}
                             onEdit={openEditDialog}
-                            onDelete={deleteContact}
+                            onDelete={(id) => setDeleting(contacts.find((c) => c.id === id) ?? null)}
                             actionInfo={contactActions.get(contact.id)}
                             onUpdate={updateContact}
+                            onOpen={(c) => setOpenContactId(c.id)}
                         />
                     ))}
                 </div>
             )}
+
+            {!loading && filteredContacts.length > shown && (
+                <div className="flex justify-center">
+                    <Button variant="outline" onClick={() => setShown((n) => n + PAGE_SIZE)}>
+                        Show {Math.min(PAGE_SIZE, filteredContacts.length - shown)} more ({filteredContacts.length - shown} not shown)
+                    </Button>
+                </div>
+            )}
+
+            <AlertDialog open={!!deleting} onOpenChange={(open) => { if (!open) setDeleting(null); }}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete {deleting?.name}?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This removes the contact with their notes, interaction history, reminders and message draft. It cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Keep contact</AlertDialogCancel>
+                        <AlertDialogAction
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            onClick={() => { if (deleting) void deleteContact(deleting.id); setDeleting(null); }}
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             <AddContactDialog
                 open={isAddDialogOpen}
@@ -275,8 +333,20 @@ export default function Connections() {
                     setIsAddDialogOpen(open);
                     if (!open) setEditingContact(null);
                 }}
-                onSave={editingContact ? handleUpdateContact : handleCreateContact}
+                onSave={editingContact?.id ? handleUpdateContact : handleCreateContact}
                 initialData={editingContact}
+                existing={contacts}
+            />
+
+            <ImportConnectionsDialog
+                open={isImportOpen}
+                onOpenChange={setIsImportOpen}
+                existing={contacts}
+                onImport={async (rows) => {
+                    const outcome = await addContacts(rows);
+                    if (outcome.added > 0) await refreshActions();
+                    return outcome;
+                }}
             />
 
             {loggingContactId && (

@@ -25,6 +25,21 @@ Technical decisions that bind the code go in `architecture/decisions/` as ADRs.
 - Affects: OQ-01 (closed); REQ-008; `supabase/functions/fetch-jobs/`; migration
   `20261126110000_job_intake_allowed_sources.sql`; principle P1.
 
+### DEC-011 The server-side LinkedIn job fetch stays until a replacement is proven
+- Decided by: Zee (product owner), 2026-11-26. Replaces the "drop the hourly LinkedIn fetch"
+  part of DEC-001.
+- Words given: "i need linkedin automation so we should have that till we dont have better
+  option".
+- `fetch-linkedin-jobs` and `parse-linkedin` are kept and the hourly schedule is not removed. The
+  job-board feeds (`fetch-jobs`) run beside it. Rows from LinkedIn now leave `posted_at` empty,
+  because the results list does not state a posting date.
+- Known risk, accepted by Zee: fetching LinkedIn pages from JobOS servers is against LinkedIn's
+  terms and can be blocked without notice. Revisit when the feeds cover enough of the watchlist.
+- Scope: reading public job listings only. P1's ban on acting on LinkedIn for the user (connect,
+  message, like, post) is unchanged.
+- Affects: P1 (exception recorded there); `supabase/functions/fetch-linkedin-jobs/`,
+  `supabase/functions/parse-linkedin/`; migration `20261126110000_job_intake_allowed_sources.sql`.
+
 ## Open questions: `OQ-##`
 
 A question someone outside engineering must answer. See `questions/README.md`: each one is also
@@ -63,6 +78,9 @@ restated in the repo where the code depends on it, so the repo is enough on its 
 - Default 10, range 3 to 30. Replaced by campaign capacity when REQ-001 is built.
 - Affects: REQ-004; `src/hooks/useDailyQueue.ts`.
 
+- Update, 2026-11-26 (REQ-001): once a campaign is saved the limit is its daily capacity, stored
+  in `campaigns`. The browser number is only the fallback for a user with no campaign.
+
 ### DEC-007 The referral prompt fires only for contacts at In conversation or Advocate
 - Decided by: Zee, 2026-11-26, by approving the REQ-007 plan
 - Words given (strategy spec 5H): "if a contact at the company is at 'In conversation' or
@@ -75,3 +93,18 @@ restated in the repo where the code depends on it, so the repo is enough on its 
   days, warns at 80, and stops queuing at 100". The 100 figure is observed, not published by
   LinkedIn, so the UI says "about 100".
 - Affects: REQ-009; `src/utils/invitation-limits.ts`.
+
+### DEC-009 A referral ask is offered only after a logged reply, and drafts need the user's notes
+- Decided by: Zee, 2026-11-26, by approving the REQ-005 plan
+- Words given (strategy spec 5E): the ask goes advice, then a call, then a referral, and a
+  referral ask comes only after a real exchange. In code: stage In conversation or Advocate and
+  at least one inbound interaction. A contact with no notes gets no draft.
+- A draft sharing 80% of its three-word sequences with another contact's saved draft is rejected.
+- Affects: REQ-005; `src/utils/message-draft.ts`.
+
+### DEC-010 "High fit" means a wanted title with nothing in the posting ruling the user out
+- Decided by: Zee, 2026-11-26, by approving the REQ-008 scope ("Accept both")
+- Fit caps come from patterns over the posting's text compared with the campaign, not from a
+  model. A cap is shown with its sentence and never hides a job on its own.
+- At most three fresh jobs join the Today list; fresh is 48 hours.
+- Affects: REQ-008; `src/utils/job-fit.ts`, `src/utils/daily-queue.ts`.

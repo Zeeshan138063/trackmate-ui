@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ContactStageBadge } from "@/components/contacts/ContactStageBadge";
 import type { ContactActionInfo } from "@/hooks/useContactActions";
 import { ROLE_LABELS, STAGE_LABELS } from "@/utils/contact-next-action";
+import { safeHttpUrl } from "@/utils/contact-list";
 import {
     Mail,
     Phone,
@@ -34,14 +35,18 @@ interface ContactCardProps {
     actionInfo?: ContactActionInfo;
     /** Saves stage, role type or do-not-contact through the page's contact list. */
     onUpdate?: (id: string, updates: Partial<Contact>) => Promise<unknown>;
+    /** When given, the page opens the details itself and the card mounts no dialog of its own. */
+    onOpen?: (contact: Contact) => void;
 }
 
-export function ContactCard({ contact, onEdit, onDelete, interactionType, actionInfo, onUpdate }: ContactCardProps) {
+export function ContactCard({ contact, onEdit, onDelete, interactionType, actionInfo, onUpdate, onOpen }: ContactCardProps) {
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const stage = contact.warmth_stage ?? "identified";
     const doNotContact = contact.relationship_stage === "do_not_contact";
     const action = actionInfo?.action;
     const suggested = actionInfo?.suggested ?? null;
+    const open = () => (onOpen ? onOpen(contact) : setIsDetailsOpen(true));
+    const linkedIn = safeHttpUrl(contact.linkedin_url);
 
     const getInitials = (name: string) => {
         return name
@@ -55,15 +60,24 @@ export function ContactCard({ contact, onEdit, onDelete, interactionType, action
     return (
         <>
             <Card
-                className="group relative h-[330px] flex flex-col hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border-muted/60"
-                onClick={() => setIsDetailsOpen(true)}
+                className="group relative h-[330px] flex flex-col hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                role="button"
+                tabIndex={0}
+                aria-label={`Open ${contact.name}`}
+                onClick={open}
+                onKeyDown={(e) => {
+                    if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+                        e.preventDefault();
+                        open();
+                    }
+                }}
             >
                 {/* Header Actions - Positioned absolutely to not mess with flex layout */}
-                <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-3 right-3 z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100 focus-within:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
                     {(onEdit || onDelete) && (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm self-end">
+                                <Button variant="ghost" size="icon" aria-label={`Actions for ${contact.name}`} className="h-8 w-8 bg-background/80 backdrop-blur-sm self-end">
                                     <MoreVertical className="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
@@ -198,9 +212,21 @@ export function ContactCard({ contact, onEdit, onDelete, interactionType, action
                     {/* Footer Contact Info - Fixed height at bottom */}
                     <div className="pt-3 border-t flex items-center justify-between text-muted-foreground mt-auto shrink-0">
                         <div className="flex gap-3">
-                            {contact.email && <Mail className="h-3.5 w-3.5 hover:text-primary transition-colors" />}
-                            {contact.phone && <Phone className="h-3.5 w-3.5 hover:text-primary transition-colors" />}
-                            {contact.linkedin_url && <Linkedin className="h-3.5 w-3.5 hover:text-[#0A66C2] transition-colors" />}
+                            {contact.email && (
+                                <a href={`mailto:${contact.email}`} aria-label={`Email ${contact.name}`} title={contact.email} onClick={(e) => e.stopPropagation()} className="hover:text-primary transition-colors">
+                                    <Mail className="h-3.5 w-3.5" />
+                                </a>
+                            )}
+                            {contact.phone && (
+                                <a href={`tel:${contact.phone}`} aria-label={`Call ${contact.name}`} title={contact.phone} onClick={(e) => e.stopPropagation()} className="hover:text-primary transition-colors">
+                                    <Phone className="h-3.5 w-3.5" />
+                                </a>
+                            )}
+                            {linkedIn && (
+                                <a href={linkedIn} target="_blank" rel="noopener noreferrer" aria-label={`${contact.name} on LinkedIn`} title="Open LinkedIn profile" onClick={(e) => e.stopPropagation()} className="hover:text-[#0A66C2] transition-colors">
+                                    <Linkedin className="h-3.5 w-3.5" />
+                                </a>
+                            )}
                         </div>
 
                         {(contact.address || contact.country) && (
@@ -215,13 +241,16 @@ export function ContactCard({ contact, onEdit, onDelete, interactionType, action
                 </CardContent>
             </Card>
 
-            <ContactDetailsDialog
-                contact={contact}
-                open={isDetailsOpen}
-                onOpenChange={setIsDetailsOpen}
-                onEdit={onEdit}
-                onUpdate={onUpdate}
-            />
+            {/* Mounted only while open: the dialog loads its own data, and a page of cards must not load it once per card. */}
+            {isDetailsOpen && (
+                <ContactDetailsDialog
+                    contact={contact}
+                    open
+                    onOpenChange={setIsDetailsOpen}
+                    onEdit={onEdit}
+                    onUpdate={onUpdate}
+                />
+            )}
         </>
     );
 }

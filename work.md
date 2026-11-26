@@ -4,6 +4,75 @@ What is true now, per branch of work. Newest section at the top. Every push that
 updates this file (the `push-tracker-gate` hook checks). Tick what is done, add what is left, and
 keep the last line of each section the next step.
 
+## 2026-11-26 - Keep the LinkedIn job fetch (DEC-011, branch jobos/keep-linkedin-fetch, into rebranding-jobos)
+
+- [x] Restored `fetch-linkedin-jobs` and `parse-linkedin`; the migration no longer unschedules the hourly job.
+- [x] LinkedIn rows leave `posted_at` empty and show "First seen".
+- [ ] Zee: do NOT run `supabase functions delete fetch-linkedin-jobs parse-linkedin`.
+- [ ] Zee: run `select jobname, schedule, command from cron.job;` to see whether the hourly job points at the right project URL with a real key. The repo's copy has a typo and a placeholder.
+- [ ] Revisit when the job-board feeds cover enough of the watchlist.
+- [ ] PR into rebranding-jobos.
+
+## 2026-11-26 - Import LinkedIn's Connections.csv (branch jobos/connections-import, into rebranding-jobos)
+
+- [x] `src/utils/linkedin-csv.ts`, 9 tests: CSV reader, LinkedIn's notes preamble, duplicates, unsafe links and formula characters dropped, 5,000-row and 5 MB limits.
+- [x] `ImportConnectionsDialog` on Connections; `addContacts` saves in batches of 200.
+- [ ] Zee: browser check with your real Connections.csv.
+- [ ] Known limits: nothing is ticked by default (each imported person gets a next step); the connected-on date is not stored.
+- [ ] Proposed, not built: list view; bulk stage change.
+- [ ] PR into rebranding-jobos.
+
+## 2026-11-26 - Connections audit fixes (branch jobos/connections-polish, into rebranding-jobos)
+
+- [x] Audit from the code (the live page needs a sign-in; not viewed in a browser).
+- [x] Extension contact import fixed; delete confirmation; search, sort, count, paging; duplicate warning (`src/utils/contact-list.ts`, 10 tests).
+- [x] Card links, keyboard and touch access; details dialog mounted once per page.
+- [ ] Zee: browser check: send a profile from the extension; delete; sort; keyboard.
+- [ ] Proposed, not built: import LinkedIn's own "Connections.csv" export; list view; bulk stage change; server-side search past about 1,000 contacts.
+- [ ] PR into rebranding-jobos.
+
+## 2026-11-26 - Consistency checker (REQ-002, branch jobos/consistency-checker, into rebranding-jobos)
+
+- [x] Spec and plan approved by Zee.
+- [x] `src/utils/consistency.ts`, 17 tests.
+- [x] Resume page: "Check consistency" dialog.
+- [ ] Zee: browser check with a tailored resume and your own pasted LinkedIn profile text. The LinkedIn reader is the part most likely to need tuning against real text.
+- [ ] Known limits: uploaded PDF and Word resumes are not read; several roles at one employer can be mis-paired.
+- [ ] Next: all P0 requirements are built. Deploy, browser-test, then Stage 2 of the strategy spec.
+- [ ] PR into rebranding-jobos.
+
+## 2026-11-26 - Fit caps and fresh jobs (REQ-008, branch jobos/fit-caps, into rebranding-jobos)
+
+- [x] Spec and plan approved by Zee; DEC-010.
+- [x] `src/utils/job-fit.ts`, 15 tests; fresh jobs in the daily queue, 3 tests.
+- [x] Jobs: cap badges, reasons with the posting's words, "Hide jobs that rule me out".
+- [ ] Zee: browser check with a saved campaign and real found jobs (needs `fetch-jobs` deployed and run).
+- [ ] Known limits: English patterns only; no cap on region, pay or start date.
+- [ ] Next: REQ-002 consistency checker.
+- [ ] PR into rebranding-jobos.
+
+## 2026-11-26 - Campaign setup (REQ-001, branch jobos/campaign-setup, into rebranding-jobos)
+
+- [x] Spec and plan approved by Zee.
+- [x] `src/utils/campaign.ts`, 10 tests.
+- [x] Migration `20261126150000_campaigns.sql` (RLS); `campaigns` in export and delete lists.
+- [x] Settings > Campaign; Today limit reads the campaign.
+- [ ] Zee: `supabase db push`; redeploy `delete-account`. Until then Settings > Campaign shows a load error.
+- [ ] Zee: browser check of save, reload, Today limit; user A / user B check.
+- [ ] Not included: follow-up send times; pay floor and start date do not filter jobs.
+- [ ] Next: REQ-008 fit caps and fresh jobs.
+- [ ] PR into rebranding-jobos.
+
+## 2026-11-26 - Message drafting (REQ-005, branch jobos/message-drafting, into rebranding-jobos)
+
+- [x] Spec and plan approved by Zee; DEC-009 in `docs/plan/README.md`.
+- [x] `src/utils/message-draft.ts`, 12 tests (`npm test`).
+- [x] `MessageDrafter` in the contact dialog; `AIGenerator.draftMessage` replaces the old note generator.
+- [ ] Zee: browser check with an AI key: draft, edit, Copy, Mark as sent (AC-7), and no key (AC-9).
+- [ ] Known limit: the duplicate check only sees drafts saved on other contacts.
+- [ ] Next: REQ-001 campaign setup.
+- [ ] PR into rebranding-jobos.
+
 ## 2026-11-26 - Security hardening (branch jobos/security-hardening, into rebranding-jobos)
 
 - [x] `manage-calendar`, `sync-calendar`: caller taken from the session (`supabase/functions/_shared/auth.ts`).
@@ -45,7 +114,7 @@ keep the last line of each section the next step.
 - [x] `fetch-jobs` reads Greenhouse, Lever and Ashby feeds for watchlist companies; `feeds.ts` with tests in `feeds_test.ts`.
 - [x] Migration `20261126110000`: unschedule LinkedIn cron, `first_seen_at`, `match_jobs`, `archive_old_jobs`.
 - [x] UI: "First seen" label and real source names.
-- [ ] Zee, in this order: `supabase db push`; `supabase functions deploy fetch-jobs`; `supabase functions delete fetch-linkedin-jobs parse-linkedin`.
+- [ ] Zee, in this order: `supabase db push`; `supabase functions deploy fetch-jobs`. The functions are no longer deleted (DEC-011).
 - [ ] Not run against the live project or a real feed from the build session (no network to those hosts). Check the first hourly run in the function logs.
 - [ ] Follow-ups: Workable feed; paste-a-URL capture into `discovered_jobs`; the public `/jobs` page still lists rows collected from LinkedIn before this change until they archive (15 days).
 - [ ] PR into rebranding-jobos.

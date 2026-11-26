@@ -18,6 +18,11 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 
 ### Added
 
+- Connections: Import from LinkedIn file reads the Connections.csv that LinkedIn lets you download, shows who is new, and adds the people you tick at stage Connected. JobOS does not sign in to LinkedIn.
+- Resume > Check consistency compares your Master Profile with every tailored resume and with LinkedIn text you paste, and lists any dates, titles, employers, schools or contact details that disagree.
+- Jobs flags postings that rule you out (citizens only, no sponsorship, a language you do not list, far more experience than you have), showing the sentence it read. New postings from the last 48 hours that match your campaign lead your Today list.
+- Settings > Campaign: say which roles you want, where you can work, your citizenships, languages, whether you need sponsorship, and how many items a day you can handle. Your Today list uses that number.
+- A contact's Connection tab drafts a message from your notes about that person, with the ask matched to how well you know them (connect, advice, a call, a referral). It refuses a draft that repeats one written for someone else, and "Mark as sent" logs it in the interaction history.
 - Connections tracks the LinkedIn invitations you mark as sent over the last seven days, warns you at 80 and stops suggesting new connection requests at 100.
 - Before you apply somewhere you already know someone well, the job reminds you to ask them first, and the Today list says who could refer you.
 - Home opens on a Today list: applications to finish, follow-ups and replies due, and people to reach out to, each with the reason it is there and Done, Snooze, Skip and Open. You set how many items a day.
@@ -27,10 +32,15 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 
 ### Changed
 
-- Job discovery now reads the public job feeds of the companies on your watchlist (Greenhouse, Lever, Ashby) and no longer fetches LinkedIn or scrapes search results.
+- Connections: search also covers email and notes, contacts can be sorted (next step due first by default), deleting asks first, adding warns about a probable duplicate, and card icons for email, phone and LinkedIn open them.
+
+- Job discovery now also reads the public job feeds of the companies on your watchlist (Greenhouse, Lever, Ashby), beside the existing LinkedIn job fetch.
 - A job with no known posting date now says "First seen" instead of "Posted", and shows its real source.
 
 ### Fixed
+
+- Sending a profile from the Chrome extension to Connections now opens the Add Contact form with the details filled in.
+- Connections no longer loads every contact's details in the background, which made the page slow with many contacts.
 
 - Browser extension 3.1.1: jobs, contacts and profiles captured by the extension now arrive in the app with all their details, and the extension's app bridge no longer runs on unrelated sites.
 - Calendar functions now check who is calling and only touch that user's calendar accounts.

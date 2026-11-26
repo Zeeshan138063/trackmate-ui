@@ -33,6 +33,7 @@ export const EXPORT_TABLES = [
     "profile_growth_settings",
     "content_queue",
     "daily_queue_events",
+    "campaigns",
 ] as const;
 
 /** Credentials are never exported, even to their owner: a data file gets emailed and synced. */
