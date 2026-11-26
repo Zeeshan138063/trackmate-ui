@@ -1,13 +1,7 @@
--- Job intake from allowed sources only (DEC-001, answering OQ-01), and honest posting dates.
+-- Job intake: job-board feeds added beside the LinkedIn fetch (DEC-001, DEC-011), and honest posting dates.
 
--- 1. Stop the hourly LinkedIn fetch. The function is removed from the repo; unscheduling here
---    means nothing calls it even if the deployed copy lingers. Safe to run twice.
-do $$
-begin
-  perform cron.unschedule(jobid) from cron.job where jobname = 'fetch-linkedin-jobs-hourly';
-exception when undefined_table or invalid_schema_name then
-  null; -- pg_cron not installed in this database
-end $$;
+-- 1. The hourly LinkedIn fetch stays scheduled (DEC-011). An earlier draft of this migration
+--    unscheduled it; that step was removed before the migration was applied anywhere.
 
 -- 2. posted_at used to default to the insert time, so a "posted" date was often just the moment
 --    JobOS first saw the job. Keep the two apart: first_seen_at is always known, posted_at only
