@@ -4,6 +4,16 @@ What is true now, per branch of work. Newest section at the top. Every push that
 updates this file (the `push-tracker-gate` hook checks). Tick what is done, add what is left, and
 keep the last line of each section the next step.
 
+## 2026-11-26 - Consistency checker (REQ-002, branch jobos/consistency-checker, into rebranding-jobos)
+
+- [x] Spec and plan approved by Zee.
+- [x] `src/utils/consistency.ts`, 17 tests.
+- [x] Resume page: "Check consistency" dialog.
+- [ ] Zee: browser check with a tailored resume and your own pasted LinkedIn profile text. The LinkedIn reader is the part most likely to need tuning against real text.
+- [ ] Known limits: uploaded PDF and Word resumes are not read; several roles at one employer can be mis-paired.
+- [ ] Next: all P0 requirements are built. Deploy, browser-test, then Stage 2 of the strategy spec.
+- [ ] PR into rebranding-jobos.
+
 ## 2026-11-26 - Fit caps and fresh jobs (REQ-008, branch jobos/fit-caps, into rebranding-jobos)
 
 - [x] Spec and plan approved by Zee; DEC-010.

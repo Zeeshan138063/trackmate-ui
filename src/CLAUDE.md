@@ -111,6 +111,9 @@ for a UI change lists the manual checks.
   user) is what the user wants and what rules a job out. Read it through `useCampaign()`; clean
   anything going in with `normalizeCampaign()`. Citizenship and visa need never go into an AI
   prompt.
+- Consistency checker: `utils/consistency.ts` compares the Master Profile with tailored resumes
+  and pasted LinkedIn text. It is deterministic and reports only; do not add a model call or an
+  auto-fix. What it cannot confirm is a "check", never a "conflict".
 - Fit caps: `utils/job-fit.ts` reads hard requirements from a posting (`extractConstraints`) and
   compares them with the campaign (`fitCaps`). Every cap carries the posting's sentence. A new
   kind of cap is a new pattern plus tests for a true case and a look-alike that must not match

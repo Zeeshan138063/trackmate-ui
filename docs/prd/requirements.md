@@ -9,7 +9,7 @@ below were re-checked against `rebranding-jobos` and are the same there)
 | ID | Requirement | Spec section | Priority | State today |
 |---|---|---|---|---|
 | REQ-001 | Campaign setup: role families, region, constraints, capacity; changing it changes filtering, scoring caps, send times and the daily queue | 5A | P0 | built on `jobos/campaign-setup` (not merged): one campaign per user, drives fit caps and the daily limit; send times not included |
-| REQ-002 | Consistency checker across Master Profile, each CV and pasted LinkedIn text | 5B | P0 | missing |
+| REQ-002 | Consistency checker across Master Profile, each CV and pasted LinkedIn text | 5B | P0 | built on `jobos/consistency-checker` (not merged): Resume > Check consistency; uploaded files are not read |
 | REQ-003 | Contact records with role type, warmth stage, and one next action with a due date | 5E | P0 | partial: record, timeline, manual reminders; no stage or next action |
 | REQ-004 | Daily queue sized to the user's capacity, each item with a reason, completable, snoozable, skippable | 5M | P0 | missing |
 | REQ-005 | Message drafting from the user's notes about the contact; never identical across contacts | 5E | P0 | built on `jobos/message-drafting` (not merged): drafts from notes, ask ladder, duplicate check, Mark as sent |
