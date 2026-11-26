@@ -57,6 +57,27 @@ export function parseBoard(careersUrl: string | null | undefined): Board | null 
   return board;
 }
 
+export interface BoardSource { board: Board; company: string }
+
+/**
+ * The boards to read: every watchlist company's careers page, then the boards of postings JobOS
+ * has already found (their links name the board). Watchlist names win when both name a board.
+ * This keeps following companies already in the feed without searching the web for new ones.
+ */
+export function collectBoards(
+  watchlist: { name?: string | null; careers_page_url?: string | null }[],
+  knownJobs: { company?: string | null; job_url?: string | null }[],
+): BoardSource[] {
+  const boards = new Map<string, BoardSource>();
+  const add = (url: string | null | undefined, name: string | null | undefined) => {
+    const board = parseBoard(url);
+    if (board && !boards.has(boardKey(board))) boards.set(boardKey(board), { board, company: String(name ?? "").trim() || board.token });
+  };
+  for (const c of watchlist) add(c.careers_page_url, c.name);
+  for (const j of knownJobs) add(j.job_url, j.company);
+  return [...boards.values()];
+}
+
 export function boardKey(b: Board): string {
   return `${b.ats}:${b.token.toLowerCase()}`;
 }

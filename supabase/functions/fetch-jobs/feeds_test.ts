@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { boardKey, feedUrl, firstMatchingKeyword, matchesAnyKeyword, normalize, parseBoard, toPlainText } from "./feeds.ts";
+import { boardKey, collectBoards, feedUrl, firstMatchingKeyword, matchesAnyKeyword, normalize, parseBoard, toPlainText } from "./feeds.ts";
 
 Deno.test("parseBoard reads Greenhouse, Lever and Ashby careers URLs", () => {
   assertEquals(parseBoard("https://boards.greenhouse.io/stripe"), { ats: "greenhouse", token: "stripe" });
@@ -77,4 +77,19 @@ Deno.test("keyword matching needs every word, as whole words", () => {
 Deno.test("toPlainText strips tags and scripts", () => {
   assertEquals(toPlainText("<p>Hello <b>world</b></p><script>x()</script>"), "Hello world");
   assertEquals(toPlainText(""), null);
+});
+
+Deno.test("collectBoards: watchlist first, then boards of jobs already found, each once", () => {
+  const boards = collectBoards(
+    [{ name: "Stripe", careers_page_url: "https://boards.greenhouse.io/stripe" }, { name: "No board", careers_page_url: "https://acme.com/careers" }],
+    [
+      { company: "stripe inc", job_url: "https://job-boards.greenhouse.io/stripe/jobs/1" },
+      { company: "Ramp", job_url: "https://jobs.ashbyhq.com/ramp/abc" },
+      { company: "Ramp", job_url: "https://jobs.ashbyhq.com/ramp/def" },
+      { company: null, job_url: "https://jobs.lever.co/palantir/x" },
+      { company: "LinkedIn row", job_url: "https://www.linkedin.com/jobs/view/1" },
+    ],
+  );
+  assertEquals(boards.map((b) => `${boardKey(b.board)}=${b.company}`), ["greenhouse:stripe=Stripe", "ashby:ramp=Ramp", "lever:palantir=palantir"]);
+  assertEquals(collectBoards([], []), []);
 });
