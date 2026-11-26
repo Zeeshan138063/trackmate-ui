@@ -30,6 +30,7 @@ import { AddEngagementDialog } from "./AddEngagementDialog";
 import { FollowUpList } from "./FollowUpList";
 import { useEngagements } from "@/hooks/useEngagements";
 import { useFollowUps } from "@/hooks/useFollowUps";
+import { safeHttpUrl } from "@/utils/contact-list";
 import { MessageDrafter } from "@/components/contacts/MessageDrafter";
 import { useResume } from "@/hooks/useResume";
 import { useContacts } from "@/hooks/useContacts";
@@ -96,7 +97,8 @@ export function ContactDetailsDialog({
 
     const handleSaveNote = async (text: string) => {
         if (!contact.id) return;
-        await updateContact(contact.id, { invitation_note: text });
+        // Save through the page's list when there is one, so the card and this dialog show the same draft.
+        await (onUpdate ?? updateContact)(contact.id, { invitation_note: text });
         toast({ title: "Draft saved", description: "Saved on this contact." });
     };
 
@@ -204,7 +206,7 @@ export function ContactDetailsDialog({
                                     </div>
                                 )}
 
-                                {contact.linkedin_url && (
+                                {safeHttpUrl(contact.linkedin_url) && (
                                     <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/30">
                                         <div className="bg-[#0A66C2]/10 p-2 rounded-full text-[#0A66C2]">
                                             <Linkedin className="h-4 w-4" />
@@ -212,7 +214,7 @@ export function ContactDetailsDialog({
                                         <div className="space-y-0.5">
                                             <p className="text-xs font-medium text-muted-foreground">LinkedIn</p>
                                             <a
-                                                href={contact.linkedin_url}
+                                                href={safeHttpUrl(contact.linkedin_url) ?? undefined}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-sm hover:underline truncate max-w-[200px] block"

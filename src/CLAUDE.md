@@ -118,6 +118,10 @@ for a UI change lists the manual checks.
   compares them with the campaign (`fitCaps`). Every cap carries the posting's sentence. A new
   kind of cap is a new pattern plus tests for a true case and a look-alike that must not match
   (DEC-010). Fresh matching jobs enter the queue through `freshHighFit()`.
+- Connections list helpers are in `utils/contact-list.ts`. Render a stored link only through
+  `safeHttpUrl()`. `ContactCard` mounts its details dialog only while open: do not mount a
+  data-loading dialog per card. The extension hand-off answers `{ type, dataId, data }` with no
+  success flag (see `extension/CLAUDE.md`).
 - Message drafts: `utils/message-draft.ts` picks the ask (`availableAsks`, DEC-009), builds the
   prompt from the user's notes and checks the result (`checkDraft`). `AIGenerator.draftMessage`
   only calls the model. A new rule for drafts goes in `checkDraft` with a test, not in the prompt
