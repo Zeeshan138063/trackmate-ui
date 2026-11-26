@@ -59,6 +59,34 @@ export function useContacts() {
         }
     };
 
+    /**
+     * Adds many contacts at once (the LinkedIn connections import). Saves in batches so one bad
+     * batch does not lose the rest. Returns how many were saved and the first error, if any.
+     */
+    const addContacts = async (rows: Partial<Contact>[]): Promise<{ added: number; error: string | null }> => {
+        if (!user) return { added: 0, error: "Sign in to import contacts." };
+        const BATCH = 200;
+        const saved: Contact[] = [];
+        let firstError: string | null = null;
+        for (let i = 0; i < rows.length; i += BATCH) {
+            const batch = rows.slice(i, i + BATCH).map((row) => ({ ...row, user_id: user.id }));
+            let { data, error } = await supabase.from('contacts').insert(batch as never).select();
+            if (error && (error.code === 'PGRST204' || error.code === '42703')) {
+                // The stage column is not in this database yet: save the people without it.
+                const plain = batch.map(({ warmth_stage: _stage, ...rest }) => rest);
+                ({ data, error } = await supabase.from('contacts').insert(plain as never).select());
+            }
+            if (error) {
+                console.error('Error importing contacts:', error);
+                firstError = firstError ?? error.message;
+                continue;
+            }
+            saved.push(...((data ?? []) as Contact[]));
+        }
+        if (saved.length > 0) setContacts(prev => [...prev, ...saved]);
+        return { added: saved.length, error: firstError };
+    };
+
     const updateContact = async (id: string, updates: Partial<Contact>) => {
         try {
             const { data, error } = await supabase
@@ -184,6 +212,7 @@ export function useContacts() {
         contacts,
         loading,
         addContact,
+        addContacts,
         updateContact,
         deleteContact,
         fetchJobContacts,

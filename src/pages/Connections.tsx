@@ -5,12 +5,13 @@ import { ContactCard } from "@/components/ContactCard";
 import { AddContactDialog } from "@/components/AddContactDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Users, MapPin, X } from "lucide-react";
+import { FileUp, Plus, Search, Users, MapPin, X } from "lucide-react";
 import { Contact } from "@/types/contact";
 import { useFollowUps } from "@/hooks/useFollowUps";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TodayActions } from "@/components/contacts/TodayActions";
+import { ImportConnectionsDialog } from "@/components/contacts/ImportConnectionsDialog";
 import { InvitationMeter } from "@/components/contacts/InvitationMeter";
 import { ContactDetailsDialog } from "@/components/ContactDetailsDialog";
 import { AddEngagementDialog } from "@/components/AddEngagementDialog";
@@ -34,7 +35,8 @@ import { addDays, ROLE_LABELS, ROLE_TYPES, STAGE_LABELS, WARMTH_STAGES } from "@
 const PAGE_SIZE = 48;
 
 export default function Connections() {
-    const { contacts, loading, addContact, updateContact, deleteContact } = useContacts();
+    const { contacts, loading, addContact, addContacts, updateContact, deleteContact } = useContacts();
+    const [isImportOpen, setIsImportOpen] = useState(false);
     const { followUps, fetchFollowUps } = useFollowUps(); // Fetch global pending follow-ups
     const [searchQuery, setSearchQuery] = useState("");
     const [locationQuery, setLocationQuery] = useState("");
@@ -179,13 +181,19 @@ export default function Connections() {
                         The people in your job search: who to reach out to today, and where each relationship stands.
                     </p>
                 </div>
-                <Button onClick={() => {
-                    setEditingContact(null);
-                    setIsAddDialogOpen(true);
-                }}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Contact
-                </Button>
+                <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+                        <FileUp className="mr-2 h-4 w-4" />
+                        Import from LinkedIn file
+                    </Button>
+                    <Button onClick={() => {
+                        setEditingContact(null);
+                        setIsAddDialogOpen(true);
+                    }}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Contact
+                    </Button>
+                </div>
             </div>
 
             {!loading && (
@@ -328,6 +336,17 @@ export default function Connections() {
                 onSave={editingContact?.id ? handleUpdateContact : handleCreateContact}
                 initialData={editingContact}
                 existing={contacts}
+            />
+
+            <ImportConnectionsDialog
+                open={isImportOpen}
+                onOpenChange={setIsImportOpen}
+                existing={contacts}
+                onImport={async (rows) => {
+                    const outcome = await addContacts(rows);
+                    if (outcome.added > 0) await refreshActions();
+                    return outcome;
+                }}
             />
 
             {loggingContactId && (

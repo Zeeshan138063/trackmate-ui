@@ -122,6 +122,9 @@ for a UI change lists the manual checks.
   `safeHttpUrl()`. `ContactCard` mounts its details dialog only while open: do not mount a
   data-loading dialog per card. The extension hand-off answers `{ type, dataId, data }` with no
   success flag (see `extension/CLAUDE.md`).
+- Importing contacts: `utils/linkedin-csv.ts` reads the file the user downloads from LinkedIn.
+  This is the only bulk source of contacts; do not add one that reads LinkedIn pages (P1).
+  Imported rows carry no notes, so drafting still needs the user's own words.
 - Message drafts: `utils/message-draft.ts` picks the ask (`availableAsks`, DEC-009), builds the
   prompt from the user's notes and checks the result (`checkDraft`). `AIGenerator.draftMessage`
   only calls the model. A new rule for drafts goes in `checkDraft` with a test, not in the prompt
