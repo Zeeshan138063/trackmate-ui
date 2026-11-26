@@ -4,6 +4,18 @@ What is true now, per branch of work. Newest section at the top. Every push that
 updates this file (the `push-tracker-gate` hook checks). Tick what is done, add what is left, and
 keep the last line of each section the next step.
 
+## 2026-11-26 - Campaign setup (REQ-001, branch jobos/campaign-setup, into rebranding-jobos)
+
+- [x] Spec and plan approved by Zee.
+- [x] `src/utils/campaign.ts`, 10 tests.
+- [x] Migration `20261126150000_campaigns.sql` (RLS); `campaigns` in export and delete lists.
+- [x] Settings > Campaign; Today limit reads the campaign.
+- [ ] Zee: `supabase db push`; redeploy `delete-account`. Until then Settings > Campaign shows a load error.
+- [ ] Zee: browser check of save, reload, Today limit; user A / user B check.
+- [ ] Not included: follow-up send times; pay floor and start date do not filter jobs.
+- [ ] Next: REQ-008 fit caps and fresh jobs.
+- [ ] PR into rebranding-jobos.
+
 ## 2026-11-26 - Message drafting (REQ-005, branch jobos/message-drafting, into rebranding-jobos)
 
 - [x] Spec and plan approved by Zee; DEC-009 in `docs/plan/README.md`.

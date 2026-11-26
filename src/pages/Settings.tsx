@@ -13,6 +13,7 @@ import { AIHelper } from "@/utils/ai-helper";
 import { PROVIDERS, AIProviderId } from "@/utils/ai-providers/registry";
 import { IntegrationsSettings } from "@/components/Settings/IntegrationsSettings";
 import { FollowUpSettings } from "@/components/Settings/FollowUpSettings";
+import { CampaignSettings } from "@/components/Settings/CampaignSettings";
 import { DataManagement } from "@/components/Settings/DataManagement";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -141,8 +142,9 @@ export default function Settings() {
       </div>
 
       <Tabs defaultValue={initialTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 lg:grid-cols-7">
+        <TabsList className="grid w-full h-auto grid-cols-4 lg:grid-cols-8">
           <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="campaign">Campaign</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="ai">AI Config</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
@@ -222,6 +224,10 @@ export default function Settings() {
               <Button>Save Changes</Button>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="campaign" className="space-y-6">
+          <CampaignSettings />
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6">
