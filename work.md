@@ -4,6 +4,15 @@ What is true now, per branch of work. Newest section at the top. Every push that
 updates this file (the `push-tracker-gate` hook checks). Tick what is done, add what is left, and
 keep the last line of each section the next step.
 
+## 2026-11-26 - Import LinkedIn's Connections.csv (branch jobos/connections-import, into rebranding-jobos)
+
+- [x] `src/utils/linkedin-csv.ts`, 9 tests: CSV reader, LinkedIn's notes preamble, duplicates, unsafe links and formula characters dropped, 5,000-row and 5 MB limits.
+- [x] `ImportConnectionsDialog` on Connections; `addContacts` saves in batches of 200.
+- [ ] Zee: browser check with your real Connections.csv.
+- [ ] Known limits: nothing is ticked by default (each imported person gets a next step); the connected-on date is not stored.
+- [ ] Proposed, not built: list view; bulk stage change.
+- [ ] PR into rebranding-jobos.
+
 ## 2026-11-26 - Connections audit fixes (branch jobos/connections-polish, into rebranding-jobos)
 
 - [x] Audit from the code (the live page needs a sign-in; not viewed in a browser).

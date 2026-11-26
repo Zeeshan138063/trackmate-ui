@@ -18,6 +18,7 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 
 ### Added
 
+- Connections: Import from LinkedIn file reads the Connections.csv that LinkedIn lets you download, shows who is new, and adds the people you tick at stage Connected. JobOS does not sign in to LinkedIn.
 - Resume > Check consistency compares your Master Profile with every tailored resume and with LinkedIn text you paste, and lists any dates, titles, employers, schools or contact details that disagree.
 - Jobs flags postings that rule you out (citizens only, no sponsorship, a language you do not list, far more experience than you have), showing the sentence it read. New postings from the last 48 hours that match your campaign lead your Today list.
 - Settings > Campaign: say which roles you want, where you can work, your citizenships, languages, whether you need sponsorship, and how many items a day you can handle. Your Today list uses that number.
