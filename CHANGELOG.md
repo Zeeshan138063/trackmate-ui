@@ -18,6 +18,7 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 
 ### Added
 
+- Jobs flags postings that rule you out (citizens only, no sponsorship, a language you do not list, far more experience than you have), showing the sentence it read. New postings from the last 48 hours that match your campaign lead your Today list.
 - Settings > Campaign: say which roles you want, where you can work, your citizenships, languages, whether you need sponsorship, and how many items a day you can handle. Your Today list uses that number.
 - A contact's Connection tab drafts a message from your notes about that person, with the ask matched to how well you know them (connect, advice, a call, a referral). It refuses a draft that repeats one written for someone else, and "Mark as sent" logs it in the interaction history.
 - Connections tracks the LinkedIn invitations you mark as sent over the last seven days, warns you at 80 and stops suggesting new connection requests at 100.

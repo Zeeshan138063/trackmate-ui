@@ -43,8 +43,15 @@ export function DailyQueue({ jobs, contacts }: Props) {
     const [logging, setLogging] = useState<QueueItem | null>(null);
     const today = localToday();
 
-    const open = (item: QueueItem) =>
+    const open = (item: QueueItem) => {
+        if (item.target.type === "found") {
+            // A posting from job discovery: open the employer's page, or the Jobs page when there is no safe link.
+            if (item.target.url && /^https:\/\//i.test(item.target.url)) window.open(item.target.url, "_blank", "noopener,noreferrer");
+            else navigate("/job-search");
+            return;
+        }
         navigate(item.target.type === "job" ? `/trackers?job=${item.target.id}` : `/connections?contact=${item.target.id}`);
+    };
 
     const done = async (item: QueueItem) => {
         if (item.source === "contact") {

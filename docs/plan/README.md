@@ -86,3 +86,10 @@ restated in the repo where the code depends on it, so the repo is enough on its 
   at least one inbound interaction. A contact with no notes gets no draft.
 - A draft sharing 80% of its three-word sequences with another contact's saved draft is rejected.
 - Affects: REQ-005; `src/utils/message-draft.ts`.
+
+### DEC-010 "High fit" means a wanted title with nothing in the posting ruling the user out
+- Decided by: Zee, 2026-11-26, by approving the REQ-008 scope ("Accept both")
+- Fit caps come from patterns over the posting's text compared with the campaign, not from a
+  model. A cap is shown with its sentence and never hides a job on its own.
+- At most three fresh jobs join the Today list; fresh is 48 hours.
+- Affects: REQ-008; `src/utils/job-fit.ts`, `src/utils/daily-queue.ts`.

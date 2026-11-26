@@ -111,6 +111,10 @@ for a UI change lists the manual checks.
   user) is what the user wants and what rules a job out. Read it through `useCampaign()`; clean
   anything going in with `normalizeCampaign()`. Citizenship and visa need never go into an AI
   prompt.
+- Fit caps: `utils/job-fit.ts` reads hard requirements from a posting (`extractConstraints`) and
+  compares them with the campaign (`fitCaps`). Every cap carries the posting's sentence. A new
+  kind of cap is a new pattern plus tests for a true case and a look-alike that must not match
+  (DEC-010). Fresh matching jobs enter the queue through `freshHighFit()`.
 - Message drafts: `utils/message-draft.ts` picks the ask (`availableAsks`, DEC-009), builds the
   prompt from the user's notes and checks the result (`checkDraft`). `AIGenerator.draftMessage`
   only calls the model. A new rule for drafts goes in `checkDraft` with a test, not in the prompt

@@ -152,3 +152,26 @@ describe("AC-5 and AC-11", () => {
     expect(buildDailyQueue(empty, TODAY)).toEqual({ items: [], hiddenCount: 0, totals: { applications: 0, followups: 0, people: 0 } });
   });
 });
+
+describe("REQ-008 fresh high-fit jobs", () => {
+  const fresh = (id: string, over: Partial<NonNullable<QueueInput["freshJobs"]>[number]> = {}) => ({ id, title: "Backend Engineer", company: `New${id}`, jobUrl: `https://x.co/${id}`, ageHours: 5, datePosted: true, ...over });
+
+  it("lead the applications group, ahead of overdue applications", () => {
+    const q = buildDailyQueue({ ...empty, jobs: [job("1", { status: "Applying", deadline: "2026-11-01" })], freshJobs: [fresh("a")] }, TODAY, 10);
+    expect(q.items.map((i) => i.key)).toEqual(["found:a:fresh", "job:1:apply"]);
+    expect(q.items[0]).toMatchObject({ group: "applications", source: "found", target: { type: "found", id: "a", url: "https://x.co/a" } });
+    expect(q.items[0].reason).toBe("Posted 5 hours ago · matches your campaign, nothing in the posting rules you out");
+  });
+
+  it("says First seen when the source gave no date, and takes at most three", () => {
+    const q = collectItems({ ...empty, freshJobs: [fresh("a", { datePosted: false, ageHours: 0.2 }), fresh("b"), fresh("c"), fresh("d")] }, TODAY);
+    expect(q).toHaveLength(3);
+    expect(q[0].reason).toMatch(/^First seen in the last hour/);
+  });
+
+  it("can be hidden like any other item", () => {
+    const q = buildDailyQueue({ ...empty, freshJobs: [fresh("a")], events: [{ itemKey: "found:a:fresh", action: "skipped", effectiveUntil: "2026-11-29" }] }, TODAY, 10);
+    expect(q.items).toEqual([]);
+  });
+});
+
