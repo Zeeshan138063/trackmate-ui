@@ -4,6 +4,14 @@ What is true now, per branch of work. Newest section at the top. Every push that
 updates this file (the `push-tracker-gate` hook checks). Tick what is done, add what is left, and
 keep the last line of each section the next step.
 
+## 2026-11-26 - Feeds follow boards already found (branch jobos/feeds-known-boards, into rebranding-jobos)
+
+- [x] Live check on 2026-11-26: `fetch-jobs` returned `boards: 0` because no watchlist company has a supported careers link; before the rewrite it found boards by web search.
+- [x] `collectBoards()` in `fetch-jobs/feeds.ts`: watchlist boards plus the boards named in links of jobs already found (6 boards in production today). Test in `feeds_test.ts`.
+- [ ] Zee: `supabase functions deploy fetch-jobs`; after the next full hour the reply should show `boards` above 0.
+- [ ] To widen coverage: add careers page links to Dream Companies.
+- [ ] PR into rebranding-jobos.
+
 ## 2026-11-26 - Keep the LinkedIn job fetch (DEC-011, branch jobos/keep-linkedin-fetch, into rebranding-jobos)
 
 - [x] Restored `fetch-linkedin-jobs` and `parse-linkedin`; the migration no longer unschedules the hourly job.

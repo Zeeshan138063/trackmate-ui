@@ -1,14 +1,14 @@
 // Job intake. Called hourly by pg_cron (fetch-ats-jobs-hourly).
 //
-// For every company on a user's watchlist whose careers page is a Greenhouse, Lever or Ashby
-// board, read that board's public feed and keep the postings whose title matches a keyword
+// For every Greenhouse, Lever or Ashby board on a user's watchlist, and every board of a posting
+// already found, read that board's public feed and keep the postings whose title matches a keyword
 // some user is actively searching for. New rows go to discovered_jobs with an embedding.
 //
-// Decision DEC-001 (answer to OQ-01): JobOS takes jobs only from feeds the job boards publish
-// for this purpose. It does not fetch LinkedIn and does not scrape search results (P1).
+// This function reads only the feeds the job boards publish for this purpose and does not search
+// the web for boards (DEC-001). The LinkedIn fetch is a separate function, kept by DEC-011.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { type Board, boardKey, feedUrl, type FeedJob, firstMatchingKeyword, normalize, parseBoard } from "./feeds.ts";
+import { type Board, boardKey, collectBoards, feedUrl, type FeedJob, firstMatchingKeyword, normalize } from "./feeds.ts";
 
 const MAX_BOARDS_PER_RUN = 60;
 const MAX_NEW_JOBS_PER_BOARD = 25;
@@ -79,19 +79,24 @@ Deno.serve(async () => {
       .not("careers_page_url", "is", null);
     if (companyError) throw companyError;
 
-    const boards = new Map<string, { board: Board; company: string }>();
-    for (const c of companies ?? []) {
-      const board = parseBoard(c.careers_page_url);
-      if (board && !boards.has(boardKey(board))) boards.set(boardKey(board), { board, company: String(c.name ?? board.token) });
-    }
+    // Also keep following the boards of postings already found: their links name the board.
+    const { data: known, error: knownError } = await supabase
+      .from("discovered_jobs")
+      .select("company, job_url")
+      .in("source", ["greenhouse", "lever", "ashby", "ats_auto"])
+      .order("created_at", { ascending: false })
+      .limit(2000);
+    if (knownError) throw knownError;
 
-    const summary = { boards: boards.size, read: 0, failed: 0, matched: 0, inserted: 0, skippedBoards: 0 };
-    if (keywords.length === 0 || boards.size === 0) {
-      return Response.json({ success: true, ...summary, note: "no active keywords or no supported careers pages" });
+    const boards = collectBoards(companies ?? [], known ?? []);
+
+    const summary = { boards: boards.length, read: 0, failed: 0, matched: 0, inserted: 0, skippedBoards: 0 };
+    if (keywords.length === 0 || boards.length === 0) {
+      return Response.json({ success: true, ...summary, note: "no active keywords, or no supported boards on a watchlist or among jobs already found" });
     }
 
     // Take a different slice each hour so a long watchlist is covered over the day.
-    const all = [...boards.values()];
+    const all = boards;
     const start = all.length > MAX_BOARDS_PER_RUN ? (new Date().getUTCHours() * MAX_BOARDS_PER_RUN) % all.length : 0;
     const batch = all.slice(start, start + MAX_BOARDS_PER_RUN);
     summary.skippedBoards = all.length - batch.length;
