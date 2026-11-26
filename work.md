@@ -4,6 +4,15 @@ What is true now, per branch of work. Newest section at the top. Every push that
 updates this file (the `push-tracker-gate` hook checks). Tick what is done, add what is left, and
 keep the last line of each section the next step.
 
+## 2026-11-26 - Keep the LinkedIn job fetch (DEC-011, branch jobos/keep-linkedin-fetch, into rebranding-jobos)
+
+- [x] Restored `fetch-linkedin-jobs` and `parse-linkedin`; the migration no longer unschedules the hourly job.
+- [x] LinkedIn rows leave `posted_at` empty and show "First seen".
+- [ ] Zee: do NOT run `supabase functions delete fetch-linkedin-jobs parse-linkedin`.
+- [ ] Zee: run `select jobname, schedule, command from cron.job;` to see whether the hourly job points at the right project URL with a real key. The repo's copy has a typo and a placeholder.
+- [ ] Revisit when the job-board feeds cover enough of the watchlist.
+- [ ] PR into rebranding-jobos.
+
 ## 2026-11-26 - Import LinkedIn's Connections.csv (branch jobos/connections-import, into rebranding-jobos)
 
 - [x] `src/utils/linkedin-csv.ts`, 9 tests: CSV reader, LinkedIn's notes preamble, duplicates, unsafe links and formula characters dropped, 5,000-row and 5 MB limits.
@@ -105,7 +114,7 @@ keep the last line of each section the next step.
 - [x] `fetch-jobs` reads Greenhouse, Lever and Ashby feeds for watchlist companies; `feeds.ts` with tests in `feeds_test.ts`.
 - [x] Migration `20261126110000`: unschedule LinkedIn cron, `first_seen_at`, `match_jobs`, `archive_old_jobs`.
 - [x] UI: "First seen" label and real source names.
-- [ ] Zee, in this order: `supabase db push`; `supabase functions deploy fetch-jobs`; `supabase functions delete fetch-linkedin-jobs parse-linkedin`.
+- [ ] Zee, in this order: `supabase db push`; `supabase functions deploy fetch-jobs`. The functions are no longer deleted (DEC-011).
 - [ ] Not run against the live project or a real feed from the build session (no network to those hosts). Check the first hourly run in the function logs.
 - [ ] Follow-ups: Workable feed; paste-a-URL capture into `discovered_jobs`; the public `/jobs` page still lists rows collected from LinkedIn before this change until they archive (15 days).
 - [ ] PR into rebranding-jobos.

@@ -9,7 +9,7 @@ Sources: `docs/prd/2026-11-26-crm-strategy-spec.md` section 2 (ground rules) and
 
 | | Principle | How it is checked |
 |---|---|---|
-| **P1** | **No LinkedIn automation.** JobOS never clicks, connects, messages, likes, comments or posts on LinkedIn for the user, and adds no scraping of LinkedIn pages. | Edit warnings on `linkedin.com` in edge functions and on `.click()` in the extension; review. Existing conflicts: OQ-01 |
+| **P1** | **No LinkedIn automation.** JobOS never clicks, connects, messages, likes, comments or posts on LinkedIn for the user, and adds no new scraping of LinkedIn pages. Exception by owner decision (DEC-011): the existing hourly fetch of public LinkedIn job listings stays until a replacement is proven. | Edit warnings on `linkedin.com` in edge functions and on `.click()` in the extension; review. Existing conflicts: OQ-01 |
 | **P2** | **Assist, do not act.** JobOS prepares the action; the user submits every application and sends every message. | Every outbound path has an approval state; test that no send happens from any other state |
 | **P3** | **Truth only.** Generated text uses only facts in the Master Profile and the user's notes. | Prompt review; draft validators; spec-reviewer |
 | **P4** | **No secrets in the browser.** Nothing secret in a `VITE_` variable, `src/` or `extension/`. | Edit warning on `VITE_*KEY/SECRET`; review |

@@ -34,7 +34,7 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 
 - Connections: search also covers email and notes, contacts can be sorted (next step due first by default), deleting asks first, adding warns about a probable duplicate, and card icons for email, phone and LinkedIn open them.
 
-- Job discovery now reads the public job feeds of the companies on your watchlist (Greenhouse, Lever, Ashby) and no longer fetches LinkedIn or scrapes search results.
+- Job discovery now also reads the public job feeds of the companies on your watchlist (Greenhouse, Lever, Ashby), beside the existing LinkedIn job fetch.
 - A job with no known posting date now says "First seen" instead of "Posted", and shows its real source.
 
 ### Fixed

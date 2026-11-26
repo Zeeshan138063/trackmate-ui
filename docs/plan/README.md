@@ -25,6 +25,21 @@ Technical decisions that bind the code go in `architecture/decisions/` as ADRs.
 - Affects: OQ-01 (closed); REQ-008; `supabase/functions/fetch-jobs/`; migration
   `20261126110000_job_intake_allowed_sources.sql`; principle P1.
 
+### DEC-011 The server-side LinkedIn job fetch stays until a replacement is proven
+- Decided by: Zee (product owner), 2026-11-26. Replaces the "drop the hourly LinkedIn fetch"
+  part of DEC-001.
+- Words given: "i need linkedin automation so we should have that till we dont have better
+  option".
+- `fetch-linkedin-jobs` and `parse-linkedin` are kept and the hourly schedule is not removed. The
+  job-board feeds (`fetch-jobs`) run beside it. Rows from LinkedIn now leave `posted_at` empty,
+  because the results list does not state a posting date.
+- Known risk, accepted by Zee: fetching LinkedIn pages from JobOS servers is against LinkedIn's
+  terms and can be blocked without notice. Revisit when the feeds cover enough of the watchlist.
+- Scope: reading public job listings only. P1's ban on acting on LinkedIn for the user (connect,
+  message, like, post) is unchanged.
+- Affects: P1 (exception recorded there); `supabase/functions/fetch-linkedin-jobs/`,
+  `supabase/functions/parse-linkedin/`; migration `20261126110000_job_intake_allowed_sources.sql`.
+
 ## Open questions: `OQ-##`
 
 A question someone outside engineering must answer. See `questions/README.md`: each one is also
