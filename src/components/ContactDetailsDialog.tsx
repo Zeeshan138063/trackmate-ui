@@ -9,7 +9,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
 import { Contact } from "@/types/contact";
 import {
     Mail,
@@ -22,11 +21,7 @@ import {
     History,
     BellRing,
     User,
-    Plus,
-    Sparkles,
-    Send,
-    Copy,
-    Loader2
+    Plus
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EngagementTimeline } from "./EngagementTimeline";
@@ -35,18 +30,10 @@ import { AddEngagementDialog } from "./AddEngagementDialog";
 import { FollowUpList } from "./FollowUpList";
 import { useEngagements } from "@/hooks/useEngagements";
 import { useFollowUps } from "@/hooks/useFollowUps";
-import { Textarea } from "@/components/ui/textarea";
-import { AIGenerator } from "@/services/AIGenerator";
+import { MessageDrafter } from "@/components/contacts/MessageDrafter";
 import { useResume } from "@/hooks/useResume";
 import { useContacts } from "@/hooks/useContacts";
 import { useToast } from "@/hooks/use-toast";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 
 interface ContactDetailsDialogProps {
     contact: Contact | null;
@@ -66,13 +53,8 @@ export function ContactDetailsDialog({
 }: ContactDetailsDialogProps) {
     const [isAddEngagementOpen, setIsAddEngagementOpen] = useState(false);
 
-    // AI Note Generation State
-    const [invitationNote, setInvitationNote] = useState("");
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [connectionContext, setConnectionContext] = useState("general");
-    const [customContext, setCustomContext] = useState("");
     const { masterProfile } = useResume();
-    const { updateContact } = useContacts();
+    const { contacts, updateContact } = useContacts();
     const { toast } = useToast();
 
     // Hooks for engagement system
@@ -98,7 +80,6 @@ export function ContactDetailsDialog({
         if (open && contact?.id) {
             fetchEngagements();
             fetchFollowUps();
-            setInvitationNote(contact.invitation_note || "");
         }
     }, [open, contact?.id]);
 
@@ -113,29 +94,10 @@ export function ContactDetailsDialog({
             .substring(0, 2);
     };
 
-    const handleGenerateNote = async () => {
-        setIsGenerating(true);
-        try {
-            const contextToSend = connectionContext === "custom" ? customContext : connectionContext;
-            const note = await AIGenerator.generateConnectionNote(contact, masterProfile, contextToSend);
-            setInvitationNote(note);
-            toast({ title: "Note Generated", description: "You can edit it before saving." });
-        } catch (error) {
-            toast({ variant: "destructive", title: "Note not generated", description: error instanceof Error ? error.message : "Could not generate note." });
-        } finally {
-            setIsGenerating(false);
-        }
-    };
-
-    const handleSaveNote = async () => {
+    const handleSaveNote = async (text: string) => {
         if (!contact.id) return;
-        await updateContact(contact.id, { invitation_note: invitationNote });
-        toast({ title: "Note Saved", description: "Invitation note attached to contact." });
-    };
-
-    const handleCopyNote = () => {
-        navigator.clipboard.writeText(invitationNote);
-        toast({ title: "Copied!", description: "Note copied to clipboard." });
+        await updateContact(contact.id, { invitation_note: text });
+        toast({ title: "Draft saved", description: "Saved on this contact." });
     };
 
     return (
@@ -284,80 +246,15 @@ export function ContactDetailsDialog({
                         </TabsContent>
 
                         <TabsContent value="connection" className="space-y-4">
-                            <div className="bg-indigo-50 border border-indigo-200 p-4 rounded-lg mb-4">
-                                <h3 className="font-medium text-indigo-900 flex items-center gap-2">
-                                    <Sparkles className="h-4 w-4 text-indigo-600" />
-                                    AI Invitation Generator
-                                </h3>
-                                <p className="text-sm text-indigo-800 mt-1">
-                                    Craft the perfect LinkedIn invitation note customized for {contact.name}.
-                                </p>
-                            </div>
-
-                            <div className="space-y-3">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-medium text-muted-foreground">Context / Tone</label>
-                                        <Select value={connectionContext} onValueChange={setConnectionContext}>
-                                            <SelectTrigger className="h-8 text-xs bg-white">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="general">Professional / General</SelectItem>
-                                                <SelectItem value="conference">Met at Conference / Event</SelectItem>
-                                                <SelectItem value="social_media">Social Media Fan</SelectItem>
-                                                <SelectItem value="alumni">Alumni / Shared Group</SelectItem>
-                                                <SelectItem value="reconnecting">Reconnecting</SelectItem>
-                                                <SelectItem value="custom">Custom (Type your own)</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="flex items-end justify-end">
-                                        <Button
-                                            onClick={handleGenerateNote}
-                                            disabled={isGenerating}
-                                            size="sm"
-                                            variant="outline"
-                                            className="gap-2 w-full h-8"
-                                        >
-                                            {isGenerating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3 text-indigo-600" />}
-                                            {invitationNote ? "Regenerate" : "Generate Draft"}
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                {connectionContext === "custom" && (
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-medium text-muted-foreground">Custom Context</label>
-                                        <Input
-                                            value={customContext}
-                                            onChange={(e) => setCustomContext(e.target.value)}
-                                            placeholder="e.g. Met at the dog park, both love hiking..."
-                                            className="h-8 text-sm"
-                                        />
-                                    </div>
-                                )}
-
-                                <Textarea
-                                    className="min-h-[120px] bg-slate-50 border-slate-200 mt-2"
-                                    placeholder="Click generate to create a personalized note..."
-                                    value={invitationNote}
-                                    onChange={(e) => setInvitationNote(e.target.value)}
-                                />
-                                <div className="flex justify-between items-center text-xs text-muted-foreground">
-                                    <span>{invitationNote.length} / 300 characters</span>
-                                    <div className="flex gap-2">
-                                        <Button size="sm" variant="ghost" onClick={handleCopyNote} disabled={!invitationNote}>
-                                            <Copy className="h-3 w-3 mr-2" />
-                                            Copy
-                                        </Button>
-                                        <Button size="sm" onClick={handleSaveNote} disabled={!invitationNote}>
-                                            <Send className="h-3 w-3 mr-2" />
-                                            Save Note
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
+                            <MessageDrafter
+                                contact={contact}
+                                otherContacts={contacts}
+                                engagements={engagements}
+                                profile={masterProfile}
+                                onSaveDraft={handleSaveNote}
+                                onLogSent={addEngagement}
+                                onInvitationSent={onUpdate ? () => onUpdate(contact.id, { invitation_sent_at: new Date().toISOString() }) : undefined}
+                            />
                         </TabsContent>
 
                         <TabsContent value="engagement" className="space-y-4">

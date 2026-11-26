@@ -75,3 +75,11 @@ restated in the repo where the code depends on it, so the repo is enough on its 
   days, warns at 80, and stops queuing at 100". The 100 figure is observed, not published by
   LinkedIn, so the UI says "about 100".
 - Affects: REQ-009; `src/utils/invitation-limits.ts`.
+
+### DEC-009 A referral ask is offered only after a logged reply, and drafts need the user's notes
+- Decided by: Zee, 2026-11-26, by approving the REQ-005 plan
+- Words given (strategy spec 5E): the ask goes advice, then a call, then a referral, and a
+  referral ask comes only after a real exchange. In code: stage In conversation or Advocate and
+  at least one inbound interaction. A contact with no notes gets no draft.
+- A draft sharing 80% of its three-word sequences with another contact's saved draft is rejected.
+- Affects: REQ-005; `src/utils/message-draft.ts`.
