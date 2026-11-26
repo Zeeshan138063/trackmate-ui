@@ -39,6 +39,8 @@ When a release ships, rename `## Unreleased` to the release date and start a new
 
 ### Fixed
 
+- Job discovery keeps following the Greenhouse, Lever and Ashby boards of jobs it has already found, not only companies on a watchlist, so those feeds did not stop when web search was removed.
+
 - Sending a profile from the Chrome extension to Connections now opens the Add Contact form with the details filled in.
 - Connections no longer loads every contact's details in the background, which made the page slow with many contacts.
 
